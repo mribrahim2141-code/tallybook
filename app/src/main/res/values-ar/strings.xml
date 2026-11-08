@@ -882,4 +882,35 @@
         <item quantity="many">تقسيم إلى %d تصنيفاً</item>
         <item quantity="other">تقسيم إلى %d تصنيف</item>
     </plurals>
+    <string name="hint_webdav_url">عنوان الخادم</string>
+    <string name="hint_webdav_username">اسم المستخدم</string>
+    <string name="hint_webdav_password">كلمة المرور</string>
+    <string name="hint_data_format_csv">CSV</string>
+    <string name="hint_data_format_xls">XLS</string>
+    <string name="hint_data_format_pdf">PDF</string>
+    <string name="backup_location_in_app">%1$s › %2$s</string>
+    <string name="service_backup_storage_access_framework">مجلد محلي</string>
+    <string name="service_backup_webdav">WebDAV</string>
+    <string name="setting_hint_map_tile_server">https://tiles.example.org/{z}/{x}/{y}.png</string>
+    <string name="setting_item_utility_exchange_rates_service_oer">OpenExchangeRates.org</string>
+    <string name="keyboard_9">9</string>
+    <string name="keyboard_8">8</string>
+    <string name="keyboard_7">7</string>
+    <string name="keyboard_6">6</string>
+    <string name="keyboard_5">5</string>
+    <string name="keyboard_4">4</string>
+    <string name="keyboard_3">3</string>
+    <string name="keyboard_2">2</string>
+    <string name="keyboard_1">1</string>
+    <string name="keyboard_0">0</string>
+    <string name="keyboard_000">000</string>
+    <string name="keyboard_point">.</string>
+    <string name="keyboard_clear">C</string>
+    <string name="keyboard_multiplication">×</string>
+    <string name="keyboard_division">÷</string>
+    <string name="keyboard_addition">+</string>
+    <string name="keyboard_subtraction">−</string>
+    <string name="keyboard_equal">=</string>
+    <string name="keyboard_confirm">✓</string>
+    <string name="keyboard_commit">></string>
 </resources>
