@@ -24,7 +24,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/material_component_lists_two_line_with_avatar_height"
-    android:background="?attr/selectableItemBackground">
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginTop="3dp"
+    android:layout_marginBottom="3dp"
+    android:background="@drawable/bg_glass_surface"
+    android:foreground="?attr/selectableItemBackground">
 
     <com.oriondev.moneywallet.ui.view.theme.ThemedImageView
         android:id="@+id/avatar_image_view"
