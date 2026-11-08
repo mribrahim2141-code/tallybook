@@ -1,44 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~ Copyright (c) 2018.
-  ~
-  ~ This file is part of MoneyWallet.
-  ~
-  ~ MoneyWallet is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
-  ~
-  ~ MoneyWallet is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~ GNU General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU General Public License
-  ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
-  -->
-
 <resources>
-    <color name="colorPrimary">#3f51b5</color>
-    <color name="colorAccent">#FF4081</color>
-    <color name="textPrimary">#DE000000</color>
-    <color name="textSecondary">#8A000000</color>
-    <color name="textPrimaryInverted">#DEFFFFFF</color>
-    <color name="textSecondaryInverted">#8AFFFFFF</color>
-
-    <!-- The dark alert dialog palette. These are the values Theme.AppCompat.Dialog.Alert resolves
-         to, kept by hand because the AppCompat resources behind them are private. -->
-    <color name="dialogDarkBackground">#FF424242</color>
+    <color name="colorPrimary">#006C50</color>
+    <color name="colorAccent">#00A878</color>
+    <color name="textPrimary">#DE101D18</color>
+    <color name="textSecondary">#8A34483E</color>
+    <color name="textPrimaryInverted">#DEE1EAE4</color>
+    <color name="textSecondaryInverted">#8AD0DDD4</color>
+    <color name="dialogDarkBackground">#FF26332D</color>
     <color name="dialogDarkTextPrimary">#FFFFFFFF</color>
-    <color name="dialogDarkTextSecondary">#B3FFFFFF</color>
-    <color name="dialogDarkTextHint">#80FFFFFF</color>
+    <color name="dialogDarkTextSecondary">#B3D0DDD4</color>
+    <color name="dialogDarkTextHint">#80D0DDD4</color>
     <color name="dialogDarkControlHighlight">#33FFFFFF</color>
-
-    <!--
-      ~ Painted over a system bar that the platform will not darken for us: the navigation bar below
-      ~ Android 8, and the strip of the drawer behind the status bar. Half black over anything the
-      ~ app draws leaves the light icons readable. Taken from androidx, which faces the same problem.
-      -->
     <color name="system_bar_scrim_dark">#801B1B1B</color>
-
 </resources>
