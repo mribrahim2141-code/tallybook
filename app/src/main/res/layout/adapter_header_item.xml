@@ -24,11 +24,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/material_component_lists_header_height"
-    android:layout_marginStart="8dp"
-    android:layout_marginEnd="8dp"
     android:layout_marginTop="4dp"
     android:layout_marginBottom="2dp"
-    android:background="@drawable/bg_glass_surface"
+    android:background="@drawable/bg_glass_surface_horizontal_inset"
     android:foreground="?attr/selectableItemBackground">
 
     <!--
