@@ -1,3 +1,4 @@
+
 name: build
 
 on:
@@ -9,8 +10,6 @@ on:
 permissions:
   contents: read
 
-# A force push should replace the run it supersedes. Pushes get a unique group
-# each, so no merge commit can be cancelled or queued behind another one.
 concurrency:
   group: build-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
@@ -19,6 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v7
 
@@ -27,37 +27,79 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      # Provision Gradle directly and invoke it from PATH. This avoids relying
-      # on Gradle Wrapper's distribution download endpoint in the build step.
       - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '9.6.1'
 
-      # Robolectric fetches the android-all jar for the SDK it runs against, about
-      # 190 MB, into the Maven local repository and not the Gradle cache, so the
-      # step above does not keep it. Which jar that is follows the Robolectric
-      # version, now in gradle/libs.versions.toml, and targetSdk, still in
-      # app/build.gradle, so the key follows both files. A cache entry is never
-      # rewritten on an exact hit, which is why the key cannot be a constant. A
-      # bump would keep restoring the old jar and fetching the new one on every
-      # run. No restore-keys on purpose, since a restored entry is saved back as
-      # a union and nothing prunes a superseded jar, so an entry would grow by a
-      # jar per bump. An unrelated edit to either file costs one fetch instead.
       - uses: actions/cache@v4
         with:
           path: ~/.m2/repository/org/robolectric
           key: robolectric-${{ hashFiles('app/build.gradle', 'gradle/libs.versions.toml') }}
 
-      - run: gradle clean testFlossOsmDebugUnitTest assembleFlossOsmDebug assembleFlossOsmDebugAndroidTest lintFlossOsmDebug
+      # Build and run tests
+      - name: Build and Run Tests
+        run: |
+          gradle clean testFlossOsmDebugUnitTest assembleFlossOsmDebug assembleFlossOsmDebugAndroidTest lintFlossOsmDebug
 
+      # Automatically diagnose failed unit tests
+      - name: Diagnose Failed Unit Tests
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob
+          import xml.etree.ElementTree as ET
+
+          report_path = "app/build/test-results/testFlossOsmDebugUnitTest/**/*.xml"
+          files = glob.glob(report_path, recursive=True)
+
+          if not files:
+              print("No test XML reports found.")
+          else:
+              failed_count = 0
+
+              for file in files:
+                  try:
+                      root = ET.parse(file).getroot()
+
+                      for test in root.iter("testcase"):
+                          for error in list(test):
+                              if error.tag in ("failure", "error"):
+                                  failed_count += 1
+
+                                  print("\n" + "=" * 70)
+                                  print("FAILED TEST")
+                                  print("=" * 70)
+                                  print("Class:", test.get("classname", "Unknown"))
+                                  print("Test:", test.get("name", "Unknown"))
+                                  print("Type:", error.tag)
+                                  print("Message:", error.get("message", "No message"))
+                                  print("\nDetails:")
+                                  print(error.text or "No additional details")
+
+                      print("\nReport file:", file)
+
+                  except Exception as exc:
+                      print("Could not read report:", file)
+                      print("Error:", str(exc))
+
+              print("\n" + "=" * 70)
+              print("TOTAL FAILED TESTS:", failed_count)
+              print("=" * 70)
+
+              if failed_count == 0:
+                  print("No failed tests were detected in the XML reports.")
+          PY
+
+      # Upload lint report
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: lint-report
           path: app/build/reports/lint-results-flossOsmDebug.html
+          if-no-files-found: ignore
 
-      # The unit tests run before lint, so a failing test is the most common red
-      # run and the one with no lint report to upload. Keep its own report.
+      # Upload unit test reports
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -65,8 +107,12 @@ jobs:
           path: |
             app/build/reports/tests/testFlossOsmDebugUnitTest/**
             app/build/test-results/testFlossOsmDebugUnitTest/**
+          if-no-files-found: ignore
 
+      # Upload debug APK
       - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: debug-apk
           path: app/build/outputs/apk/flossOsm/debug/*.apk
+          if-no-files-found: ignore
