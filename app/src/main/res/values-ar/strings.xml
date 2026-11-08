@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">دفتر الميزانية</string>
+    <string name="app_name">Tallybook</string>
     <string name="menu_transaction">المعاملات</string>
     <string name="menu_category">التصنيفات</string>
     <string name="menu_overview">نظرة عامة</string>
