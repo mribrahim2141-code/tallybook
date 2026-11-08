@@ -97,7 +97,7 @@ public class DeepDarkThemeTest {
         assertEquals(0xFFFFFFFF, theme.getColorCardBackground());
         assertEquals(0xFFFAFAFA, theme.getColorWindowBackground());
         assertEquals(0xFFF1F8F3, theme.getDrawerBackgroundColor());
-        assertEquals(0xFFE8E8E8, theme.getDrawerSelectedItemColor());
+        assertEquals(0xFFD7EFE2, theme.getDrawerSelectedItemColor());
 
         ThemeEngine.setMode(ThemeEngine.Mode.DARK);
         assertEquals(0xFF424242, theme.getColorCardBackground());
