@@ -913,4 +913,6 @@
     <string name="keyboard_equal">=</string>
     <string name="keyboard_confirm">✓</string>
     <string name="keyboard_commit">></string>
+    <string name="overview_summary_title">ملخص الفترة المحددة</string>
+    <string name="overview_summary_balance">الرصيد الحالي</string>
 </resources>
