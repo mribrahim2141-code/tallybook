@@ -35,6 +35,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.background.OverviewDataLoader;
@@ -48,6 +49,7 @@ import com.oriondev.moneywallet.ui.activity.PeriodDetailActivity;
 import com.oriondev.moneywallet.ui.adapter.pager.OverviewChartViewPagerAdapter;
 import com.oriondev.moneywallet.ui.adapter.recycler.OverviewItemAdapter;
 import com.oriondev.moneywallet.ui.fragment.base.SinglePanelFragment;
+import com.oriondev.moneywallet.utils.MoneyFormatter;
 
 /**
  * Created by andrea on 17/08/18.
@@ -62,6 +64,11 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
     private OverviewItemAdapter mRecyclerViewAdapter;
 
     private OverviewSettingPicker mOverviewSettingPicker;
+
+    private TextView mIncomeSummaryTextView;
+    private TextView mExpenseSummaryTextView;
+    private TextView mNetSummaryTextView;
+    private TextView mBalanceSummaryTextView;
 
     private BroadcastReceiver mBroadcastReceiver;
 
@@ -82,6 +89,10 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         View view = inflater.inflate(R.layout.layout_panel_overview, parent, true);
         ViewPager viewPager = view.findViewById(R.id.chart_view_pager);
         RecyclerView recyclerView = view.findViewById(R.id.recycler_view);
+        mIncomeSummaryTextView = view.findViewById(R.id.summary_income_value);
+        mExpenseSummaryTextView = view.findViewById(R.id.summary_expense_value);
+        mNetSummaryTextView = view.findViewById(R.id.summary_net_value);
+        mBalanceSummaryTextView = view.findViewById(R.id.summary_balance_value);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         // initialize adapters
         mViewPagerAdapter = new OverviewChartViewPagerAdapter();
@@ -138,6 +149,14 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
     public void onLoadFinished(@NonNull Loader<OverviewData> loader, OverviewData data) {
         mViewPagerAdapter.setData(data);
         mRecyclerViewAdapter.setData(data);
+        MoneyFormatter formatter = MoneyFormatter.getInstance();
+        formatter.setDivider("\n");
+        mIncomeSummaryTextView.setText(formatter.getTintedString(
+                data.getTotalIncomes(), MoneyFormatter.TintMode.INCOME));
+        mExpenseSummaryTextView.setText(formatter.getTintedString(
+                data.getTotalExpenses(), MoneyFormatter.TintMode.EXPENSE));
+        mNetSummaryTextView.setText(formatter.getTintedString(data.getTotalNetIncomes()));
+        mBalanceSummaryTextView.setText(formatter.getTintedString(data.getTotalBalance()));
     }
 
     @Override
