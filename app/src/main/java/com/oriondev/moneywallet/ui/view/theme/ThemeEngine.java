@@ -46,92 +46,93 @@ public class ThemeEngine implements ITheme {
     private static final String MODE = "mode";
     private static final String SYSTEM_COLORS = "system_colors";
 
-    private static final int DEFAULT_COLOR_PRIMARY = Color.parseColor("#3f51b5");
-    private static final int DEFAULT_COLOR_PRIMARY_DARK = Color.parseColor("#303F9F");
-    private static final int DEFAULT_COLOR_ACCENT = Color.parseColor("#FF4081");
+    // Emerald is the default seed; user-picked and wallpaper colors remain respected.
+    private static final int DEFAULT_COLOR_PRIMARY = Color.parseColor("#006C50");
+    private static final int DEFAULT_COLOR_PRIMARY_DARK = Color.parseColor("#00513F");
+    private static final int DEFAULT_COLOR_ACCENT = Color.parseColor("#00A878");
     private static final Mode DEFAULT_MODE = Mode.LIGHT;
 
     private static final int[] DEFAULT_TEXT_COLOR_PRIMARY = new int[] {
-            Color.parseColor("#DE000000"), // OK
-            Color.parseColor("#FFFFFFFF"), // OK
-            Color.parseColor("#FFFFFFFF")  // OK
+            Color.parseColor("#DE101D18"),
+            Color.parseColor("#FFE1E9E3"),
+            Color.parseColor("#FFFFFFFF")
     };
 
     private static final int[] DEFAULT_TEXT_COLOR_PRIMARY_INVERSE = new int[] {
-            Color.parseColor("#DEFFFFFF"), // OK
-            Color.parseColor("#FF000000"), // OK
-            Color.parseColor("#FF000000")  // OK
+            Color.parseColor("#DEE1EAE4"),
+            Color.parseColor("#FF101D18"),
+            Color.parseColor("#FF000000")
     };
 
     private static final int[] DEFAULT_TEXT_COLOR_SECONDARY = new int[] {
-            Color.parseColor("#8A000000"), // OK
-            Color.parseColor("#B3FFFFFF"), // OK
-            Color.parseColor("#B3FFFFFF")  // OK
+            Color.parseColor("#8A34483E"),
+            Color.parseColor("#B3D0DDD4"),
+            Color.parseColor("#B3FFFFFF")
     };
 
     private static final int[] DEFAULT_TEXT_COLOR_SECONDARY_INVERSE = new int[] {
-            Color.parseColor("#8AFFFFFF"), // OK
-            Color.parseColor("#B3000000"), // OK
+            Color.parseColor("#8AD0DDD4"),
+            Color.parseColor("#B334483E"),
             Color.parseColor("#B3000000")
     };
 
     private static final int[] DEFAULT_ICON_COLOR = new int[] {
-            Color.parseColor("#8A000000"), // OK
-            Color.parseColor("#8AFFFFFF"), // OK
-            Color.parseColor("#8AFFFFFF")  // OK
+            Color.parseColor("#8A34483E"),
+            Color.parseColor("#8AD0DDD4"),
+            Color.parseColor("#8AFFFFFF")
     };
 
     private static final int[] DEFAULT_HINT_TEXT_COLOR = new int[] {
-            Color.parseColor("#61000000"), // OK
-            Color.parseColor("#80FFFFFF"), // OK
-            Color.parseColor("#80FFFFFF")  // OK
+            Color.parseColor("#6134483E"),
+            Color.parseColor("#80D0DDD4"),
+            Color.parseColor("#80FFFFFF")
     };
 
     private static final int[] DEFAULT_COLOR_CARD_BACKGROUND = new int[] {
-            Color.parseColor("#FFFFFF"), // OK
-            Color.parseColor("#424242"), // OK
-            Color.parseColor("#000000")  // OK
+            Color.parseColor("#FFFFFF"),
+            Color.parseColor("#26332D"),
+            Color.parseColor("#000000")
     };
 
     private static final int[] DEFAULT_COLOR_WINDOW_FOREGROUND = new int[] {
-            Color.parseColor("#FFFFFF"), // OK
-            Color.parseColor("#303030"), // OK
-            Color.parseColor("#000000")  // OK
+            Color.parseColor("#FFFFFF"),
+            Color.parseColor("#26332D"),
+            Color.parseColor("#000000")
     };
 
     private static final int[] DEFAULT_COLOR_WINDOW_BACKGROUND = new int[] {
-            Color.parseColor("#FAFAFA"), // OK
-            Color.parseColor("#212121"), // OK
-            Color.parseColor("#000000")  // OK
+            Color.parseColor("#F5FAF6"),
+            Color.parseColor("#17211C"),
+            Color.parseColor("#000000")
     };
 
     private static final int[] DEFAULT_COLOR_RIPPLE = new int[] {
-            Color.parseColor("#1f000000"), // OK
-            Color.parseColor("#33ffffff"), // OK
-            Color.parseColor("#33ffffff") // OK
+            Color.parseColor("#1F006C50"),
+            Color.parseColor("#33FFFFFF"),
+            Color.parseColor("#33FFFFFF")
     };
 
     private static final int[] DRAWER_BACKGROUND_COLOR = new int[] {
-            Color.parseColor("#F9F9F9"),
-            Color.parseColor("#303030"),
+            Color.parseColor("#F1F8F3"),
+            Color.parseColor("#202C25"),
             Color.parseColor("#000000")
     };
 
     private static final int[] DRAWER_ICON_COLOR = new int[] {
-            Color.parseColor("#8A000000"),
-            Color.parseColor("#8AFFFFFF"),
+            Color.parseColor("#8A34483E"),
+            Color.parseColor("#8AD0DDD4"),
             Color.parseColor("#8AFFFFFF")
     };
 
     private static final int[] DRAWER_TEXT_COLOR = new int[] {
-            Color.parseColor("#DE000000"),
-            Color.parseColor("#DEFFFFFF"),
+            Color.parseColor("#DE101D18"),
+            Color.parseColor("#DEE1EAE4"),
             Color.parseColor("#DEFFFFFF")
     };
 
     private static final int[] DRAWER_SELECTED_ITEM_COLOR = new int[] {
-            Color.parseColor("#E8E8E8"),
-            Color.parseColor("#202020"),
+            Color.parseColor("#D7EFE2"),
+            Color.parseColor("#29483A"),
             Color.parseColor("#202020")
     };
 
@@ -164,12 +165,6 @@ public class ThemeEngine implements ITheme {
      * Shows a color without storing it, so a chooser can repaint the screen behind it while it
      * is open. The stored value is untouched, which is what makes cancelling free. Clear it from
      * clearPreview once the chooser is gone.
-     * <p>
-     * The color that is stored is never an override, and a chooser opens on it and can be walked
-     * back to it. That is not only to save a repaint of every observer. The stored dark primary
-     * is its own value while a previewed one is derived from the primary, and out of the box
-     * those two are not the same color, so showing the stored primary as an override would move
-     * the status bar to a color no screen will have once the chooser is gone.
      *
      * @return whether the screen is now showing something other than what is stored
      */
@@ -204,8 +199,6 @@ public class ThemeEngine implements ITheme {
         if (sPreviewColorPrimary == null && sPreviewColorAccent == null) {
             return;
         }
-        // OK stores the color it was previewing, so by the time the chooser is gone the override
-        // and the stored value are the same color and dropping it moves nothing on screen.
         boolean showsSomethingElse = sInstance == null
                 || (sPreviewColorPrimary != null && sPreviewColorPrimary != sInstance.getStoredColorPrimary())
                 || (sPreviewColorAccent != null && sPreviewColorAccent != sInstance.getStoredColorAccent());
@@ -219,9 +212,6 @@ public class ThemeEngine implements ITheme {
     @UiThread
     public static void setColorPrimary(int colorPrimary) {
         if (sInstance != null) {
-            // Against the stored value, never the getter: a preview of this same color is showing
-            // while the chooser's OK button is what calls this, and comparing with the getter would
-            // read that preview and skip the write.
             if (colorPrimary != sInstance.getStoredColorPrimary()) {
                 sInstance.mPreferences.edit().putInt(COLOR_PRIMARY, colorPrimary).apply();
                 sInstance.mPreferences.edit().putInt(COLOR_PRIMARY_DARK, Util.darkenColor(colorPrimary)).apply();
@@ -336,8 +326,6 @@ public class ThemeEngine implements ITheme {
         mPreferences = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
     }
 
-    // Each getter holds the override it read, since it can be cleared between a null check
-    // and a use.
     @Override
     public int getColorPrimary() {
         Integer preview = sPreviewColorPrimary;
@@ -410,7 +398,6 @@ public class ThemeEngine implements ITheme {
             case INDEX_MODE_DEEP_DARK:
                 return Mode.DEEP_DARK;
             default:
-                // the stored value has been manually altered
                 return Mode.LIGHT;
         }
     }
@@ -500,8 +487,6 @@ public class ThemeEngine implements ITheme {
         return drawerSelectedForeground();
     }
 
-    // The opaque black or white, not the surface's own icon or text color: those are what the
-    // closed entries are already drawn in.
     private int drawerSelectedForeground() {
         int background = getDrawerSelectedItemColor();
         return Util.visibleOr(getColorPrimary(), background, getBestColor(background));
@@ -561,18 +546,12 @@ public class ThemeEngine implements ITheme {
             mIndex = index;
         }
 
-        /*package-local*/ int getIndex() {
+        public int getIndex() {
             return mIndex;
         }
     }
 
     public interface ThemeObserver {
-
         void onThemeChanged(ITheme theme);
-    }
-
-    public interface ThemeConsumer {
-
-        void onApplyTheme(ITheme theme);
     }
 }
