@@ -1,6 +1,7 @@
 name: build
 
 on:
+  workflow_dispatch:
   push:
     branches: [ master, feat/arabic-rtl-emerald-glass ]
   pull_request:
