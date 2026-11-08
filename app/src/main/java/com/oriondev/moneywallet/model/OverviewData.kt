@@ -24,7 +24,7 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.RadarData
 
 /**
- * Created by andrea on 17/08/18.
+ * The chart series and the currency-aware totals used by the overview summary.
  */
 class OverviewData {
 
@@ -32,31 +32,54 @@ class OverviewData {
     private val mLineData: LineData?
     private val mRadarData: RadarData?
     private val mPeriodMoneyList: MutableList<PeriodMoney>
+    private val mTotalIncomes: Money
+    private val mTotalExpenses: Money
+    private val mTotalNetIncomes: Money
+    private val mTotalTransfers: Money
+    private val mTotalBalance: Money
 
-    constructor(barData: BarData?, lineData: LineData?, radarData: RadarData?, periodMoneyList: MutableList<PeriodMoney>) {
+    constructor(barData: BarData?, lineData: LineData?, radarData: RadarData?, periodMoneyList: MutableList<PeriodMoney>) :
+            this(barData, lineData, radarData, periodMoneyList, Money(), Money(), Money(), Money(), Money())
+
+    constructor(
+            barData: BarData?,
+            lineData: LineData?,
+            radarData: RadarData?,
+            periodMoneyList: MutableList<PeriodMoney>,
+            totalIncomes: Money,
+            totalExpenses: Money,
+            totalNetIncomes: Money,
+            totalTransfers: Money,
+            totalBalance: Money
+    ) {
         mBarData = barData
         mLineData = lineData
         mRadarData = radarData
         mPeriodMoneyList = periodMoneyList
+        mTotalIncomes = totalIncomes
+        mTotalExpenses = totalExpenses
+        mTotalNetIncomes = totalNetIncomes
+        mTotalTransfers = totalTransfers
+        mTotalBalance = totalBalance
     }
 
-    fun getBarData(): BarData? {
-        return mBarData
-    }
+    fun getBarData(): BarData? = mBarData
 
-    fun getLineData(): LineData? {
-        return mLineData
-    }
+    fun getLineData(): LineData? = mLineData
 
-    fun getRadarData(): RadarData? {
-        return mRadarData
-    }
+    fun getRadarData(): RadarData? = mRadarData
 
-    fun getPeriodMoney(index: Int): PeriodMoney {
-        return mPeriodMoneyList.get(index)
-    }
+    fun getPeriodMoney(index: Int): PeriodMoney = mPeriodMoneyList[index]
 
-    fun getPeriodCount(): Int {
-        return mPeriodMoneyList.size
-    }
+    fun getPeriodCount(): Int = mPeriodMoneyList.size
+
+    fun getTotalIncomes(): Money = mTotalIncomes
+
+    fun getTotalExpenses(): Money = mTotalExpenses
+
+    fun getTotalNetIncomes(): Money = mTotalNetIncomes
+
+    fun getTotalTransfers(): Money = mTotalTransfers
+
+    fun getTotalBalance(): Money = mTotalBalance
 }
