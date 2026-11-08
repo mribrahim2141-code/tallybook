@@ -25,7 +25,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="@dimen/material_component_lists_header_height"
-    android:background="?attr/selectableItemBackground">
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="2dp"
+    android:background="@drawable/bg_glass_surface"
+    android:foreground="?attr/selectableItemBackground">
 
     <!--
       An amount wide enough takes the whole row and resolves the date range beside it to nothing,
