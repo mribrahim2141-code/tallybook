@@ -939,4 +939,6 @@
     <string name="search_sort_description">"Sort, %1$s"</string>
     <string name="search_currency_header">"%1$s (%2$s)"</string>
 
+    <string name="overview_summary_title">Selected period summary</string>
+    <string name="overview_summary_balance">Current balance</string>
 </resources>
