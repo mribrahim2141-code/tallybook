@@ -778,4 +778,108 @@
         <item quantity="many">%1$s، %2$d معاملة</item>
         <item quantity="other">%1$s، %2$d معاملة</item>
     </plurals>
+    <string name="hint_not_exclude_wallet">إظهار هذه المحفظة ضمن الإجمالي</string>
+    <string name="hint_category_rule_pattern">النص المطلوب البحث عنه</string>
+    <string name="hint_show_category_report">إظهار هذا التصنيف ضمن التقارير</string>
+    <string name="hint_show_category_report_on">هذا التصنيف مشمول في التقارير</string>
+    <string name="hint_show_category_report_off">هذا التصنيف غير مشمول في التقارير</string>
+    <string name="hint_show_category_report_off_parent">هذا التصنيف غير مشمول في التقارير لأن التصنيف %1$s غير مشمول.</string>
+    <string name="hint_show_in_total">إظهار ضمن إجمالي المحافظ</string>
+    <string name="hint_recurrence_invalid">تكرار غير صالح</string>
+    <string name="hint_budget_repeat">تكرار هذه الميزانية</string>
+    <string name="hint_category_budgets">ميزانيات التصنيفات</string>
+    <string name="hint_budget_follow_category_budgets">استخدام ميزانيات التصنيفات التابعة كحد لهذه الميزانية</string>
+    <string name="message_budget_period_superseded">انتقلت هذه الميزانية إلى فترة لاحقة منذ فتحها، لذلك أصبحت هذه الفترة جزءاً من سجلها ولا يمكن ضبطها للتكرار. افتح الفترة الأحدث بدلاً من ذلك.</string>
+    <string name="error_input_invalid_budget_recurrence">هذا التكرار لا يتكرر، لذلك لا يمكن استخدامه لتحديد مدة الفترة.</string>
+    <string name="hint_split_add_part">إضافة جزء</string>
+    <string name="hint_split_remaining">المتبقي ضمن %1$s</string>
+    <string name="split_part">%1$s، %2$s</string>
+    <string name="split_part_with_note">%1$s، %2$s، %3$s</string>
+    <string name="split_remainder">%1$s، %2$s، بقية الإجمالي</string>
+    <string name="split_not_counted">لن يتم احتساب هذه الأجزاء حتى يتم تثبيتها في المحرر.</string>
+    <string name="hint_tax">الضريبة</string>
+    <string name="hint_net_incomes">صافي الإيرادات</string>
+    <string name="hint_size_unknown">الحجم غير معروف</string>
+    <string name="hint_address_unknown">العنوان غير معروف</string>
+    <string name="hint_export_optional_columns">أعمدة اختيارية</string>
+    <string name="hint_export_unique_wallet">دمج معاملات المحافظ المختلفة</string>
+    <string name="hint_export_csv_no_transfers">لا يتم تضمين طرفي التحويل في ملف CSV، لأن الملف لا يوضح أي صفين يمثلان تحويلاً واحداً. تُدرج رسوم التحويل، بينما تتضمن التنسيقات الأخرى التحويلات كاملة.</string>
+    <string name="csv_import_mapping_intro">لم يتم إنشاء هذا الملف بواسطة Tallybook. اختر العمود الذي يحتوي على كل حقل.</string>
+    <string name="csv_import_date_column">عمود التاريخ</string>
+    <string name="csv_import_amount_column">عمود المبلغ</string>
+    <string name="csv_import_description_column">عمود الوصف</string>
+    <string name="csv_import_note_column">عمود الملاحظة</string>
+    <string name="csv_import_category_column">عمود التصنيف</string>
+    <string name="csv_import_date_format">تنسيق التاريخ</string>
+    <string name="error_wallet_currency_not_consistent">لا يمكنك نقل هذه المحفظة إلا إلى محفظة تستخدم العملة الحالية أو إحدى العملات المستخدمة في معاملاتها.</string>
+    <string name="error_wallet_currency_has_split_repayment">يوجد دين أو مبلغ مستحق وأحد أقساط سداده في محافظ مختلفة، وإحدى هذه المحافظ هي هذه المحفظة. انقل القسط إلى محفظة الدين أو احذفه، ثم غيّر العملة.</string>
+    <string name="error_wallet_currency_has_split_saving">يوجد هدف ادخار وبعض إيداعاته أو سحوباته في محافظ مختلفة، وإحدى هذه المحافظ هي هذه المحفظة. انقل الهدف إلى المحفظة التي تحتوي على تلك العمليات، أو احذف العمليات الموجودة في المحفظة الأخرى، ثم غيّر العملة.</string>
+    <string name="error_debt_wallet_currency_not_consistent">سيؤدي هذا الإجراء إلى نقل الدين إلى محفظة تستخدم عملة مختلفة عن عملة مدفوعاته.</string>
+    <string name="message_multiply_currency_decimals">يجب تحديث المبالغ في قاعدة البيانات لتتوافق مع عدد المنازل العشرية الجديد. قد تستغرق العملية بعض الوقت. يمكنك تخطي التحديث، لكن ستُعرض المبالغ بعد التغيير مقسومة على %d.</string>
+    <string name="message_divide_currency_decimals">يجب تحديث المبالغ في قاعدة البيانات لتتوافق مع عدد المنازل العشرية الجديد. قد تستغرق العملية بعض الوقت. يمكنك تخطي التحديث، لكن ستُعرض المبالغ بعد التغيير مضروبة في %d. وإذا تم تحديث المبالغ فستُفقد بعض المعلومات عن أجزائها الكسرية الحالية.</string>
+    <string name="message_error_legacy_upgrade_failed">حدث خطأ أثناء تحديث قاعدة البيانات الداخلية. يرجى إبلاغ المطور بهذه الرسالة. لا تحذف التطبيق حتى لا تفقد بياناتك. ستتم إعادتك إلى التطبيق للتحقق من وجود تلف في البيانات. رسالة الخطأ: %s</string>
+    <plurals name="message_error_delete_category_in_more_splits">
+        <item quantity="zero">لا توجد معاملات مقسمة أخرى تستخدم هذا التصنيف.</item>
+        <item quantity="one">تستخدمه معاملة مقسمة إضافية واحدة.</item>
+        <item quantity="two">تستخدمه معاملتان مقسمتان إضافيتان.</item>
+        <item quantity="few">تستخدمه %d معاملات مقسمة إضافية.</item>
+        <item quantity="many">تستخدمه %d معاملة مقسمة إضافية.</item>
+        <item quantity="other">تستخدمه %d معاملة مقسمة إضافية.</item>
+    </plurals>
+    <plurals name="message_delete_selected_transactions">
+        <item quantity="zero">لم يتم تحديد معاملات للحذف.</item>
+        <item quantity="one">سيتم حذف المعاملة المحددة.</item>
+        <item quantity="two">سيتم حذف المعاملتين المحددتين.</item>
+        <item quantity="few">سيتم حذف %d معاملات محددة.</item>
+        <item quantity="many">سيتم حذف %d معاملة محددة.</item>
+        <item quantity="other">سيتم حذف %d معاملة محددة.</item>
+    </plurals>
+    <plurals name="message_move_selected_transactions">
+        <item quantity="zero">لا توجد معاملات لنقلها.</item>
+        <item quantity="one">هل تريد نقل معاملة واحدة إلى %2$s؟</item>
+        <item quantity="two">هل تريد نقل معاملتين إلى %2$s؟</item>
+        <item quantity="few">هل تريد نقل %1$d معاملات إلى %2$s؟</item>
+        <item quantity="many">هل تريد نقل %1$d معاملة إلى %2$s؟</item>
+        <item quantity="other">هل تريد نقل %1$d معاملة إلى %2$s؟</item>
+    </plurals>
+    <plurals name="message_move_selected_transactions_other_currency">
+        <item quantity="zero">لا توجد معاملات بعملة مختلفة.</item>
+        <item quantity="one">معاملة واحدة منها بعملة أخرى. سيبقى مبلغها كما هو معروض دون تحويل.</item>
+        <item quantity="two">معاملتان منهما بعملة أخرى. ستبقى المبالغ كما هي معروضة دون تحويل.</item>
+        <item quantity="few">%d معاملات منها بعملة أخرى. ستبقى مبالغها كما هي معروضة دون تحويل.</item>
+        <item quantity="many">%d معاملة منها بعملة أخرى. ستبقى مبالغها كما هي معروضة دون تحويل.</item>
+        <item quantity="other">%d معاملة منها بعملة أخرى. ستبقى مبالغها كما هي معروضة دون تحويل.</item>
+    </plurals>
+    <plurals name="message_change_category_selected_transactions">
+        <item quantity="zero">لا توجد معاملات لتغيير تصنيفها.</item>
+        <item quantity="one">هل تريد تغيير تصنيف معاملة واحدة إلى %2$s؟</item>
+        <item quantity="two">هل تريد تغيير تصنيف معاملتين إلى %2$s؟</item>
+        <item quantity="few">هل تريد تغيير تصنيف %1$d معاملات إلى %2$s؟</item>
+        <item quantity="many">هل تريد تغيير تصنيف %1$d معاملة إلى %2$s؟</item>
+        <item quantity="other">هل تريد تغيير تصنيف %1$d معاملة إلى %2$s؟</item>
+    </plurals>
+    <plurals name="message_error_change_selected_transactions">
+        <item quantity="zero">لم تتعذر أي معاملة عن التعديل.</item>
+        <item quantity="one">تعذر تعديل معاملة واحدة. يتم تعديل التحويلات والديون والمدخرات من شاشاتها الخاصة.</item>
+        <item quantity="two">تعذر تعديل معاملتين. يتم تعديل التحويلات والديون والمدخرات من شاشاتها الخاصة.</item>
+        <item quantity="few">تعذر تعديل %d معاملات. يتم تعديل التحويلات والديون والمدخرات من شاشاتها الخاصة.</item>
+        <item quantity="many">تعذر تعديل %d معاملة. يتم تعديل التحويلات والديون والمدخرات من شاشاتها الخاصة.</item>
+        <item quantity="other">تعذر تعديل %d معاملة. يتم تعديل التحويلات والديون والمدخرات من شاشاتها الخاصة.</item>
+    </plurals>
+    <plurals name="message_error_change_split_transactions">
+        <item quantity="zero">لم تحتفظ أي معاملة مقسمة بتصنيفها بسبب تغيير النوع.</item>
+        <item quantity="one">احتفظت معاملة مقسمة واحدة بتصنيفها، لأن المعاملة المقسمة لا يمكن نقلها بين الدخل والمصروف.</item>
+        <item quantity="two">احتفظت معاملتان مقسمتان بتصنيفهما، لأن المعاملة المقسمة لا يمكن نقلها بين الدخل والمصروف.</item>
+        <item quantity="few">احتفظت %d معاملات مقسمة بتصنيفاتها، لأن المعاملة المقسمة لا يمكن نقلها بين الدخل والمصروف.</item>
+        <item quantity="many">احتفظت %d معاملة مقسمة بتصنيفها، لأن المعاملة المقسمة لا يمكن نقلها بين الدخل والمصروف.</item>
+        <item quantity="other">احتفظت %d معاملة مقسمة بتصنيفها، لأن المعاملة المقسمة لا يمكن نقلها بين الدخل والمصروف.</item>
+    </plurals>
+    <plurals name="description_split_categories">
+        <item quantity="zero">بدون تصنيفات</item>
+        <item quantity="one">تقسيم إلى تصنيف واحد</item>
+        <item quantity="two">تقسيم إلى تصنيفين</item>
+        <item quantity="few">تقسيم إلى %d تصنيفات</item>
+        <item quantity="many">تقسيم إلى %d تصنيفاً</item>
+        <item quantity="other">تقسيم إلى %d تصنيف</item>
+    </plurals>
 </resources>
