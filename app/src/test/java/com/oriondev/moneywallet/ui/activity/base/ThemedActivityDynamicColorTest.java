@@ -51,7 +51,7 @@ import static org.robolectric.Shadows.shadowOf;
 @RunWith(RobolectricTestRunner.class)
 public class ThemedActivityDynamicColorTest {
 
-    private static final int STATIC_COLOR_PRIMARY = 0xFF24389C;
+    private static final int STATIC_COLOR_PRIMARY = 0xFF006C50;
     private static final int GREEN = 0xFF2E7D32;
 
     private final List<ActivityController<?>> mControllers = new ArrayList<>();
