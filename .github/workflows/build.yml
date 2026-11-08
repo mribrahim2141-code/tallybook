@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, feat/arabic-rtl-emerald-glass ]
   pull_request:
 
 permissions:
