@@ -30,12 +30,24 @@
         android:orientation="vertical"
         android:descendantFocusability="blocksDescendants">
 
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/view_pie_chart_height"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="@dimen/view_pie_chart_margin_top"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="@dimen/view_pie_chart_margin_bottom"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="4dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
+
         <androidx.viewpager.widget.ViewPager
             android:id="@+id/chart_view_pager"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/view_pie_chart_height"
-            android:layout_marginTop="@dimen/view_pie_chart_margin_top"
-            android:layout_marginBottom="@dimen/view_pie_chart_margin_bottom">
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_glass_surface">
 
             <com.oriondev.moneywallet.ui.view.theme.ThemedViewPagerIndicator
                 android:id="@+id/view_pager_indicator"
@@ -46,6 +58,7 @@
                 app:tabPaddingEnd="0dp" />
 
         </androidx.viewpager.widget.ViewPager>
+        </com.google.android.material.card.MaterialCardView>
 
         <com.oriondev.moneywallet.ui.view.theme.ThemedRecyclerView
             app:systemBarInsetSides="@bool/panel_fills_window"
