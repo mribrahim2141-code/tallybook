@@ -143,7 +143,7 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
                             int direction = cursor.getInt(cursor.getColumnIndex(Contract.Transaction.DIRECTION));
                             String currency = cursor.getString(cursor.getColumnIndex(Contract.Transaction.WALLET_CURRENCY));
                             long money = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY));
-                            String categoryTag = cursor.getString(cursor.getColumnIndex(Contract.Transaction.CATEGORY_TAG));
+                            String categoryTag = cursor.getString(cursor.getColumnIndexOrThrow(Contract.Transaction.CATEGORY_TAG));
                             boolean incoming = direction == Contract.Direction.INCOME;
                             if (Contract.CategoryTag.TRANSFER.equals(categoryTag)) {
                                 currentPeriod.addTransfer(currency, money, incoming);
