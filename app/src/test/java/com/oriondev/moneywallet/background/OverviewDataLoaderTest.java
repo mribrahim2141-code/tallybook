@@ -9,6 +9,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.oriondev.moneywallet.model.Group;
 import com.oriondev.moneywallet.model.OverviewData;
+import com.oriondev.moneywallet.model.OverviewExpenseCategory;
 import com.oriondev.moneywallet.model.OverviewSetting;
 import com.oriondev.moneywallet.model.PeriodMoney;
 import com.oriondev.moneywallet.storage.database.Contract;
@@ -28,6 +29,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verifies that overview totals agree with the detailed period summary: transfer principal is
@@ -86,6 +88,73 @@ public class OverviewDataLoaderTest {
 
         assertEquals(100L, data.getTotalBalance().getMoney("EUR"));
         assertEquals(200L, data.getTotalBalance().getMoney("USD"));
+    }
+
+    @Test
+    public void topExpenseCategoriesAggregateRankAndKeepCurrenciesSeparate() {
+        long eurWallet = insertWallet("EUR cash", "EUR", 0L, true);
+        long otherEurWallet = insertWallet("EUR savings", "EUR", 0L, true);
+        long usdWallet = insertWallet("USD cash", "USD", 0L, true);
+        PreferenceManager.setCurrentWallet(mContext, PreferenceManager.TOTAL_WALLET_ID);
+
+        long food = insertExpenseCategory("Food", true);
+        long rent = insertExpenseCategory("Rent", true);
+        long transport = insertExpenseCategory("Transport", true);
+        long health = insertExpenseCategory("Health", true);
+        long hidden = insertExpenseCategory("Hidden", false);
+        long fuel = insertExpenseCategory("Fuel", true);
+
+        insertExpense(eurWallet, food, 100L);
+        insertExpense(eurWallet, food, 50L);
+        insertExpense(eurWallet, rent, 200L);
+        insertExpense(eurWallet, transport, 75L);
+        insertExpense(eurWallet, health, 50L);
+        insertExpense(eurWallet, hidden, 900L);
+        insertExpense(usdWallet, fuel, 500L);
+        // Transfer principal is not spending and must not appear among expense categories.
+        insertTransfer(eurWallet, otherEurWallet, 1000L, 0L);
+
+        OverviewData data = loadOverview(OverviewSetting.CashFlow.NET_INCOMES);
+        java.util.List<OverviewExpenseCategory> top = data.getTopExpenseCategories();
+
+        assertEquals("top three for EUR followed by the independent USD ranking", 4, top.size());
+        assertEquals(rent, top.get(0).getCategoryId());
+        assertEquals(200L, top.get(0).getAmount());
+        assertEquals("EUR", top.get(0).getCurrency());
+        assertEquals(food, top.get(1).getCategoryId());
+        assertEquals(150L, top.get(1).getAmount());
+        assertEquals(transport, top.get(2).getCategoryId());
+        assertEquals(75L, top.get(2).getAmount());
+        assertEquals(fuel, top.get(3).getCategoryId());
+        assertEquals(500L, top.get(3).getAmount());
+        assertEquals("USD", top.get(3).getCurrency());
+        for (OverviewExpenseCategory category : top) {
+            assertTrue("hidden categories and transfer principal must not be ranked",
+                    category.getCategoryId() != hidden);
+        }
+    }
+
+    private long insertExpenseCategory(String name, boolean showReport) {
+        ContentValues values = new ContentValues();
+        values.put(Contract.Category.NAME, name);
+        values.put(Contract.Category.ICON, ICON);
+        values.put(Contract.Category.TYPE, Contract.CategoryType.EXPENSE.getValue());
+        values.put(Contract.Category.SHOW_REPORT, showReport);
+        return ContentUris.parseId(mResolver.insert(DataContentProvider.CONTENT_CATEGORIES, values));
+    }
+
+    private void insertExpense(long walletId, long categoryId, long money) {
+        ContentValues values = new ContentValues();
+        values.put(Contract.Transaction.MONEY, money);
+        values.put(Contract.Transaction.DATE, midMonth());
+        values.put(Contract.Transaction.DESCRIPTION, "Expense");
+        values.put(Contract.Transaction.CATEGORY_ID, categoryId);
+        values.put(Contract.Transaction.DIRECTION, Contract.Direction.EXPENSE);
+        values.put(Contract.Transaction.TYPE, NewEditTransactionActivity.TYPE_STANDARD);
+        values.put(Contract.Transaction.WALLET_ID, walletId);
+        values.put(Contract.Transaction.CONFIRMED, true);
+        values.put(Contract.Transaction.COUNT_IN_TOTAL, true);
+        mResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS, values);
     }
 
     private OverviewData loadOverview(OverviewSetting.CashFlow cashFlow) {
