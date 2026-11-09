@@ -200,19 +200,20 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
                 lineEntryList.add(new Entry(i, value));
                 radarEntryList.add(new RadarEntry(value));
             }
-            // generate one data set for each chart
+            // Keep one stable color for this currency across all three chart types.
+            int color = COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length];
             BarDataSet barDataSet = new BarDataSet(barEntryList, currency);
-            barDataSet.setColor(COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length]);
+            barDataSet.setColor(color);
             barDataSets.add(barDataSet);
             LineDataSet lineDataSet = new LineDataSet(lineEntryList, currency);
-            lineDataSet.setColor(COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length]);
-            lineDataSet.setCircleColor(COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length]);
+            lineDataSet.setColor(color);
+            lineDataSet.setCircleColor(color);
             lineDataSet.setCircleRadius(0.3f);
             lineDataSet.setLineWidth(1f);
             lineDataSets.add(lineDataSet);
             RadarDataSet radarDataSet = new RadarDataSet(radarEntryList, currency);
-            radarDataSet.setColor(COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length]);
-            radarDataSet.setFillColor(COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length]);
+            radarDataSet.setColor(color);
+            radarDataSet.setFillColor(color);
             radarDataSet.setDrawFilled(true);
             radarDataSets.add(radarDataSet);
         }

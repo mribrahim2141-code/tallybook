@@ -126,6 +126,30 @@ public class OverviewDataLoaderTest {
     }
 
     @Test
+    public void chartTypesKeepTheSameColorForEachCurrency() {
+        long eurWallet = insertWallet("EUR cash", "EUR", 0L, true);
+        long usdWallet = insertWallet("USD cash", "USD", 0L, true);
+        PreferenceManager.setCurrentWallet(mContext, PreferenceManager.TOTAL_WALLET_ID);
+        insertIncome(eurWallet, 100L);
+        insertIncome(usdWallet, 200L);
+
+        OverviewData data = loadOverview(OverviewSetting.CashFlow.NET_INCOMES);
+
+        assertEquals(2, data.getBarData().getDataSetCount());
+        assertEquals(2, data.getLineData().getDataSetCount());
+        assertEquals(2, data.getRadarData().getDataSetCount());
+        for (int i = 0; i < 2; i++) {
+            int color = data.getBarData().getDataSetByIndex(i).getColor();
+            assertEquals(color, data.getLineData().getDataSetByIndex(i).getColor());
+            assertEquals(color, data.getRadarData().getDataSetByIndex(i).getColor());
+            assertEquals(data.getBarData().getDataSetByIndex(i).getLabel(),
+                    data.getLineData().getDataSetByIndex(i).getLabel());
+            assertEquals(data.getBarData().getDataSetByIndex(i).getLabel(),
+                    data.getRadarData().getDataSetByIndex(i).getLabel());
+        }
+    }
+
+    @Test
     public void totalWalletBalanceKeepsCurrenciesSeparateAndHonorsWalletInclusion() {
         insertWallet("Cash EUR", "EUR", 100L, true);
         insertWallet("Cash USD", "USD", 200L, true);
