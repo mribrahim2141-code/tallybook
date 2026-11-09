@@ -78,15 +78,15 @@ public class ReportLoaderSourceTest {
 
     /**
      * The count is the assertion, not the presence. OverviewDataLoader appends it on the incomes
-     * chart and again on the expenses chart, so one branch losing it while the other keeps it is
-     * what a presence check would miss.
+     * chart, the expenses chart, and the top-expense-categories query, so one branch losing it
+     * while the others keep it is what a presence check would miss.
      */
     @Test
     public void everyScreenThatSumsOneDirectionHoldsTransfersOut() {
         assertEquals("a chart that stops filtering on NOT_TRANSFER plots both halves of a "
-                + "transfer as money earned and money spent, and disagrees with the header on "
-                + "the transactions list: OverviewDataLoader",
-                2, countOf(NOT_TRANSFER, readSource("OverviewDataLoader")));
+                + "transfer as money earned and money spent, or as a top expense category, and "
+                + "disagrees with the header on the transactions list: OverviewDataLoader",
+                3, countOf(NOT_TRANSFER, readSource("OverviewDataLoader")));
         assertEquals("a tab that stops filtering on NOT_TRANSFER counts both halves of a "
                 + "transfer into its total and onto its pie, and disagrees with the header on "
                 + "the transactions list: PeriodDetailFlowLoader",
