@@ -72,6 +72,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
     private View mComparisonContainer;
     private TextView mIncomeChangeTextView;
     private TextView mExpenseChangeTextView;
+    private View mTopExpensesContainer;
+    private TextView mTopExpensesTextView;
 
     private BroadcastReceiver mBroadcastReceiver;
 
@@ -99,6 +101,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         mComparisonContainer = view.findViewById(R.id.summary_comparison_container);
         mIncomeChangeTextView = view.findViewById(R.id.summary_income_change_value);
         mExpenseChangeTextView = view.findViewById(R.id.summary_expense_change_value);
+        mTopExpensesContainer = view.findViewById(R.id.summary_top_expenses_container);
+        mTopExpensesTextView = view.findViewById(R.id.summary_top_expenses_value);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         // initialize adapters
         mViewPagerAdapter = new OverviewChartViewPagerAdapter();
@@ -163,6 +167,18 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
                 data.getTotalExpenses(), MoneyFormatter.TintMode.EXPENSE));
         mNetSummaryTextView.setText(formatter.getTintedString(data.getTotalNetIncomes()));
         mBalanceSummaryTextView.setText(formatter.getTintedString(data.getTotalBalance()));
+        StringBuilder topExpenses = new StringBuilder();
+        for (com.oriondev.moneywallet.model.OverviewExpenseCategory category : data.getTopExpenseCategories()) {
+            if (topExpenses.length() > 0) {
+                topExpenses.append('\\n');
+            }
+            topExpenses.append(getString(R.string.overview_top_expense_item,
+                    category.getCurrency(), category.getName(),
+                    formatter.getNotTintedString(new com.oriondev.moneywallet.model.Money(
+                            category.getCurrency(), category.getAmount()))));
+        }
+        mTopExpensesTextView.setText(topExpenses.toString());
+        mTopExpensesContainer.setVisibility(topExpenses.length() > 0 ? View.VISIBLE : View.GONE);
         boolean hasPreviousPeriod = data.getPeriodCount() > 1;
         mComparisonContainer.setVisibility(hasPreviousPeriod ? View.VISIBLE : View.GONE);
         if (hasPreviousPeriod) {

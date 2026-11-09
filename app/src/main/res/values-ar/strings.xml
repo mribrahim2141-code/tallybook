@@ -922,4 +922,6 @@
     <string name="overview_comparison_title">التغير عن الفترة السابقة</string>
     <string name="overview_comparison_income">تغير الدخل</string>
     <string name="overview_comparison_expense">تغير المصروفات</string>
+    <string name="overview_top_expenses_title">أكثر التصنيفات إنفاقاً</string>
+    <string name="overview_top_expense_item">%1$s • %2$s: %3$s</string>
 </resources>

@@ -40,6 +40,7 @@ import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Money;
 import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.model.OverviewData;
+import com.oriondev.moneywallet.model.OverviewExpenseCategory;
 import com.oriondev.moneywallet.model.OverviewSetting;
 import com.oriondev.moneywallet.model.PeriodMoney;
 import com.oriondev.moneywallet.storage.database.Contract;
@@ -49,6 +50,10 @@ import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.DateUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -232,8 +237,100 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
         }
         // return generated data
         Money totalBalance = loadWalletBalance();
+        List<OverviewExpenseCategory> topExpenseCategories = loadTopExpenseCategories();
         return new OverviewData(barData, lineData, radarData, periodMoneyList,
-                totalIncomes, totalExpenses, totalNetIncomes, totalTransfers, totalBalance);
+                totalIncomes, totalExpenses, totalNetIncomes, totalTransfers, totalBalance,
+                topExpenseCategories);
+    }
+
+
+    /**
+     * Ranks expense categories independently for each currency. Amounts in different currencies
+     * are never compared or combined, and the same report filters as the period detail are used.
+     */
+    private List<OverviewExpenseCategory> loadTopExpenseCategories() {
+        Map<String, Map<Long, OverviewExpenseCategory>> byCurrency = new HashMap<>();
+        String[] projection = new String[] {
+                Contract.Transaction.CATEGORY_ID,
+                Contract.Transaction.CATEGORY_NAME,
+                Contract.Transaction.MONEY,
+                Contract.Transaction.WALLET_CURRENCY
+        };
+        long currentWallet = PreferenceManager.getCurrentWallet();
+        String selection;
+        String[] selectionArgs;
+        if (currentWallet == PreferenceManager.TOTAL_WALLET_ID) {
+            selection = Contract.Transaction.WALLET_COUNT_IN_TOTAL + " = 1";
+            selectionArgs = null;
+        } else {
+            selection = Contract.Transaction.WALLET_ID + " = ?";
+            selectionArgs = new String[] {String.valueOf(currentWallet)};
+        }
+        selection += " AND " + Contract.Transaction.CONFIRMED + " = '1' AND "
+                + Contract.Transaction.COUNT_IN_TOTAL + " = '1'";
+        selection += " AND " + Contract.Transaction.REPORT_FILTER;
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('now', 'localtime')";
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") >= DATETIME('"
+                + DateUtils.getSQLDateTimeString(mOverviewSetting.getStartDate()) + "')";
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('"
+                + DateUtils.getSQLDateTimeString(mOverviewSetting.getEndDate()) + "')";
+        selection += " AND " + Contract.Transaction.DIRECTION + " = "
+                + Contract.Direction.EXPENSE + " AND " + Contract.Transaction.NOT_TRANSFER;
+
+        Cursor cursor = getContext().getContentResolver().query(
+                DataContentProvider.CONTENT_CATEGORY_LINES, projection, selection, selectionArgs,
+                Contract.Transaction.CATEGORY_ID);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    long categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(
+                            Contract.Transaction.CATEGORY_ID));
+                    String name = cursor.getString(cursor.getColumnIndexOrThrow(
+                            Contract.Transaction.CATEGORY_NAME));
+                    String currency = cursor.getString(cursor.getColumnIndexOrThrow(
+                            Contract.Transaction.WALLET_CURRENCY));
+                    long amount = cursor.getLong(cursor.getColumnIndexOrThrow(
+                            Contract.Transaction.MONEY));
+                    Map<Long, OverviewExpenseCategory> categories = byCurrency.get(currency);
+                    if (categories == null) {
+                        categories = new HashMap<>();
+                        byCurrency.put(currency, categories);
+                    }
+                    OverviewExpenseCategory category = categories.get(categoryId);
+                    if (category == null) {
+                        categories.put(categoryId, new OverviewExpenseCategory(
+                                categoryId, name, currency, amount));
+                    } else {
+                        category.addAmount(amount);
+                    }
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+
+        List<String> currencies = new ArrayList<>(byCurrency.keySet());
+        Collections.sort(currencies);
+        List<OverviewExpenseCategory> result = new ArrayList<>();
+        for (String currency : currencies) {
+            List<OverviewExpenseCategory> categories = new ArrayList<>(
+                    byCurrency.get(currency).values());
+            Collections.sort(categories, new Comparator<OverviewExpenseCategory>() {
+                @Override
+                public int compare(OverviewExpenseCategory left, OverviewExpenseCategory right) {
+                    int amountOrder = Long.compare(right.getAmount(), left.getAmount());
+                    if (amountOrder != 0) {
+                        return amountOrder;
+                    }
+                    String leftName = left.getName() == null ? "" : left.getName();
+                    String rightName = right.getName() == null ? "" : right.getName();
+                    return String.CASE_INSENSITIVE_ORDER.compare(leftName, rightName);
+                }
+            });
+            for (int i = 0; i < Math.min(3, categories.size()); i++) {
+                result.add(categories.get(i));
+            }
+        }
+        return result;
     }
 
     /**

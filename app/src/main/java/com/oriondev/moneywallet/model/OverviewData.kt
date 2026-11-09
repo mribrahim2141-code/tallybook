@@ -22,6 +22,7 @@ package com.oriondev.moneywallet.model
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.RadarData
+import com.oriondev.moneywallet.model.OverviewExpenseCategory
 
 /**
  * The chart series and the currency-aware totals used by the overview summary.
@@ -37,6 +38,7 @@ class OverviewData {
     private val mTotalNetIncomes: Money
     private val mTotalTransfers: Money
     private val mTotalBalance: Money
+    private val mTopExpenseCategories: List<OverviewExpenseCategory>
 
     constructor(barData: BarData?, lineData: LineData?, radarData: RadarData?, periodMoneyList: MutableList<PeriodMoney>) :
             this(barData, lineData, radarData, periodMoneyList, Money(), Money(), Money(), Money(), Money())
@@ -51,6 +53,20 @@ class OverviewData {
             totalNetIncomes: Money,
             totalTransfers: Money,
             totalBalance: Money
+    ) : this(barData, lineData, radarData, periodMoneyList, totalIncomes, totalExpenses,
+            totalNetIncomes, totalTransfers, totalBalance, emptyList())
+
+    constructor(
+            barData: BarData?,
+            lineData: LineData?,
+            radarData: RadarData?,
+            periodMoneyList: MutableList<PeriodMoney>,
+            totalIncomes: Money,
+            totalExpenses: Money,
+            totalNetIncomes: Money,
+            totalTransfers: Money,
+            totalBalance: Money,
+            topExpenseCategories: List<OverviewExpenseCategory>
     ) {
         mBarData = barData
         mLineData = lineData
@@ -61,6 +77,7 @@ class OverviewData {
         mTotalNetIncomes = totalNetIncomes
         mTotalTransfers = totalTransfers
         mTotalBalance = totalBalance
+        mTopExpenseCategories = topExpenseCategories
     }
 
     fun getBarData(): BarData? = mBarData
@@ -82,6 +99,8 @@ class OverviewData {
     fun getTotalTransfers(): Money = mTotalTransfers
 
     fun getTotalBalance(): Money = mTotalBalance
+
+    fun getTopExpenseCategories(): List<OverviewExpenseCategory> = mTopExpenseCategories
 
     /**
      * Difference between the newest and preceding visible periods, kept separately by currency.
