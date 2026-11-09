@@ -179,7 +179,12 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         }
         mTopExpensesTextView.setText(topExpenses.toString());
         mTopExpensesContainer.setVisibility(topExpenses.length() > 0 ? View.VISIBLE : View.GONE);
-        boolean hasPreviousPeriod = data.getPeriodCount() > 1;
+        // PeriodMoney follows the selected chart filter. The comparison shows both income and
+        // expense changes, so it is only meaningful when the chart includes the complete net flow.
+        OverviewSetting currentSetting = mOverviewSettingPicker.getCurrentSettings();
+        boolean hasCompletePeriodData = currentSetting.getType() == OverviewSetting.Type.CASH_FLOW
+                && currentSetting.getCashFlow() == OverviewSetting.CashFlow.NET_INCOMES;
+        boolean hasPreviousPeriod = data.getPeriodCount() > 1 && hasCompletePeriodData;
         mComparisonContainer.setVisibility(hasPreviousPeriod ? View.VISIBLE : View.GONE);
         if (hasPreviousPeriod) {
             formatter.applyNotTinted(mIncomeChangeTextView, data.getLatestIncomeChange());
