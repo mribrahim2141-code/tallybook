@@ -14,6 +14,7 @@ import com.oriondev.moneywallet.model.OverviewSetting;
 import com.oriondev.moneywallet.model.PeriodMoney;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.storage.database.SplitPartsCodec;
 import com.oriondev.moneywallet.storage.database.TestDatabases;
 import com.oriondev.moneywallet.storage.database.TransferContentValuesBuilder;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
@@ -25,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -134,6 +136,32 @@ public class OverviewDataLoaderTest {
         }
     }
 
+    @Test
+    public void topExpenseCategoriesCountSplitPartsAndMainCategoryRemainder() {
+        long wallet = insertWallet("Split expenses", "EUR", 0L, true);
+        PreferenceManager.setCurrentWallet(mContext, PreferenceManager.TOTAL_WALLET_ID);
+
+        long main = insertExpenseCategory("Other", true);
+        long food = insertExpenseCategory("Food", true);
+        long health = insertExpenseCategory("Health", true);
+
+        // The transaction total is 1,000: 600 belongs to Food, 300 to Health,
+        // and the remaining 100 stays under its main category, Other.
+        insertSplitExpense(wallet, main, 1000L, food, 600L, health, 300L);
+        insertExpense(wallet, food, 100L);
+
+        java.util.List<OverviewExpenseCategory> top =
+                loadOverview(OverviewSetting.CashFlow.NET_INCOMES).getTopExpenseCategories();
+
+        assertEquals(3, top.size());
+        assertEquals(food, top.get(0).getCategoryId());
+        assertEquals(700L, top.get(0).getAmount());
+        assertEquals(health, top.get(1).getCategoryId());
+        assertEquals(300L, top.get(1).getAmount());
+        assertEquals(main, top.get(2).getCategoryId());
+        assertEquals(100L, top.get(2).getAmount());
+    }
+
     private long insertExpenseCategory(String name, boolean showReport) {
         ContentValues values = new ContentValues();
         values.put(Contract.Category.NAME, name);
@@ -141,6 +169,25 @@ public class OverviewDataLoaderTest {
         values.put(Contract.Category.TYPE, Contract.CategoryType.EXPENSE.getValue());
         values.put(Contract.Category.SHOW_REPORT, showReport);
         return ContentUris.parseId(mResolver.insert(DataContentProvider.CONTENT_CATEGORIES, values));
+    }
+
+    private void insertSplitExpense(long walletId, long mainCategoryId, long total,
+                                    long firstCategoryId, long firstAmount,
+                                    long secondCategoryId, long secondAmount) {
+        ContentValues values = new ContentValues();
+        values.put(Contract.Transaction.MONEY, total);
+        values.put(Contract.Transaction.DATE, midMonth());
+        values.put(Contract.Transaction.DESCRIPTION, "Split expense");
+        values.put(Contract.Transaction.CATEGORY_ID, mainCategoryId);
+        values.put(Contract.Transaction.DIRECTION, Contract.Direction.EXPENSE);
+        values.put(Contract.Transaction.TYPE, NewEditTransactionActivity.TYPE_STANDARD);
+        values.put(Contract.Transaction.WALLET_ID, walletId);
+        values.put(Contract.Transaction.CONFIRMED, true);
+        values.put(Contract.Transaction.COUNT_IN_TOTAL, true);
+        values.put(Contract.Transaction.SPLIT_PARTS, SplitPartsCodec.encode(Arrays.asList(
+                new SplitPartsCodec.Part(firstCategoryId, firstAmount, null),
+                new SplitPartsCodec.Part(secondCategoryId, secondAmount, null))));
+        mResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS, values);
     }
 
     private void insertExpense(long walletId, long categoryId, long money) {
