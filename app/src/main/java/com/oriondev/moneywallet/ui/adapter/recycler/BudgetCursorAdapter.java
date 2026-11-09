@@ -66,7 +66,7 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
         if (target <= 0L || progress <= 0L) {
             return 0;
         }
-        return (int) Math.min(100L, Math.round((double) progress * 100d / (double) target));
+        return (int) Math.min((long) Integer.MAX_VALUE, Math.round((double) progress * 100d / (double) target));
     }
 
     private final ActionListener mActionListener;
@@ -131,11 +131,11 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
             mMoneyFormatter.applyNotTinted(holder.mAvailableTextView, currency, difference);
         }
         if (overTarget) {
-            holder.mUsageTextView.setText(context.getString(R.string.budget_usage_exceeded, usagePercent));
+            holder.mUsageTextView.setText(holder.getContext().getString(R.string.budget_usage_exceeded, usagePercent));
         } else if (usagePercent >= 80) {
-            holder.mUsageTextView.setText(context.getString(R.string.budget_usage_near_limit, usagePercent));
+            holder.mUsageTextView.setText(holder.getContext().getString(R.string.budget_usage_near_limit, usagePercent));
         } else {
-            holder.mUsageTextView.setText(context.getString(R.string.budget_usage_percent, usagePercent));
+            holder.mUsageTextView.setText(holder.getContext().getString(R.string.budget_usage_percent, usagePercent));
         }
         // check if budget is expired
         Context context = holder.mDateTextView.getContext();
