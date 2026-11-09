@@ -945,4 +945,7 @@
 
     <string name="overview_summary_title">Selected period summary</string>
     <string name="overview_summary_balance">Current balance</string>
+    <string name="overview_comparison_title">Change vs previous period</string>
+    <string name="overview_comparison_income">Income change</string>
+    <string name="overview_comparison_expense">Expense change</string>
 </resources>

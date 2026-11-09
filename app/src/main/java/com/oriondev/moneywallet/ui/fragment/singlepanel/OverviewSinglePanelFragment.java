@@ -69,6 +69,9 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
     private TextView mExpenseSummaryTextView;
     private TextView mNetSummaryTextView;
     private TextView mBalanceSummaryTextView;
+    private View mComparisonContainer;
+    private TextView mIncomeChangeTextView;
+    private TextView mExpenseChangeTextView;
 
     private BroadcastReceiver mBroadcastReceiver;
 
@@ -93,6 +96,9 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         mExpenseSummaryTextView = view.findViewById(R.id.summary_expense_value);
         mNetSummaryTextView = view.findViewById(R.id.summary_net_value);
         mBalanceSummaryTextView = view.findViewById(R.id.summary_balance_value);
+        mComparisonContainer = view.findViewById(R.id.summary_comparison_container);
+        mIncomeChangeTextView = view.findViewById(R.id.summary_income_change_value);
+        mExpenseChangeTextView = view.findViewById(R.id.summary_expense_change_value);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         // initialize adapters
         mViewPagerAdapter = new OverviewChartViewPagerAdapter();
@@ -157,6 +163,12 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
                 data.getTotalExpenses(), MoneyFormatter.TintMode.EXPENSE));
         mNetSummaryTextView.setText(formatter.getTintedString(data.getTotalNetIncomes()));
         mBalanceSummaryTextView.setText(formatter.getTintedString(data.getTotalBalance()));
+        boolean hasPreviousPeriod = data.getPeriodCount() > 1;
+        mComparisonContainer.setVisibility(hasPreviousPeriod ? View.VISIBLE : View.GONE);
+        if (hasPreviousPeriod) {
+            formatter.applyNotTinted(mIncomeChangeTextView, data.getLatestIncomeChange());
+            formatter.applyNotTinted(mExpenseChangeTextView, data.getLatestExpenseChange());
+        }
     }
 
     @Override

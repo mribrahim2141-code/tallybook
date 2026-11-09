@@ -82,4 +82,30 @@ class OverviewData {
     fun getTotalTransfers(): Money = mTotalTransfers
 
     fun getTotalBalance(): Money = mTotalBalance
+
+    /**
+     * Difference between the newest and preceding visible periods, kept separately by currency.
+     * An empty result is returned when the overview contains fewer than two periods.
+     */
+    fun getLatestIncomeChange(): Money {
+        val change = Money()
+        if (mPeriodMoneyList.size >= 2) {
+            val current = mPeriodMoneyList[mPeriodMoneyList.size - 1]
+            val previous = mPeriodMoneyList[mPeriodMoneyList.size - 2]
+            change.addMoney(current.getIncomes())
+            change.removeMoney(previous.getIncomes())
+        }
+        return change
+    }
+
+    fun getLatestExpenseChange(): Money {
+        val change = Money()
+        if (mPeriodMoneyList.size >= 2) {
+            val current = mPeriodMoneyList[mPeriodMoneyList.size - 1]
+            val previous = mPeriodMoneyList[mPeriodMoneyList.size - 2]
+            change.addMoney(current.getExpenses())
+            change.removeMoney(previous.getExpenses())
+        }
+        return change
+    }
 }
