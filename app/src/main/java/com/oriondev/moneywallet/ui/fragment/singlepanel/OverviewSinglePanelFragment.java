@@ -170,7 +170,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         StringBuilder topExpenses = new StringBuilder();
         for (com.oriondev.moneywallet.model.OverviewExpenseCategory category : data.getTopExpenseCategories()) {
             if (topExpenses.length() > 0) {
-                topExpenses.append('\\n');
+                topExpenses.append('\n');
             }
             topExpenses.append(getString(R.string.overview_top_expense_item,
                     category.getCurrency(), category.getName(),
