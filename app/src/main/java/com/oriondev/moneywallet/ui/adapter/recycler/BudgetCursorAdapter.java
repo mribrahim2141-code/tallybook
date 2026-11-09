@@ -62,6 +62,13 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
 
     private MoneyFormatter mMoneyFormatter;
 
+    static int calculateUsagePercent(long target, long progress) {
+        if (target <= 0L || progress <= 0L) {
+            return 0;
+        }
+        return (int) Math.min(100L, Math.round((double) progress * 100d / (double) target));
+    }
+
     private final ActionListener mActionListener;
 
     public BudgetCursorAdapter(ActionListener actionListener) {
@@ -112,9 +119,24 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
         holder.mProgressBar.setMaxValue(target);
         holder.mProgressBar.setProgressValue(progress);
         long difference = Math.max(target - progress, 0L);
+        boolean overTarget = progress > target;
+        int usagePercent = calculateUsagePercent(target, progress);
         // fill the views
         mMoneyFormatter.applyNotTinted(holder.mUsedTextView, currency, progress);
-        mMoneyFormatter.applyNotTinted(holder.mAvailableTextView, currency, difference);
+        if (overTarget) {
+            holder.mAvailableHeaderTextView.setText(R.string.budget_over_by);
+            mMoneyFormatter.applyNotTinted(holder.mAvailableTextView, currency, progress - target);
+        } else {
+            holder.mAvailableHeaderTextView.setText(R.string.adapter_available_money);
+            mMoneyFormatter.applyNotTinted(holder.mAvailableTextView, currency, difference);
+        }
+        if (overTarget) {
+            holder.mUsageTextView.setText(context.getString(R.string.budget_usage_exceeded, usagePercent));
+        } else if (usagePercent >= 80) {
+            holder.mUsageTextView.setText(context.getString(R.string.budget_usage_near_limit, usagePercent));
+        } else {
+            holder.mUsageTextView.setText(context.getString(R.string.budget_usage_percent, usagePercent));
+        }
         // check if budget is expired
         Context context = holder.mDateTextView.getContext();
         Date endDate = DateUtils.getDateFromSQLDateString(cursor.getString(mIndexEndDate));
@@ -142,6 +164,8 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
         private MaterialProgressBar mProgressBar;
         private TextView mUsedTextView;
         private TextView mAvailableTextView;
+        private TextView mAvailableHeaderTextView;
+        private TextView mUsageTextView;
         private TextView mDateTextView;
 
         /*package-local*/ ViewHolder(View itemView) {
@@ -152,6 +176,8 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
             mProgressBar = itemView.findViewById(R.id.progress_bar);
             mUsedTextView = itemView.findViewById(R.id.used_body_text_view);
             mAvailableTextView = itemView.findViewById(R.id.available_body_text_view);
+            mAvailableHeaderTextView = itemView.findViewById(R.id.available_header_text_view);
+            mUsageTextView = itemView.findViewById(R.id.budget_usage_text_view);
             mDateTextView = itemView.findViewById(R.id.date_text_view);
             itemView.setOnClickListener(this);
         }
