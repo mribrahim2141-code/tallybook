@@ -291,6 +291,10 @@
     <string name="adapter_needed_money">المطلوب:</string>
     <string name="adapter_used_money">المستخدم:</string>
     <string name="adapter_available_money">المتاح:</string>
+    <string name="budget_over_by">مقدار التجاوز:</string>
+    <string name="budget_usage_percent">المستخدم %1$d%%</string>
+    <string name="budget_usage_near_limit">اقتربت من الحد · استُهلك %1$d%%</string>
+    <string name="budget_usage_exceeded">تم تجاوز الحد · استُهلك %1$d%%</string>
     <string name="adapter_tax_money">الضريبة:</string>
     <string name="header_debts_to_pay">مبالغ عليك سدادها:</string>
     <string name="header_debts_to_receive">مبالغ لك تحصيلها:</string>
