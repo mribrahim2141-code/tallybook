@@ -42,6 +42,7 @@ import com.github.mikephil.charting.data.RadarEntry;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.OverviewData;
 import com.oriondev.moneywallet.model.PeriodMoney;
+import com.oriondev.moneywallet.utils.DateFormatter;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -96,8 +97,10 @@ public class OverviewAxisLabelRangeTest {
 
     private static List<PeriodMoney> periods(int count) {
         List<PeriodMoney> periods = new ArrayList<>();
+        long day = 24L * 60L * 60L * 1000L;
         for (int at = 0; at < count; at++) {
-            periods.add(new PeriodMoney(new Date(), new Date()));
+            Date date = new Date(at * day);
+            periods.add(new PeriodMoney(date, date));
         }
         return periods;
     }
@@ -117,13 +120,18 @@ public class OverviewAxisLabelRangeTest {
         return labels;
     }
 
-    private static void assertLabelsWithin(String where, List<String> labels, int count) {
+    private void assertLabelsWithin(String where, List<String> labels, int count) {
         assertFalse(where + " drew no labels at all, so there is nothing to check", labels.isEmpty());
+        Context context = themed();
+        List<String> expectedLabels = new ArrayList<>();
+        for (PeriodMoney period : periods(count)) {
+            expectedLabels.add(DateFormatter.getDateRange(context,
+                    period.getStartDate(), period.getEndDate()));
+        }
         for (String label : labels) {
-            assertTrue(where + " drew " + labels + ", and " + label + " is not a period number"
-                            + " within 1 and " + count,
-                    label.matches("\\d+") && Integer.parseInt(label) >= 1
-                            && Integer.parseInt(label) <= count);
+            assertTrue(where + " drew " + labels + ", and " + label
+                            + " does not identify one of the displayed periods",
+                    expectedLabels.contains(label));
         }
     }
 
@@ -178,8 +186,11 @@ public class OverviewAxisLabelRangeTest {
     public void theRadarAxisCountsFromTheFirstPeriod() {
         RadarChart chart = overviewPage(2, 12).findViewById(R.id.radar_chart_view);
         assertNotNull("the page carries no radar chart, so there is no axis label to read", chart);
-        assertEquals("the radar chart names the first period by its index and not by its number",
-                "1", chart.getXAxis().getValueFormatter().getFormattedValue(0f));
+        PeriodMoney first = periods(12).get(0);
+        String expected = DateFormatter.getDateRange(themed(),
+                first.getStartDate(), first.getEndDate());
+        assertEquals("the radar chart labels its first point with the first period date",
+                expected, chart.getXAxis().getValueFormatter().getFormattedValue(0f));
     }
 
 }
