@@ -4,7 +4,7 @@ name: build
 on:
   workflow_dispatch:
   push:
-    branches: [ master, feat/arabic-rtl-emerald-glass ]
+    branches: [ master, feat/arabic-rtl-emerald-glass, feat/overview-dashboard-v1 ]
   pull_request:
 
 permissions:
