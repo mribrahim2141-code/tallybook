@@ -40,6 +40,7 @@ import com.oriondev.moneywallet.model.Money;
 import com.oriondev.moneywallet.model.OverviewData;
 import com.oriondev.moneywallet.model.PeriodDetailSummaryData;
 import com.oriondev.moneywallet.model.PeriodMoney;
+import com.oriondev.moneywallet.utils.DateFormatter;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -149,16 +150,24 @@ public class ChartAxisDigitsTest {
 
     @Test
     @Config(qualifiers = "fa-rIR")
-    public void theOverviewBarAxisIsWrittenInPersianDigits() {
+    public void theOverviewBarAxisShowsThePeriodDateInPersianLocale() {
         requirePersianLocale();
-        assertPersianDigits("the overview bar chart period number", barAxisLabel(overviewPage(0)));
+        View page = overviewPage(0);
+        PeriodMoney period = onePeriod().get(0);
+        assertEquals("the overview bar chart labels its first period with its date",
+                DateFormatter.getDateRange(page.getContext(),
+                        period.getStartDate(), period.getEndDate()), barAxisLabel(page));
     }
 
     @Test
     @Config(qualifiers = "fa-rIR")
-    public void theOverviewLineAxisIsWrittenInPersianDigits() {
+    public void theOverviewLineAxisShowsThePeriodDateInPersianLocale() {
         requirePersianLocale();
-        assertPersianDigits("the overview line chart period number", lineAxisLabel(overviewPage(1)));
+        View page = overviewPage(1);
+        PeriodMoney period = onePeriod().get(0);
+        assertEquals("the overview line chart labels its first period with its date",
+                DateFormatter.getDateRange(page.getContext(),
+                        period.getStartDate(), period.getEndDate()), lineAxisLabel(page));
     }
 
     @Test
@@ -170,9 +179,12 @@ public class ChartAxisDigitsTest {
 
     @Test
     @Config(qualifiers = "en-rUS")
-    public void theOverviewBarAxisStaysLatinInEnglish() {
-        assertEquals("the overview bar chart period number is not the Latin one in English",
-                "1", barAxisLabel(overviewPage(0)));
+    public void theOverviewBarAxisShowsThePeriodDateInEnglishLocale() {
+        View page = overviewPage(0);
+        PeriodMoney period = onePeriod().get(0);
+        assertEquals("the overview bar chart labels its first period with its date",
+                DateFormatter.getDateRange(page.getContext(),
+                        period.getStartDate(), period.getEndDate()), barAxisLabel(page));
     }
 
 }
