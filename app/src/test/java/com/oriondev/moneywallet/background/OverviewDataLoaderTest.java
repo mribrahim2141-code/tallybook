@@ -80,6 +80,32 @@ public class OverviewDataLoaderTest {
     }
 
     @Test
+    public void summaryTotalsStayPeriodWideWhenChartShowsOnlyOneDirection() {
+        long wallet = insertWallet("Checking", "EUR", 0L, true);
+        long other = insertWallet("Savings", "EUR", 0L, true);
+        PreferenceManager.setCurrentWallet(mContext, wallet);
+        insertIncome(wallet, 50L);
+        long food = insertExpenseCategory("Food", true);
+        insertExpense(wallet, food, 20L);
+        insertTransfer(other, wallet, 10L, 0L);
+        insertTransfer(wallet, other, 30L, 0L);
+
+        OverviewData incomeChart = loadOverview(OverviewSetting.CashFlow.INCOMES);
+        OverviewData expenseChart = loadOverview(OverviewSetting.CashFlow.EXPENSES);
+
+        for (OverviewData data : Arrays.asList(incomeChart, expenseChart)) {
+            assertEquals(50L, data.getTotalIncomes().getMoney("EUR"));
+            assertEquals(20L, data.getTotalExpenses().getMoney("EUR"));
+            assertEquals(10L, data.getTotalTransfers().getMoney("EUR"));
+            assertEquals(10L, data.getTotalNetIncomes().getMoney("EUR"));
+        }
+        assertEquals("income chart remains direction-specific",
+                50L, incomeChart.getPeriodMoney(0).getIncomes().getMoney("EUR"));
+        assertEquals("expense chart remains direction-specific",
+                20L, expenseChart.getPeriodMoney(0).getExpenses().getMoney("EUR"));
+    }
+
+    @Test
     public void totalWalletBalanceKeepsCurrenciesSeparateAndHonorsWalletInclusion() {
         insertWallet("Cash EUR", "EUR", 100L, true);
         insertWallet("Cash USD", "USD", 200L, true);

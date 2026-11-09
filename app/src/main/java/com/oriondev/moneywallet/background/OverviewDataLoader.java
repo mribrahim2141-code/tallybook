@@ -152,21 +152,10 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
                             boolean incoming = direction == Contract.Direction.INCOME;
                             if (Contract.CategoryTag.TRANSFER.equals(categoryTag)) {
                                 currentPeriod.addTransfer(currency, money, incoming);
-                                if (incoming) {
-                                    totalTransfers.addMoney(currency, money);
-                                    totalNetIncomes.addMoney(currency, money);
-                                } else {
-                                    totalTransfers.removeMoney(currency, money);
-                                    totalNetIncomes.removeMoney(currency, money);
-                                }
                             } else if (incoming) {
                                 currentPeriod.addIncome(currency, money);
-                                totalIncomes.addMoney(currency, money);
-                                totalNetIncomes.addMoney(currency, money);
                             } else if (direction == Contract.Direction.EXPENSE) {
                                 currentPeriod.addExpense(currency, money);
-                                totalExpenses.addMoney(currency, money);
-                                totalNetIncomes.removeMoney(currency, money);
                             }
                         } else {
                             break;
@@ -177,6 +166,9 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
             }
             cursor.close();
         }
+        // Summary figures are independent of the chart's selected cash-flow/category filter.
+        loadSummaryTotals(totalIncomes, totalExpenses, totalNetIncomes, totalTransfers);
+
         // generate chart data
         List<IBarDataSet> barDataSets = new ArrayList<>();
         List<ILineDataSet> lineDataSets = new ArrayList<>();
@@ -243,6 +235,75 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
                 topExpenseCategories);
     }
 
+
+    /**
+     * Loads period-wide income, expense, transfer, and net totals independently from the chart
+     * filter. Selecting an income/expense chart or drilling into a category must not change
+     * the summary card's meaning.
+     */
+    private void loadSummaryTotals(Money totalIncomes, Money totalExpenses,
+                                   Money totalNetIncomes, Money totalTransfers) {
+        String[] projection = new String[] {
+                Contract.Transaction.DIRECTION,
+                Contract.Transaction.WALLET_CURRENCY,
+                Contract.Transaction.MONEY,
+                Contract.Transaction.CATEGORY_TAG
+        };
+        long currentWallet = PreferenceManager.getCurrentWallet();
+        String selection;
+        String[] selectionArgs;
+        if (currentWallet == PreferenceManager.TOTAL_WALLET_ID) {
+            selection = Contract.Transaction.WALLET_COUNT_IN_TOTAL + " = 1";
+            selectionArgs = null;
+        } else {
+            selection = Contract.Transaction.WALLET_ID + " = ?";
+            selectionArgs = new String[] {String.valueOf(currentWallet)};
+        }
+        selection += " AND " + Contract.Transaction.CONFIRMED + " = '1' AND "
+                + Contract.Transaction.COUNT_IN_TOTAL + " = '1'";
+        selection += " AND " + Contract.Transaction.REPORT_FILTER;
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('now', 'localtime')";
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") >= DATETIME('"
+                + DateUtils.getSQLDateTimeString(mOverviewSetting.getStartDate()) + "')";
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('"
+                + DateUtils.getSQLDateTimeString(mOverviewSetting.getEndDate()) + "')";
+
+        Cursor cursor = getContext().getContentResolver().query(
+                DataContentProvider.CONTENT_CATEGORY_LINES, projection, selection, selectionArgs,
+                Contract.Transaction.DATE + " ASC");
+        if (cursor == null) {
+            return;
+        }
+        try {
+            while (cursor.moveToNext()) {
+                int direction = cursor.getInt(cursor.getColumnIndexOrThrow(
+                        Contract.Transaction.DIRECTION));
+                String currency = cursor.getString(cursor.getColumnIndexOrThrow(
+                        Contract.Transaction.WALLET_CURRENCY));
+                long amount = cursor.getLong(cursor.getColumnIndexOrThrow(
+                        Contract.Transaction.MONEY));
+                String categoryTag = cursor.getString(cursor.getColumnIndexOrThrow(
+                        Contract.Transaction.CATEGORY_TAG));
+                if (Contract.CategoryTag.TRANSFER.equals(categoryTag)) {
+                    if (direction == Contract.Direction.INCOME) {
+                        totalTransfers.addMoney(currency, amount);
+                        totalNetIncomes.addMoney(currency, amount);
+                    } else if (direction == Contract.Direction.EXPENSE) {
+                        totalTransfers.removeMoney(currency, amount);
+                        totalNetIncomes.removeMoney(currency, amount);
+                    }
+                } else if (direction == Contract.Direction.INCOME) {
+                    totalIncomes.addMoney(currency, amount);
+                    totalNetIncomes.addMoney(currency, amount);
+                } else if (direction == Contract.Direction.EXPENSE) {
+                    totalExpenses.addMoney(currency, amount);
+                    totalNetIncomes.removeMoney(currency, amount);
+                }
+            }
+        } finally {
+            cursor.close();
+        }
+    }
 
     /**
      * Ranks expense categories independently for each currency. Amounts in different currencies
