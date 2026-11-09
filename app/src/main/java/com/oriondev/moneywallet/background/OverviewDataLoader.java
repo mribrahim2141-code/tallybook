@@ -89,6 +89,7 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
         Money totalIncomes = new Money();
         Money totalExpenses = new Money();
         Money totalNetIncomes = new Money();
+        Money chartNetIncomes = new Money();
         Money totalTransfers = new Money();
         List<PeriodMoney> periodMoneyList = new ArrayList<>();
         Uri uri = DataContentProvider.CONTENT_CATEGORY_LINES;
@@ -152,10 +153,17 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
                             boolean incoming = direction == Contract.Direction.INCOME;
                             if (Contract.CategoryTag.TRANSFER.equals(categoryTag)) {
                                 currentPeriod.addTransfer(currency, money, incoming);
+                                if (incoming) {
+                                    chartNetIncomes.addMoney(currency, money);
+                                } else {
+                                    chartNetIncomes.removeMoney(currency, money);
+                                }
                             } else if (incoming) {
                                 currentPeriod.addIncome(currency, money);
+                                chartNetIncomes.addMoney(currency, money);
                             } else if (direction == Contract.Direction.EXPENSE) {
                                 currentPeriod.addExpense(currency, money);
+                                chartNetIncomes.removeMoney(currency, money);
                             }
                         } else {
                             break;
@@ -173,7 +181,7 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
         List<IBarDataSet> barDataSets = new ArrayList<>();
         List<ILineDataSet> lineDataSets = new ArrayList<>();
         List<IRadarDataSet> radarDataSets = new ArrayList<>();
-        for (String currency : totalNetIncomes.getCurrencies()) {
+        for (String currency : chartNetIncomes.getCurrencies()) {
             // for each currency we have to iterate the list of period money and generate
             // a valid chart data set for each chart types.
             List<BarEntry> barEntryList = new ArrayList<>();
