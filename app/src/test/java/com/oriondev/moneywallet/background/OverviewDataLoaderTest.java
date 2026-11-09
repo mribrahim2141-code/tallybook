@@ -96,7 +96,7 @@ public class OverviewDataLoaderTest {
         for (OverviewData data : Arrays.asList(incomeChart, expenseChart)) {
             assertEquals(50L, data.getTotalIncomes().getMoney("EUR"));
             assertEquals(20L, data.getTotalExpenses().getMoney("EUR"));
-            assertEquals(10L, data.getTotalTransfers().getMoney("EUR"));
+            assertEquals(-20L, data.getTotalTransfers().getMoney("EUR"));
             assertEquals(10L, data.getTotalNetIncomes().getMoney("EUR"));
         }
         assertEquals("income chart remains direction-specific",
