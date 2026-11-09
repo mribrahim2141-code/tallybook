@@ -162,6 +162,28 @@ public class OverviewDataLoaderTest {
         assertEquals(100L, top.get(2).getAmount());
     }
 
+    @Test
+    public void topExpenseCategoriesHonorSelectedWalletAndDateRange() {
+        long selectedWallet = insertWallet("Selected", "EUR", 0L, true);
+        long otherWallet = insertWallet("Other", "EUR", 0L, true);
+        PreferenceManager.setCurrentWallet(mContext, selectedWallet);
+        long food = insertExpenseCategory("Food", true);
+
+        insertExpenseAt(selectedWallet, food, 120L, at(15, 12, 0, 0, 0));
+        insertExpenseAt(selectedWallet, food, 400L, at(5, 12, 0, 0, 0));
+        insertExpenseAt(selectedWallet, food, 500L, at(25, 12, 0, 0, 0));
+        insertExpenseAt(otherWallet, food, 900L, at(15, 12, 0, 0, 0));
+
+        java.util.List<OverviewExpenseCategory> top = loadOverview(
+                at(10, 0, 0, 0, 0), at(20, 23, 59, 59, 999))
+                .getTopExpenseCategories();
+
+        assertEquals(1, top.size());
+        assertEquals(food, top.get(0).getCategoryId());
+        assertEquals("only the selected wallet's in-range expense is counted",
+                120L, top.get(0).getAmount());
+    }
+
     private long insertExpenseCategory(String name, boolean showReport) {
         ContentValues values = new ContentValues();
         values.put(Contract.Category.NAME, name);
@@ -190,6 +212,20 @@ public class OverviewDataLoaderTest {
         mResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS, values);
     }
 
+    private void insertExpenseAt(long walletId, long categoryId, long money, Date date) {
+        ContentValues values = new ContentValues();
+        values.put(Contract.Transaction.MONEY, money);
+        values.put(Contract.Transaction.DATE, DateUtils.getSQLDateTimeString(date));
+        values.put(Contract.Transaction.DESCRIPTION, "Dated expense");
+        values.put(Contract.Transaction.CATEGORY_ID, categoryId);
+        values.put(Contract.Transaction.DIRECTION, Contract.Direction.EXPENSE);
+        values.put(Contract.Transaction.TYPE, NewEditTransactionActivity.TYPE_STANDARD);
+        values.put(Contract.Transaction.WALLET_ID, walletId);
+        values.put(Contract.Transaction.CONFIRMED, true);
+        values.put(Contract.Transaction.COUNT_IN_TOTAL, true);
+        mResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS, values);
+    }
+
     private void insertExpense(long walletId, long categoryId, long money) {
         ContentValues values = new ContentValues();
         values.put(Contract.Transaction.MONEY, money);
@@ -205,11 +241,16 @@ public class OverviewDataLoaderTest {
     }
 
     private OverviewData loadOverview(OverviewSetting.CashFlow cashFlow) {
-        OverviewSetting setting = new OverviewSetting(
-                at(1, 0, 0, 0, 0),
-                at(31, 23, 59, 59, 999),
-                Group.YEARLY,
-                cashFlow);
+        return loadOverview(at(1, 0, 0, 0, 0), at(31, 23, 59, 59, 999), cashFlow);
+    }
+
+    private OverviewData loadOverview(Date start, Date end) {
+        return loadOverview(start, end, OverviewSetting.CashFlow.NET_INCOMES);
+    }
+
+    private OverviewData loadOverview(Date start, Date end,
+                                       OverviewSetting.CashFlow cashFlow) {
+        OverviewSetting setting = new OverviewSetting(start, end, Group.YEARLY, cashFlow);
         return new OverviewDataLoader(mContext, setting).loadInBackground();
     }
 
