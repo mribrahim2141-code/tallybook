@@ -15,7 +15,7 @@ public class BudgetCursorAdapterTest {
     }
 
     @Test
-    public void usagePercentCapsOverBudgetAndHandlesInvalidTarget() {
+    public void usagePercentAllowsOverBudgetAndHandlesInvalidTarget() {
         assertEquals(125, BudgetCursorAdapter.calculateUsagePercent(10000L, 12500L));
         assertEquals(0, BudgetCursorAdapter.calculateUsagePercent(0L, 100L));
         assertEquals(0, BudgetCursorAdapter.calculateUsagePercent(-1L, 100L));

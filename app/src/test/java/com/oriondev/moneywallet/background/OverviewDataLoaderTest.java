@@ -106,6 +106,26 @@ public class OverviewDataLoaderTest {
     }
 
     @Test
+    public void summaryTotalsStayPeriodWideWhenChartShowsOneCategory() {
+        long wallet = insertWallet("Checking", "EUR", 0L, true);
+        PreferenceManager.setCurrentWallet(mContext, wallet);
+        long food = insertExpenseCategory("Food", true);
+        long transport = insertExpenseCategory("Transport", true);
+        insertIncome(wallet, 50L);
+        insertExpense(wallet, food, 20L);
+        insertExpense(wallet, transport, 15L);
+
+        OverviewData categoryChart = loadOverview(
+                at(1, 0, 0, 0, 0), at(31, 23, 59, 59, 999), food);
+
+        assertEquals(50L, categoryChart.getTotalIncomes().getMoney("EUR"));
+        assertEquals(35L, categoryChart.getTotalExpenses().getMoney("EUR"));
+        assertEquals(15L, categoryChart.getTotalNetIncomes().getMoney("EUR"));
+        assertEquals("category chart remains restricted to the selected category",
+                20L, categoryChart.getPeriodMoney(0).getExpenses().getMoney("EUR"));
+    }
+
+    @Test
     public void totalWalletBalanceKeepsCurrenciesSeparateAndHonorsWalletInclusion() {
         insertWallet("Cash EUR", "EUR", 100L, true);
         insertWallet("Cash USD", "USD", 200L, true);
@@ -268,6 +288,11 @@ public class OverviewDataLoaderTest {
 
     private OverviewData loadOverview(OverviewSetting.CashFlow cashFlow) {
         return loadOverview(at(1, 0, 0, 0, 0), at(31, 23, 59, 59, 999), cashFlow);
+    }
+
+    private OverviewData loadOverview(Date start, Date end, long categoryId) {
+        OverviewSetting setting = new OverviewSetting(start, end, Group.YEARLY, categoryId);
+        return new OverviewDataLoader(mContext, setting).loadInBackground();
     }
 
     private OverviewData loadOverview(Date start, Date end) {
