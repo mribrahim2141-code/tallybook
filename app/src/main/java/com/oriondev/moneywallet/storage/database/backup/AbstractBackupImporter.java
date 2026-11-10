@@ -91,33 +91,59 @@ public abstract class AbstractBackupImporter {
      * before this change and not made worse by it. No sentence anywhere may call the restore
      * atomic without naming it.
      */
+    private File mPreparedDatabase;
+    private File mPreparedDatabaseFolder;
+    private File mPreparedAttachmentFolder;
+    private File mStagedAttachmentFolder;
+    private File mPreviousAttachmentFolder;
+    private boolean mHadPreviousAttachments;
+
     public void importDatabase(@NonNull File temporaryFolder, @NonNull File databaseFolder) throws ImportException {
+        prepareDatabase(temporaryFolder, databaseFolder);
+        commitDatabase();
+        finishDatabaseRestore();
+    }
+
+    /**
+     * Build the replacement database without making it live. The caller can prepare the
+     * attachment directory too, then commit both resources with rollback if either commit fails.
+     */
+    public void prepareDatabase(@NonNull File temporaryFolder, @NonNull File databaseFolder) throws ImportException {
         File staged = new File(databaseFolder, SQLDatabaseImporter.STAGING_DATABASE_NAME);
         try {
             importDatabase(temporaryFolder);
-            promoteStagedDatabase(databaseFolder, staged);
+            DataContentProvider.closeStagingDatabase();
+            mPreparedDatabase = staged;
+            mPreparedDatabaseFolder = databaseFolder;
         } catch (ImportException | RuntimeException e) {
-            // RuntimeException as well. JSONDatabaseImporter converts IOException and
-            // JSONException and catches nothing else, so anything unchecked the provider raises
-            // comes straight through, a full disk being the one to expect
             discardStagedDatabase(staged);
             throw e;
         } finally {
-            // both paths above close it already. This is here for the third one, an Error, which
-            // neither catch takes. Without it a thread that had been sent to the staging file
-            // would keep writing there for as long as it lived, with the real ledger sitting
-            // untouched beside it and nothing to say so
             DataContentProvider.closeStagingDatabase();
         }
-        // out of the try on purpose, so that nothing which can throw runs between the promote and
-        // the end of it. A throw after the ledger has been replaced would reach a catch whose only
-        // job is to discard a staged file that no longer exists, and the caller would be told the
-        // restore failed when it had in fact succeeded.
-        //
-        // The categories the user had hidden are remembered by id, and the database that knew
-        // those ids has just been replaced. The rows that went into the new one were given fresh
-        // ids in the order they were read, so the remembered ones now name other categories.
-        // Forgetting them leaves every category showing, where the list starts.
+    }
+
+    /** Promote a database previously prepared by prepareDatabase. */
+    public void commitDatabase() throws ImportException {
+        if (mPreparedDatabase == null || mPreparedDatabaseFolder == null) {
+            throw new ImportException("No prepared database restore");
+        }
+        promoteStagedDatabase(mPreparedDatabaseFolder, mPreparedDatabase);
+        mPreparedDatabase = null;
+        mPreparedDatabaseFolder = null;
+    }
+
+    /** Remove a prepared database when another part of the restore could not be prepared. */
+    public void discardPreparedDatabase() {
+        if (mPreparedDatabase != null) {
+            discardStagedDatabase(mPreparedDatabase);
+            mPreparedDatabase = null;
+            mPreparedDatabaseFolder = null;
+        }
+    }
+
+    /** Apply post-commit preferences only after the database and attachments are both installed. */
+    public void finishDatabaseRestore() {
         PreferenceManager.setCollapsedCategories(Collections.<String>emptySet());
     }
 
@@ -132,12 +158,15 @@ public abstract class AbstractBackupImporter {
      * process dies between the two renames, the next restore recovers that previous folder
      * before starting. Both directories are siblings, so the renames stay on the same volume.
      */
-    public void importAttachments(@NonNull File attachmentFolder) throws ImportException {
+    /**
+     * Extract attachments into a sibling staging directory without touching the live folder.
+     */
+    public void prepareAttachments(@NonNull File attachmentFolder) throws ImportException {
         File parent = attachmentFolder.getAbsoluteFile().getParentFile();
         File staging = new File(parent, attachmentFolder.getName() + ".restore-staging");
         File previous = new File(parent, attachmentFolder.getName() + ".restore-previous");
         try {
-            // Recover the old directory if a previous process stopped after moving it aside.
+            // Recover a folder left aside by an interrupted earlier restore.
             if (previous.exists()) {
                 if (attachmentFolder.exists()) {
                     FileUtils.deleteDirectory(previous);
@@ -145,27 +174,95 @@ public abstract class AbstractBackupImporter {
                     throw new IOException("Cannot recover the previous attachment folder");
                 }
             }
-
             FileUtils.deleteQuietly(staging);
             FileUtils.forceMkdir(staging);
             importAttachmentFiles(staging);
+            mPreparedAttachmentFolder = attachmentFolder;
+            mStagedAttachmentFolder = staging;
+            mPreviousAttachmentFolder = previous;
+        } catch (IOException | ImportException e) {
+            FileUtils.deleteQuietly(staging);
+            throw new ImportException(e.getMessage());
+        }
+    }
 
-            boolean hadPrevious = attachmentFolder.exists();
-            if (hadPrevious && !attachmentFolder.renameTo(previous)) {
+    /**
+     * Swap in prepared attachments but retain the old folder until the database commit succeeds.
+     */
+    public void commitAttachments() throws ImportException {
+        if (mPreparedAttachmentFolder == null || mStagedAttachmentFolder == null) {
+            throw new ImportException("No prepared attachment restore");
+        }
+        try {
+            mHadPreviousAttachments = mPreparedAttachmentFolder.exists();
+            if (mHadPreviousAttachments && !mPreparedAttachmentFolder.renameTo(mPreviousAttachmentFolder)) {
                 throw new IOException("Cannot move the current attachment folder");
             }
-            if (!staging.renameTo(attachmentFolder)) {
-                if (hadPrevious && !previous.renameTo(attachmentFolder)) {
+            if (!mStagedAttachmentFolder.renameTo(mPreparedAttachmentFolder)) {
+                if (mHadPreviousAttachments && !mPreviousAttachmentFolder.renameTo(mPreparedAttachmentFolder)) {
                     throw new IOException("Cannot install restored attachments or recover the previous folder");
                 }
                 throw new IOException("Cannot install restored attachments");
             }
-            FileUtils.deleteQuietly(previous);
+            mStagedAttachmentFolder = null;
+        } catch (IOException e) {
+            throw new ImportException(e.getMessage());
+        }
+    }
+
+    /** Restore the previous attachment folder if the database commit did not complete. */
+    public void rollbackAttachments() throws ImportException {
+        if (mPreparedAttachmentFolder == null) {
+            return;
+        }
+        try {
+            if (mPreparedAttachmentFolder.exists()) {
+                FileUtils.deleteDirectory(mPreparedAttachmentFolder);
+            }
+            if (mHadPreviousAttachments && mPreviousAttachmentFolder != null
+                    && mPreviousAttachmentFolder.exists()
+                    && !mPreviousAttachmentFolder.renameTo(mPreparedAttachmentFolder)) {
+                throw new IOException("Cannot restore the previous attachment folder");
+            }
         } catch (IOException e) {
             throw new ImportException(e.getMessage());
         } finally {
-            FileUtils.deleteQuietly(staging);
+            clearAttachmentRestoreState();
         }
+    }
+
+    /** Discard the retained old folder after both restore components have committed. */
+    public void finishAttachmentRestore() {
+        if (mPreviousAttachmentFolder != null) {
+            FileUtils.deleteQuietly(mPreviousAttachmentFolder);
+        }
+        clearAttachmentRestoreState();
+    }
+
+    /** Existing one-step API retained for legacy callers. */
+    public void importAttachments(@NonNull File attachmentFolder) throws ImportException {
+        prepareAttachments(attachmentFolder);
+        try {
+            commitAttachments();
+            finishAttachmentRestore();
+        } catch (ImportException e) {
+            rollbackAttachments();
+            throw e;
+        } finally {
+            if (mStagedAttachmentFolder != null) {
+                FileUtils.deleteQuietly(mStagedAttachmentFolder);
+            }
+        }
+    }
+
+    private void clearAttachmentRestoreState() {
+        if (mStagedAttachmentFolder != null) {
+            FileUtils.deleteQuietly(mStagedAttachmentFolder);
+        }
+        mPreparedAttachmentFolder = null;
+        mStagedAttachmentFolder = null;
+        mPreviousAttachmentFolder = null;
+        mHadPreviousAttachments = false;
     }
 
     protected abstract void importAttachmentFiles(File attachmentFolder) throws IOException, ImportException;
