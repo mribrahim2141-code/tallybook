@@ -97,6 +97,7 @@ public abstract class AbstractBackupImporter {
     private File mStagedAttachmentFolder;
     private File mPreviousAttachmentFolder;
     private boolean mHadPreviousAttachments;
+    private boolean mAttachmentsCommitted;
 
     public void importDatabase(@NonNull File temporaryFolder, @NonNull File databaseFolder) throws ImportException {
         prepareDatabase(temporaryFolder, databaseFolder);
@@ -199,12 +200,10 @@ public abstract class AbstractBackupImporter {
                 throw new IOException("Cannot move the current attachment folder");
             }
             if (!mStagedAttachmentFolder.renameTo(mPreparedAttachmentFolder)) {
-                if (mHadPreviousAttachments && !mPreviousAttachmentFolder.renameTo(mPreparedAttachmentFolder)) {
-                    throw new IOException("Cannot install restored attachments or recover the previous folder");
-                }
                 throw new IOException("Cannot install restored attachments");
             }
             mStagedAttachmentFolder = null;
+            mAttachmentsCommitted = true;
         } catch (IOException e) {
             throw new ImportException(e.getMessage());
         }
@@ -216,13 +215,16 @@ public abstract class AbstractBackupImporter {
             return;
         }
         try {
-            if (mPreparedAttachmentFolder.exists()) {
+            boolean previousExists = mPreviousAttachmentFolder != null && mPreviousAttachmentFolder.exists();
+            if (previousExists) {
+                if (mPreparedAttachmentFolder.exists()) {
+                    FileUtils.deleteDirectory(mPreparedAttachmentFolder);
+                }
+                if (!mPreviousAttachmentFolder.renameTo(mPreparedAttachmentFolder)) {
+                    throw new IOException("Cannot restore the previous attachment folder");
+                }
+            } else if (mAttachmentsCommitted && !mHadPreviousAttachments && mPreparedAttachmentFolder.exists()) {
                 FileUtils.deleteDirectory(mPreparedAttachmentFolder);
-            }
-            if (mHadPreviousAttachments && mPreviousAttachmentFolder != null
-                    && mPreviousAttachmentFolder.exists()
-                    && !mPreviousAttachmentFolder.renameTo(mPreparedAttachmentFolder)) {
-                throw new IOException("Cannot restore the previous attachment folder");
             }
         } catch (IOException e) {
             throw new ImportException(e.getMessage());
@@ -263,6 +265,7 @@ public abstract class AbstractBackupImporter {
         mStagedAttachmentFolder = null;
         mPreviousAttachmentFolder = null;
         mHadPreviousAttachments = false;
+        mAttachmentsCommitted = false;
     }
 
     protected abstract void importAttachmentFiles(File attachmentFolder) throws IOException, ImportException;
