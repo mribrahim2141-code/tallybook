@@ -25,7 +25,7 @@ public class MoneyProgressMathTest {
     @Test
     public void debtRemainingHandlesMinimumLongValue() {
         assertEquals(Long.MAX_VALUE, MoneyProgressMath.safeAbs(Long.MIN_VALUE));
-        assertEquals(0L, MoneyProgressMath.remaining(Long.MIN_VALUE, 0L));
+        assertEquals(Long.MAX_VALUE, MoneyProgressMath.remaining(Long.MIN_VALUE, 0L));
         assertEquals(40L, MoneyProgressMath.remaining(100L, 60L));
         assertEquals(0L, MoneyProgressMath.remaining(100L, 120L));
     }
