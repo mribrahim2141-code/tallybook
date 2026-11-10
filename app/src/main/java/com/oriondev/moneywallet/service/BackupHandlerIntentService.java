@@ -265,14 +265,6 @@ public class BackupHandlerIntentService extends IntentService {
                 }
                 throw commitFailure;
             }
-
-            // Both resources are now installed. Only now reset wallet/widget references and
-            // notify observers, so the UI never redraws against a half-restored pair.
-            importer.finishDatabaseRestore();
-            importer.finishAttachmentRestore();
-            NotificationManagerCompat.from(this).cancel(NotificationContract.NOTIFICATION_ID_RECURRENCE);
-            DataContentProvider.notifyDatabaseIsChanged(this);
-            CurrencyManager.invalidateCache(this);
         } catch (ImportException | IOException | RuntimeException restoreFailure) {
             // Also handles failures while preparing either resource. These calls are harmless
             // when the corresponding staging operation did not get far enough to prepare state.
@@ -286,6 +278,14 @@ public class BackupHandlerIntentService extends IntentService {
         } finally {
             FileUtils.cleanDirectory(temporaryFolder);
         }
+
+        // Both resources are now installed. Only now reset wallet/widget references and notify
+        // observers, so the UI never redraws against a half-restored pair.
+        importer.finishDatabaseRestore();
+        importer.finishAttachmentRestore();
+        NotificationManagerCompat.from(this).cancel(NotificationContract.NOTIFICATION_ID_RECURRENCE);
+        DataContentProvider.notifyDatabaseIsChanged(this);
+        CurrencyManager.invalidateCache(this);
     }
 
     private String getNotificationContentTitle(int action, boolean error) {
