@@ -232,6 +232,17 @@
                                 android:ellipsize="end"
                                 android:textColor="?attr/colorOnSurface"
                                 tools:text="SAR 500" />
+
+                            <TextView
+                                android:id="@+id/summary_income_change_percent"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textSize="11sp"
+                                android:maxLines="3"
+                                android:ellipsize="end"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                tools:text="SAR: +10.0%" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -259,6 +270,17 @@
                                 android:ellipsize="end"
                                 android:textColor="?attr/colorOnSurface"
                                 tools:text="SAR 120" />
+
+                            <TextView
+                                android:id="@+id/summary_expense_change_percent"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textSize="11sp"
+                                android:maxLines="3"
+                                android:ellipsize="end"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                tools:text="SAR: +8.0%" />
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
