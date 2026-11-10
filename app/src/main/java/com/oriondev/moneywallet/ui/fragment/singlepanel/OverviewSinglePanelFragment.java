@@ -228,7 +228,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         numberFormat.setMaximumFractionDigits(1);
         StringBuilder result = new StringBuilder();
         for (String currency : currencies) {
-            if (result.length() > 0) result.append('\\n');
+            if (result.length() > 0) result.append('\n');
             BigDecimal change = OverviewChangeMath.percentageChange(
                     previous.getMoney(currency), current.getMoney(currency));
             String value;
