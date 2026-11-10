@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import com.oriondev.moneywallet.storage.database.ExportException;
 import com.oriondev.moneywallet.storage.database.SQLDatabaseExporter;
 import com.oriondev.moneywallet.storage.database.model.Attachment;
+import com.oriondev.moneywallet.utils.AttachmentFileUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -50,14 +51,25 @@ public abstract class AbstractBackupExporter {
         Cursor cursor = SQLDatabaseExporter.getAllAttachments(mContentResolver);
         if (cursor != null) {
             List<File> fileList = new ArrayList<>();
-            while (cursor.moveToNext()) {
-                Attachment attachment = SQLDatabaseExporter.getAttachment(cursor);
-                File file = new File(attachmentFolder, attachment.mFile);
-                if (file.exists()) {
-                    fileList.add(file);
+            try {
+                while (cursor.moveToNext()) {
+                    Attachment attachment = SQLDatabaseExporter.getAttachment(cursor);
+                    File file;
+                    try {
+                        file = AttachmentFileUtils.resolve(attachmentFolder, attachment.mFile);
+                    } catch (java.io.IOException e) {
+                        throw new ExportException("Cannot validate attachment file path: " + e.getMessage());
+                    }
+                    if (file == null) {
+                        throw new ExportException("Invalid attachment file path in database");
+                    }
+                    if (file.isFile()) {
+                        fileList.add(file);
+                    }
                 }
+            } finally {
+                cursor.close();
             }
-            cursor.close();
             exportAttachmentFiles(fileList);
         }
     }
