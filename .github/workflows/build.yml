@@ -4,7 +4,7 @@ name: build
 on:
   workflow_dispatch:
   push:
-    branches: [ master, feat/arabic-rtl-emerald-glass ]
+    branches: [ master, feat/arabic-rtl-emerald-glass, feat/overview-dashboard-v1 ]
   pull_request:
 
 permissions:
@@ -27,9 +27,9 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      # Use the repository-pinned Gradle Wrapper instead of provisioning a
+      # separate Gradle distribution through setup-gradle.
       - uses: gradle/actions/setup-gradle@v6
-        with:
-          gradle-version: '9.6.1'
 
       - uses: actions/cache@v4
         with:
@@ -39,7 +39,7 @@ jobs:
       # Build and run tests
       - name: Build and Run Tests
         run: |
-          gradle clean testFlossOsmDebugUnitTest assembleFlossOsmDebug assembleFlossOsmDebugAndroidTest lintFlossOsmDebug
+          ./gradlew --no-daemon clean testFlossOsmDebugUnitTest assembleFlossOsmDebug assembleFlossOsmDebugAndroidTest lintFlossOsmDebug
 
       # Automatically diagnose failed unit tests
       - name: Diagnose Failed Unit Tests
