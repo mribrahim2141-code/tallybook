@@ -32,6 +32,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -143,6 +144,24 @@ public class ImportExportIntentServiceTest {
         assertEquals(2, mTokens.size());
         assertEquals("t", mTokens.get(LocalAction.ACTION_EXPORT_SERVICE_STARTED));
         assertEquals("t", mTokens.get(LocalAction.ACTION_EXPORT_SERVICE_FINISHED));
+    }
+
+    @Test
+    public void aFailedXlsExportClosesTheExporterAndDeletesItsPartialFile() throws Exception {
+        File folder = new File(mContext.getCacheDir(), "failed-export-" + UUID.randomUUID());
+        assertTrue(folder.mkdirs());
+        Wallet invalidWallet = new Wallet(1L, "Invalid/Wallet", IconLoader.parse(ICON),
+                CurrencyManager.getCurrency("EUR"), 0L, 0L);
+        try {
+            ImportExportIntentService.exportTransactions(mContext, DataFormat.XLS, folder,
+                    null, null, new Wallet[]{invalidWallet}, false, null);
+            fail("an invalid worksheet name should fail the export");
+        } catch (RuntimeException expected) {
+            // The exporter must still be closed and its incomplete cache file removed.
+        }
+        File[] leftovers = folder.listFiles();
+        assertTrue("partial export files were left in the cache",
+                leftovers == null || leftovers.length == 0);
     }
 
     private void run(Intent intent) {
