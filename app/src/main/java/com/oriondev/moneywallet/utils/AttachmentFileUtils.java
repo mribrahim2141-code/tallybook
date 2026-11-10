@@ -31,7 +31,7 @@ public final class AttachmentFileUtils {
     public static File resolve(@NonNull File attachmentFolder, @Nullable String fileName) throws IOException {
         if (fileName == null || fileName.isEmpty()
                 || ".".equals(fileName) || "..".equals(fileName)
-                || fileName.contains("/") || fileName.contains("\\\\")) {
+                || fileName.contains("/") || fileName.contains("\\")) {
             return null;
         }
         File canonicalFolder = attachmentFolder.getCanonicalFile();
