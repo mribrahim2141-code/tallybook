@@ -27,6 +27,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -171,6 +172,47 @@ public class BackupImportFailureTest {
             assertTrue(!new File(attachmentFolder.getParentFile(), attachmentFolder.getName() +
                     ".restore-staging").exists());
         }
+    }
+
+    @Test
+    public void preparedDatabaseDoesNotReplaceTheLiveDatabaseUntilCommit() throws Exception {
+        File liveDatabase = mContext.getDatabasePath(SQLDatabaseImporter.DATABASE_NAME);
+        assertTrue(liveDatabase.isFile());
+        byte[] original = Files.readAllBytes(liveDatabase.toPath());
+        File backup = exportBackup();
+        DefaultBackupImporter importer = new DefaultBackupImporter(mContext, backup, null);
+
+        importer.prepareDatabase(importFolder(), liveDatabase.getParentFile());
+
+        assertArrayEquals(original, Files.readAllBytes(liveDatabase.toPath()));
+        importer.discardPreparedDatabase();
+        assertArrayEquals(original, Files.readAllBytes(liveDatabase.toPath()));
+    }
+
+    @Test
+    public void preparedAttachmentRestoreCanBeRolledBackAfterCommit() throws Exception {
+        File attachmentFolder = new File(mContext.getCacheDir(), "restore-attachments-rollback");
+        assertTrue(attachmentFolder.mkdirs() || attachmentFolder.isDirectory());
+        File existing = new File(attachmentFolder, "existing.txt");
+        Files.write(existing.toPath(), "keep me".getBytes(StandardCharsets.UTF_8));
+        File backup = zipAttachment("rollback-attachments.mwbx", "receipt.txt", "restored");
+        DefaultBackupImporter importer = new DefaultBackupImporter(mContext, backup, null);
+
+        importer.prepareAttachments(attachmentFolder);
+
+        assertEquals("keep me", new String(Files.readAllBytes(existing.toPath()), StandardCharsets.UTF_8));
+        assertTrue(!new File(attachmentFolder, "receipt.txt").exists());
+
+        importer.commitAttachments();
+
+        assertTrue(!existing.exists());
+        assertEquals("restored", new String(Files.readAllBytes(
+                new File(attachmentFolder, "receipt.txt").toPath()), StandardCharsets.UTF_8));
+
+        importer.rollbackAttachments();
+
+        assertEquals("keep me", new String(Files.readAllBytes(existing.toPath()), StandardCharsets.UTF_8));
+        assertTrue(!new File(attachmentFolder, "receipt.txt").exists());
     }
 
     private File zipRawEntry(String backupName, String entryName) throws Exception {
