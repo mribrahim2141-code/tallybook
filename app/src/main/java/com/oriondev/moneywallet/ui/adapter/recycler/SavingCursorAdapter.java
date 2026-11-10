@@ -37,6 +37,7 @@ import com.oriondev.moneywallet.ui.view.MaterialProgressBar;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
+import com.oriondev.moneywallet.utils.MoneyProgressMath;
 
 /**
  * Created by andrea on 06/03/18.
@@ -88,8 +89,8 @@ public class SavingCursorAdapter extends AbstractCursorAdapter<SavingCursorAdapt
             holder.mButtonLayout.setVisibility(View.VISIBLE);
             long startMoney = cursor.getLong(mIndexStartMoney);
             long progress = cursor.getLong(mIndexProgress);
-            long current = startMoney + progress;
-            long needed = Math.max(target - current, 0L);
+            long current = MoneyProgressMath.saturatedAdd(startMoney, progress);
+            long needed = MoneyProgressMath.amountNeeded(target, current);
             holder.mProgressBar.setMaxValue(target);
             holder.mProgressBar.setProgressValue(current);
             mMoneyFormatter.applyNotTinted(holder.mCurrentMoneyTextView, currency, current);
