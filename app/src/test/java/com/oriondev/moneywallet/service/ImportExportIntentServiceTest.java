@@ -14,7 +14,9 @@ import androidx.test.core.app.ApplicationProvider;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.DataFormat;
 import com.oriondev.moneywallet.model.Wallet;
+import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.storage.database.TestDatabases;
+import com.oriondev.moneywallet.storage.database.data.AbstractDataExporter;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.IconLoader;
 
@@ -28,13 +30,19 @@ import org.robolectric.RobolectricTestRunner;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Date;
+import java.util.List;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mockStatic;
@@ -143,6 +151,67 @@ public class ImportExportIntentServiceTest {
         assertEquals(2, mTokens.size());
         assertEquals("t", mTokens.get(LocalAction.ACTION_EXPORT_SERVICE_STARTED));
         assertEquals("t", mTokens.get(LocalAction.ACTION_EXPORT_SERVICE_FINISHED));
+    }
+
+    @Test
+    public void aFailedExportClosesTheExporterAndDeletesItsPartialFile() throws Exception {
+        File folder = new File(mContext.getCacheDir(), "failed-export-" + UUID.randomUUID());
+        assertTrue(folder.mkdirs());
+        File partialFile = new File(folder, "partial.csv");
+        assertTrue(partialFile.createNewFile());
+        FailingExporter exporter = new FailingExporter(mContext, partialFile);
+        Wallet wallet = new Wallet(1L, "Cash", IconLoader.parse(ICON),
+                CurrencyManager.getCurrency("EUR"), 0L, 0L);
+        try {
+            ImportExportIntentService.exportTransactions(mContext, DataFormat.CSV,
+                    null, new Date(), new Wallet[]{wallet}, false, null, exporter);
+            fail("the injected exporter should fail");
+        } catch (IOException expected) {
+            assertEquals("simulated export failure", expected.getMessage());
+        }
+        assertTrue("exporter was not closed after failure", exporter.closed);
+        assertFalse("partial export file was not deleted", partialFile.exists());
+    }
+
+    private static final class FailingExporter extends AbstractDataExporter {
+        private final File outputFile;
+        private boolean closed;
+
+        FailingExporter(Context context, File outputFile) throws IOException {
+            super(context, outputFile.getParentFile());
+            this.outputFile = outputFile;
+        }
+
+        @Override
+        public boolean isMultiWalletSupported() {
+            return false;
+        }
+
+        @Override
+        public String[] getColumns(boolean uniqueWallet, String[] optionalColumns) {
+            return new String[]{"datetime"};
+        }
+
+        @Override
+        public void exportData(android.database.Cursor cursor, String[] columns, Wallet... wallets)
+                throws IOException {
+            throw new IOException("simulated export failure");
+        }
+
+        @Override
+        public void close() {
+            closed = true;
+        }
+
+        @Override
+        public File getOutputFile() {
+            return outputFile;
+        }
+
+        @Override
+        public String getResultType() {
+            return "text/csv";
+        }
     }
 
     private void run(Intent intent) {
