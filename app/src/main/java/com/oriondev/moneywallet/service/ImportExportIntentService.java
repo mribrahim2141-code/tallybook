@@ -182,51 +182,82 @@ public class ImportExportIntentService extends IntentService {
         // in a separate way
         boolean multiWallet = wallets != null && wallets.length > 1 && dataExporter.isMultiWalletSupported() && !uniqueWallet;
         String[] columns = dataExporter.getColumns(!multiWallet, optionalColumns);
-        // before starting with the export logic, check if the exporter should
-        // store the people names into his internal cache to speedup the procedure
-        if (dataExporter.shouldLoadPeople()) {
-            Cursor cursor = contentResolver.query(DataContentProvider.CONTENT_PEOPLE, null, null, null, null);
-            if (cursor != null) {
-                dataExporter.cachePeople(cursor);
-                cursor.close();
-            }
-        }
-        // handle the export logic differently
-        if (multiWallet) {
-            // execute a query for each wallet: we should clone the original builder
-            // to avoid mistakes during each successive query
-            for (Wallet wallet : wallets) {
-                String selection = selectionBuilder + " AND " + Contract.Transaction.WALLET_ID + " = ?";
-                String[] arguments = selectionArguments.toArray(new String[selectionArguments.size() + 1]);
-                arguments[arguments.length - 1] = String.valueOf(wallet.getId());
-                Cursor cursor = contentResolver.query(uri, null, selection, arguments, sortOrder);
-                if (cursor != null) {
-                    dataExporter.exportData(cursor, columns, wallet);
-                    cursor.close();
-                }
-            }
-        } else {
-            // execute only a large query: we can modify the original builder here
-            if (wallets != null) {
-                selectionBuilder.append(" AND (");
-                for (int i = 0; i < wallets.length; i++) {
-                    if (i != 0) {
-                        selectionBuilder.append(" OR ");
+        boolean exporterCloseAttempted = false;
+        boolean exportCompleted = false;
+        try {
+            // before starting with the export logic, check if the exporter should
+            // store the people names into his internal cache to speedup the procedure
+            if (dataExporter.shouldLoadPeople()) {
+                Cursor peopleCursor = contentResolver.query(DataContentProvider.CONTENT_PEOPLE, null, null, null, null);
+                if (peopleCursor != null) {
+                    try {
+                        dataExporter.cachePeople(peopleCursor);
+                    } finally {
+                        peopleCursor.close();
                     }
-                    selectionBuilder.append(Contract.Transaction.WALLET_ID + " = ?");
-                    selectionArguments.add(String.valueOf(wallets[i].getId()));
                 }
-                selectionBuilder.append(")");
             }
-            Cursor cursor = contentResolver.query(uri, null, selectionBuilder.toString(), selectionArguments.toArray(new String[selectionArguments.size()]), sortOrder);
-            if (cursor != null) {
-                dataExporter.exportData(cursor, columns, wallets);
-                cursor.close();
+            // handle the export logic differently
+            if (multiWallet) {
+                // execute a query for each wallet: we should clone the original builder
+                // to avoid mistakes during each successive query
+                for (Wallet wallet : wallets) {
+                    String selection = selectionBuilder + " AND " + Contract.Transaction.WALLET_ID + " = ?";
+                    String[] arguments = selectionArguments.toArray(new String[selectionArguments.size() + 1]);
+                    arguments[arguments.length - 1] = String.valueOf(wallet.getId());
+                    Cursor cursor = contentResolver.query(uri, null, selection, arguments, sortOrder);
+                    if (cursor != null) {
+                        try {
+                            dataExporter.exportData(cursor, columns, wallet);
+                        } finally {
+                            cursor.close();
+                        }
+                    }
+                }
+            } else {
+                // execute only a large query: we can modify the original builder here
+                if (wallets != null) {
+                    selectionBuilder.append(" AND (");
+                    for (int i = 0; i < wallets.length; i++) {
+                        if (i != 0) {
+                            selectionBuilder.append(" OR ");
+                        }
+                        selectionBuilder.append(Contract.Transaction.WALLET_ID + " = ?");
+                        selectionArguments.add(String.valueOf(wallets[i].getId()));
+                    }
+                    selectionBuilder.append(")");
+                }
+                Cursor cursor = contentResolver.query(uri, null, selectionBuilder.toString(), selectionArguments.toArray(new String[selectionArguments.size()]), sortOrder);
+                if (cursor != null) {
+                    try {
+                        dataExporter.exportData(cursor, columns, wallets);
+                    } finally {
+                        cursor.close();
+                    }
+                }
+            }
+            // close the exporter to flush and close all the open streams
+            exporterCloseAttempted = true;
+            dataExporter.close();
+            exportCompleted = true;
+            return dataExporter;
+        } finally {
+            if (!exportCompleted) {
+                // A failed export must not leave an open writer or a partial file in app cache.
+                if (!exporterCloseAttempted) {
+                    try {
+                        dataExporter.close();
+                    } catch (IOException ignored) {
+                        // The original export failure is more useful to the caller.
+                    }
+                }
+                File outputFile = dataExporter.getOutputFile();
+                if (outputFile != null && outputFile.exists()) {
+                    // This is always inside the app-owned export cache, never the user's folder.
+                    outputFile.delete();
+                }
             }
         }
-        // close the exporter to flush and close all the open streams
-        dataExporter.close();
-        return dataExporter;
     }
 
     private Wallet[] getWalletList(Intent intent, String key) {
