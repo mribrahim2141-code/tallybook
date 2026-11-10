@@ -31,4 +31,11 @@ public final class MoneyProgressMath {
     public static long amountNeeded(long target, long current) {
         return Math.max(0L, saturatedSubtract(target, current));
     }
+
+    /** Returns a progress percentage clamped to the inclusive range 0..100. */
+    public static int progressPercent(long target, long current) {
+        if (target <= 0L || current <= 0L) return 0;
+        if (current >= target) return 100;
+        return (int) Math.round(((double) current / (double) target) * 100.0d);
+    }
 }
