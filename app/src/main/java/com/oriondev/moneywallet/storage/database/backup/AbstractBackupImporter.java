@@ -101,7 +101,12 @@ public abstract class AbstractBackupImporter {
 
     public void importDatabase(@NonNull File temporaryFolder, @NonNull File databaseFolder) throws ImportException {
         prepareDatabase(temporaryFolder, databaseFolder);
-        commitDatabase();
+        try {
+            commitDatabase();
+        } catch (ImportException | RuntimeException e) {
+            discardPreparedDatabase();
+            throw e;
+        }
         finishDatabaseRestore();
     }
 
@@ -184,6 +189,9 @@ public abstract class AbstractBackupImporter {
         } catch (IOException | ImportException e) {
             FileUtils.deleteQuietly(staging);
             throw new ImportException(e.getMessage());
+        } catch (RuntimeException e) {
+            FileUtils.deleteQuietly(staging);
+            throw e;
         }
     }
 
