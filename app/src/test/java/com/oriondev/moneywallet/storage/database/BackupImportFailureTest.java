@@ -23,7 +23,9 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -141,6 +143,47 @@ public class BackupImportFailureTest {
         assertTrue(!existing.exists());
         File restored = new File(attachmentFolder, "receipt.txt");
         assertEquals("restored", new String(Files.readAllBytes(restored.toPath()), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void maliciousAttachmentPathsAreRejectedWithoutChangingExistingFiles() throws Exception {
+        String[] maliciousPaths = {
+                "attachments/../escape.txt",
+                "attachments/nested/receipt.txt",
+                "attachments/..\\\\escape.txt"
+        };
+        for (int i = 0; i < maliciousPaths.length; i++) {
+            File attachmentFolder = new File(mContext.getCacheDir(), "unsafe-attachments-" + i);
+            assertTrue(attachmentFolder.mkdirs() || attachmentFolder.isDirectory());
+            File existing = new File(attachmentFolder, "existing.txt");
+            Files.write(existing.toPath(), "keep me".getBytes(StandardCharsets.UTF_8));
+            File backup = zipRawEntry("unsafe-" + i + ".mwbx", maliciousPaths[i]);
+
+            try {
+                new DefaultBackupImporter(mContext, backup, null).importAttachments(attachmentFolder);
+                fail("malicious attachment path should be rejected: " + maliciousPaths[i]);
+            } catch (ImportException expected) {
+                assertTrue(expected.getMessage().contains("Invalid attachment path"));
+            }
+
+            assertEquals("keep me", new String(Files.readAllBytes(existing.toPath()), StandardCharsets.UTF_8));
+            assertTrue(attachmentFolder.isDirectory());
+            assertTrue(!new File(attachmentFolder.getParentFile(), attachmentFolder.getName() +
+                    ".restore-staging").exists());
+        }
+    }
+
+    private File zipRawEntry(String backupName, String entryName) throws Exception {
+        File backup = new File(mContext.getCacheDir(), backupName);
+        ZipOutputStream output = new ZipOutputStream(new FileOutputStream(backup));
+        try {
+            output.putNextEntry(new ZipEntry(entryName));
+            output.write("untrusted".getBytes(StandardCharsets.UTF_8));
+            output.closeEntry();
+        } finally {
+            output.close();
+        }
+        return backup;
     }
 
     private File zipAttachment(String backupName, String entryName, String value) throws Exception {
