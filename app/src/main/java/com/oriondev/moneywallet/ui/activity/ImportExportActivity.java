@@ -801,9 +801,14 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
             }
             // The source is always an app-owned FileProvider cache file, not the user's
             // selected destination. Remove it whether the copy succeeded or failed.
-            if (TextUtils.equals(getPackageName() + ".storage.file", sourceUri.getAuthority())) {
-                getContentResolver().delete(sourceUri, null, null);
-            }
+            deleteExportSource(sourceUri);
+        }
+    }
+
+    /** Delete only the app-owned cache URI returned by the export service. */
+    void deleteExportSource(Uri sourceUri) {
+        if (sourceUri != null && TextUtils.equals(getPackageName() + ".storage.file", sourceUri.getAuthority())) {
+            getContentResolver().delete(sourceUri, null, null);
         }
     }
 
