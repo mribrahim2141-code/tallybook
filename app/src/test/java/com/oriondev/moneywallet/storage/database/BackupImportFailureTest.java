@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.oriondev.moneywallet.storage.database.backup.DefaultBackupExporter;
 import com.oriondev.moneywallet.storage.database.backup.DefaultBackupImporter;
+import com.oriondev.moneywallet.storage.database.SQLDatabaseImporter;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 
 import net.lingala.zip4j.model.ZipParameters;
