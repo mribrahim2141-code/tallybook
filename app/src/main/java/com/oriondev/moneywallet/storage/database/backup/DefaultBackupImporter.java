@@ -140,7 +140,7 @@ public class DefaultBackupImporter extends AbstractBackupImporter {
                     // Attachments are stored as flat files. Reject path components rather than
                     // allowing an archive entry to write outside the staging directory.
                     if (name.isEmpty() || ".".equals(name) || "..".equals(name)
-                            || name.contains("/") || name.contains("\\\\")) {
+                            || name.contains("/") || name.contains("\\")) {
                         throw new ImportException("Invalid attachment path in backup");
                     }
                     zipFile.extractFile(header, attachmentFolder.getPath(), null, name);
