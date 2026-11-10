@@ -134,9 +134,16 @@ public class DefaultBackupImporter extends AbstractBackupImporter {
                 String path = header.getFileName();
                 if (path.startsWith(BackupManager.FileStructure.FOLDER_ATTACHMENTS)) {
                     String name = path.substring(BackupManager.FileStructure.FOLDER_ATTACHMENTS.length());
-                    if (!name.contains("/")) {
-                        zipFile.extractFile(header, attachmentFolder.getPath(), null, name);
+                    if (header.isDirectory()) {
+                        continue;
                     }
+                    // Attachments are stored as flat files. Reject path components rather than
+                    // allowing an archive entry to write outside the staging directory.
+                    if (name.isEmpty() || ".".equals(name) || "..".equals(name)
+                            || name.contains("/") || name.contains("\\\\")) {
+                        throw new ImportException("Invalid attachment path in backup");
+                    }
+                    zipFile.extractFile(header, attachmentFolder.getPath(), null, name);
                 }
             }
         } catch (ZipException e) {
