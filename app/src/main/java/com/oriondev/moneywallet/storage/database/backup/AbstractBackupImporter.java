@@ -85,11 +85,12 @@ public abstract class AbstractBackupImporter {
      * JobIntentService dispatches on, with the process gone. Every component here shares that
      * one process, so the restore died with it.
      *
-     * What this does NOT cover is the attachments. BackupHandlerIntentService runs importDatabase
-     * and then importAttachments, and importAttachments empties the attachment folder before it
-     * extracts anything, so a failure there leaves the new ledger live and the files gone. True
-     * before this change and not made worse by it. No sentence anywhere may call the restore
-     * atomic without naming it.
+     * The service uses the prepare/commit methods below to build both resources before
+     * replacing either one. It installs the attachment directory first while retaining the
+     * previous directory, then promotes the staged database. If database promotion fails, the
+     * previous attachment directory is restored. This protects against failures during the
+     * in-process commit; a process death between the two commits is not a filesystem-wide
+     * transaction, so no sentence anywhere may call the restore fully atomic.
      */
     private File mPreparedDatabase;
     private File mPreparedDatabaseFolder;
