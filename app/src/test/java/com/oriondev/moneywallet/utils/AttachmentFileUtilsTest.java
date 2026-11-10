@@ -35,7 +35,7 @@ public class AttachmentFileUtilsTest {
     public void rejectsUnixAndWindowsPathSeparators() throws Exception {
         File folder = temporaryFolder.newFolder("attachments");
         assertNull(AttachmentFileUtils.resolve(folder, "nested/receipt.pdf"));
-        assertNull(AttachmentFileUtils.resolve(folder, "nested\\\\receipt.pdf"));
+        assertNull(AttachmentFileUtils.resolve(folder, "nested\\receipt.pdf"));
     }
 
     @Test
