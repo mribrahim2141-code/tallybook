@@ -109,6 +109,7 @@ public class AttachmentHandlerIntentService extends IntentService {
         File destination = getAttachmentFile(attachment);
         InputStream inputStream = null;
         OutputStream outputStream = null;
+        boolean created = false;
         boolean completed = false;
         try {
             inputStream = contentResolver.openInputStream(uri);
@@ -119,6 +120,7 @@ public class AttachmentHandlerIntentService extends IntentService {
             if (!destination.createNewFile()) {
                 throw new IOException("Attachment file already exists");
             }
+            created = true;
             outputStream = new FileOutputStream(destination);
             IOUtils.copy(inputStream, outputStream);
             outputStream.flush();
@@ -130,7 +132,7 @@ public class AttachmentHandlerIntentService extends IntentService {
             if (outputStream != null) {
                 try {outputStream.close();} catch (IOException ignore) {}
             }
-            if (!completed) {
+            if (created && !completed) {
                 FileUtils.deleteQuietly(destination);
             }
         }
