@@ -42,6 +42,7 @@ import com.oriondev.moneywallet.utils.DateFormatter;
 import com.oriondev.moneywallet.utils.DateUtils;
 import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
+import com.oriondev.moneywallet.utils.MoneyProgressMath;
 
 import java.util.Date;
 
@@ -138,7 +139,7 @@ public class DebtCursorAdapter extends AbstractCursorAdapter {
         holder.mDescriptionTextView.setText(cursor.getString(mIndexDescription));
         CurrencyUnit currency = CurrencyManager.getCurrency(cursor.getString(mIndexCurrency));
         long target = cursor.getLong(mIndexMoney);
-        long progress = Math.abs(cursor.getLong(mIndexProgress));
+        long progress = MoneyProgressMath.safeAbs(cursor.getLong(mIndexProgress));
         Contract.DebtType debtType = Contract.DebtType.fromValue(cursor.getInt(mIndexDebtType));
         // the same test that decides between the figure left to settle and completed below, so
         // settling in full is offered exactly when the card shows an amount to settle
@@ -165,14 +166,14 @@ public class DebtCursorAdapter extends AbstractCursorAdapter {
         holder.mProgressBar.setProgressValue(progress);
         if (progress < target) {
             Context context = holder.mProgressTextView.getContext();
-            long remaining = Math.abs(target - progress);
+            long remaining = MoneyProgressMath.remaining(target, progress);
             String differenceText = mMoneyFormatter.getNotTintedString(currency, remaining);
             String progressText = context.getString(R.string.relative_string_money_to_settle_debt, differenceText);
             holder.mProgressTextView.setText(progressText);
         } else {
             holder.mProgressTextView.setText(R.string.relative_string_debt_completed);
         }
-        long interest = Math.abs(cursor.getLong(mIndexInterest));
+        long interest = MoneyProgressMath.safeAbs(cursor.getLong(mIndexInterest));
         if (interest == 0L || debtType == null) {
             holder.mInterestTextView.setVisibility(View.GONE);
         } else {
