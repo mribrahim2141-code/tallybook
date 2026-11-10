@@ -799,9 +799,11 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
             if (!copied && target != null) {
                 target.delete();
             }
-            // The source is always an app-owned FileProvider cache file, not the user's
-            // selected destination. Remove it whether the copy succeeded or failed.
-            deleteExportSource(sourceUri);
+            // Keep the source if copying failed so the export can be retried.
+            // On success, remove only the app-owned temporary FileProvider source.
+            if (copied) {
+                deleteExportSource(sourceUri);
+            }
         }
     }
 
