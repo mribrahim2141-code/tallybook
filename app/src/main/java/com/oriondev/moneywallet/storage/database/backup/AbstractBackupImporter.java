@@ -123,16 +123,48 @@ public abstract class AbstractBackupImporter {
 
     protected abstract void importDatabase(@NonNull File temporaryFolder) throws ImportException;
 
+    /**
+     * Restore attachments into a sibling staging directory first. The current folder is not
+     * touched until every entry has been extracted successfully, so a bad archive, wrong
+     * password, or full device cannot erase the user's existing attachments.
+     *
+     * The previous folder is kept until the staging directory has taken its place. If the
+     * process dies between the two renames, the next restore recovers that previous folder
+     * before starting. Both directories are siblings, so the renames stay on the same volume.
+     */
     public void importAttachments(@NonNull File attachmentFolder) throws ImportException {
+        File parent = attachmentFolder.getAbsoluteFile().getParentFile();
+        File staging = new File(parent, attachmentFolder.getName() + ".restore-staging");
+        File previous = new File(parent, attachmentFolder.getName() + ".restore-previous");
         try {
-            if (attachmentFolder.exists()) {
-                FileUtils.cleanDirectory(attachmentFolder);
-            } else {
-                FileUtils.forceMkdir(attachmentFolder);
+            // Recover the old directory if a previous process stopped after moving it aside.
+            if (previous.exists()) {
+                if (attachmentFolder.exists()) {
+                    FileUtils.deleteDirectory(previous);
+                } else if (!previous.renameTo(attachmentFolder)) {
+                    throw new IOException("Cannot recover the previous attachment folder");
+                }
             }
-            importAttachmentFiles(attachmentFolder);
+
+            FileUtils.deleteQuietly(staging);
+            FileUtils.forceMkdir(staging);
+            importAttachmentFiles(staging);
+
+            boolean hadPrevious = attachmentFolder.exists();
+            if (hadPrevious && !attachmentFolder.renameTo(previous)) {
+                throw new IOException("Cannot move the current attachment folder");
+            }
+            if (!staging.renameTo(attachmentFolder)) {
+                if (hadPrevious && !previous.renameTo(attachmentFolder)) {
+                    throw new IOException("Cannot install restored attachments or recover the previous folder");
+                }
+                throw new IOException("Cannot install restored attachments");
+            }
+            FileUtils.deleteQuietly(previous);
         } catch (IOException e) {
             throw new ImportException(e.getMessage());
+        } finally {
+            FileUtils.deleteQuietly(staging);
         }
     }
 
