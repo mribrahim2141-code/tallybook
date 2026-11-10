@@ -106,6 +106,57 @@ public class BackupImportFailureTest {
         new DefaultBackupImporter(mContext, backup, null).importDatabase(importFolder());
     }
 
+    @Test
+    public void failedAttachmentExtractionKeepsTheExistingFolder() throws Exception {
+        File attachmentFolder = new File(mContext.getCacheDir(), "restore-attachments");
+        assertTrue(attachmentFolder.mkdirs() || attachmentFolder.isDirectory());
+        File existing = new File(attachmentFolder, "existing.txt");
+        Files.write(existing.toPath(), "keep me".getBytes(StandardCharsets.UTF_8));
+        File invalidBackup = new File(mContext.getCacheDir(), "invalid-attachments.mwbx");
+        Files.write(invalidBackup.toPath(), "not a zip".getBytes(StandardCharsets.UTF_8));
+
+        try {
+            new DefaultBackupImporter(mContext, invalidBackup, null).importAttachments(attachmentFolder);
+            fail("invalid archive should not be imported");
+        } catch (ImportException expected) {
+            assertTrue(expected.getMessage().contains("Invalid backup file"));
+        }
+
+        assertEquals("keep me", new String(Files.readAllBytes(existing.toPath()), StandardCharsets.UTF_8));
+        assertTrue(attachmentFolder.isDirectory());
+        assertTrue(!new File(attachmentFolder.getParentFile(), attachmentFolder.getName() +
+                ".restore-staging").exists());
+    }
+
+    @Test
+    public void validAttachmentRestoreReplacesTheFolderAfterExtraction() throws Exception {
+        File attachmentFolder = new File(mContext.getCacheDir(), "restore-attachments-valid");
+        assertTrue(attachmentFolder.mkdirs() || attachmentFolder.isDirectory());
+        File existing = new File(attachmentFolder, "old.txt");
+        Files.write(existing.toPath(), "old".getBytes(StandardCharsets.UTF_8));
+        File backup = zipAttachment("valid-attachments.mwbx", "receipt.txt", "restored");
+
+        new DefaultBackupImporter(mContext, backup, null).importAttachments(attachmentFolder);
+
+        assertTrue(!existing.exists());
+        File restored = new File(attachmentFolder, "receipt.txt");
+        assertEquals("restored", new String(Files.readAllBytes(restored.toPath()), StandardCharsets.UTF_8));
+    }
+
+    private File zipAttachment(String backupName, String entryName, String value) throws Exception {
+        File sourceFolder = new File(mContext.getCacheDir(), "attachment-source");
+        assertTrue(sourceFolder.mkdirs() || sourceFolder.isDirectory());
+        File source = new File(sourceFolder, entryName);
+        Files.write(source.toPath(), value.getBytes(StandardCharsets.UTF_8));
+        File backup = new File(mContext.getCacheDir(), backupName);
+        ZipParameters parameters = new ZipParameters();
+        parameters.setRootFolderInZip("attachments/");
+        parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+        parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+        new net.lingala.zip4j.core.ZipFile(backup).addFile(source, parameters);
+        return backup;
+    }
+
     private String restoreFailure(File backup) throws Exception {
         try {
             new DefaultBackupImporter(mContext, backup, null).importDatabase(importFolder());
