@@ -387,6 +387,7 @@
     <string name="adapter_available_money">"Available:"</string>
     <string name="budget_over_by">"Over by:"</string>
     <string name="budget_usage_percent">"Used %1$d%%"</string>
+    <string name="saving_progress_percent">"Progress: %1$d%%"</string>
     <string name="budget_usage_near_limit">"Near limit · %1$d%% used"</string>
     <string name="budget_usage_exceeded">"Target exceeded · %1$d%% used"</string>
     <string name="budget_forecast_usage">"Forecast by period end: %1$s"</string>
