@@ -39,6 +39,8 @@ import android.widget.TextView;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.background.OverviewDataLoader;
+import com.oriondev.moneywallet.model.Money;
+import com.oriondev.moneywallet.model.OverviewChangeMath;
 import com.oriondev.moneywallet.model.OverviewData;
 import com.oriondev.moneywallet.model.OverviewSetting;
 import com.oriondev.moneywallet.model.PeriodMoney;
@@ -50,6 +52,14 @@ import com.oriondev.moneywallet.ui.adapter.pager.OverviewChartViewPagerAdapter;
 import com.oriondev.moneywallet.ui.adapter.recycler.OverviewItemAdapter;
 import com.oriondev.moneywallet.ui.fragment.base.SinglePanelFragment;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
+
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by andrea on 17/08/18.
@@ -72,6 +82,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
     private View mComparisonContainer;
     private TextView mIncomeChangeTextView;
     private TextView mExpenseChangeTextView;
+    private TextView mIncomeChangePercentTextView;
+    private TextView mExpenseChangePercentTextView;
     private View mTopExpensesContainer;
     private TextView mTopExpensesTextView;
 
@@ -101,6 +113,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         mComparisonContainer = view.findViewById(R.id.summary_comparison_container);
         mIncomeChangeTextView = view.findViewById(R.id.summary_income_change_value);
         mExpenseChangeTextView = view.findViewById(R.id.summary_expense_change_value);
+        mIncomeChangePercentTextView = view.findViewById(R.id.summary_income_change_percent);
+        mExpenseChangePercentTextView = view.findViewById(R.id.summary_expense_change_percent);
         mTopExpensesContainer = view.findViewById(R.id.summary_top_expenses_container);
         mTopExpensesTextView = view.findViewById(R.id.summary_top_expenses_value);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -189,7 +203,45 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         if (hasPreviousPeriod) {
             formatter.applyNotTinted(mIncomeChangeTextView, data.getLatestIncomeChange());
             formatter.applyNotTinted(mExpenseChangeTextView, data.getLatestExpenseChange());
+            PeriodMoney previous = data.getPeriodMoney(data.getPeriodCount() - 2);
+            PeriodMoney latest = data.getPeriodMoney(data.getPeriodCount() - 1);
+            mIncomeChangePercentTextView.setText(formatPercentageChanges(
+                    previous.getIncomes(), latest.getIncomes()));
+            mExpenseChangePercentTextView.setText(formatPercentageChanges(
+                    previous.getExpenses(), latest.getExpenses()));
         }
+    }
+
+    private String formatPercentageChanges(Money previous, Money current) {
+        Set<String> currencySet = new LinkedHashSet<>();
+        for (String currency : previous.getCurrencies()) {
+            if (currency != null) currencySet.add(currency);
+        }
+        for (String currency : current.getCurrencies()) {
+            if (currency != null) currencySet.add(currency);
+        }
+        List<String> currencies = new ArrayList<>(currencySet);
+        Collections.sort(currencies);
+
+        NumberFormat numberFormat = NumberFormat.getNumberInstance();
+        numberFormat.setMinimumFractionDigits(1);
+        numberFormat.setMaximumFractionDigits(1);
+        StringBuilder result = new StringBuilder();
+        for (String currency : currencies) {
+            if (result.length() > 0) result.append('\n');
+            BigDecimal change = OverviewChangeMath.percentageChange(
+                    previous.getMoney(currency), current.getMoney(currency));
+            String value;
+            if (change == null) {
+                value = getString(R.string.overview_comparison_new);
+            } else {
+                String sign = change.signum() > 0 ? "+" : (change.signum() < 0 ? "−" : "");
+                value = getString(R.string.overview_comparison_percent_value,
+                        sign, numberFormat.format(change.abs()));
+            }
+            result.append(getString(R.string.overview_comparison_percent_item, currency, value));
+        }
+        return result.toString();
     }
 
     @Override
