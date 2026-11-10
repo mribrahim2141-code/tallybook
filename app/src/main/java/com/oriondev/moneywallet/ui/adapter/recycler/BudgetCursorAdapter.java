@@ -41,7 +41,10 @@ import com.oriondev.moneywallet.utils.DateUtils;
 import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
 
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by andrea on 06/03/18.
@@ -54,6 +57,7 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
     private int mIndexId;
     private int mIndexType;
     private int mIndexTarget;
+    private int mIndexStartDate;
     private int mIndexEndDate;
     private int mIndexCategoryIcon;
     private int mIndexCategoryName;
@@ -61,6 +65,28 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
     private int mIndexProgress;
 
     private MoneyFormatter mMoneyFormatter;
+
+    static long calculateProjectedUsage(long progress, Date startDate, Date endDate, Date today) {
+        if (startDate == null || endDate == null || today == null || progress < 0L) return -1L;
+        long startDay = utcDay(startDate);
+        long endDay = utcDay(endDate);
+        long todayDay = utcDay(today);
+        if (endDay < startDay || todayDay < startDay || todayDay > endDay) return -1L;
+        if (progress == 0L) return 0L;
+        long elapsedDays = todayDay - startDay + 1L;
+        long totalDays = endDay - startDay + 1L;
+        double projected = Math.ceil((double) progress * (double) totalDays / (double) elapsedDays);
+        return projected >= Long.MAX_VALUE ? Long.MAX_VALUE : (long) projected;
+    }
+
+    private static long utcDay(Date date) {
+        Calendar local = Calendar.getInstance();
+        local.setTime(date);
+        Calendar utc = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        utc.clear();
+        utc.set(local.get(Calendar.YEAR), local.get(Calendar.MONTH), local.get(Calendar.DAY_OF_MONTH));
+        return utc.getTimeInMillis() / 86400000L;
+    }
 
     static int calculateUsagePercent(long target, long progress) {
         if (target <= 0L || progress <= 0L) {
@@ -82,6 +108,7 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
         mIndexId = cursor.getColumnIndex(Contract.Budget.ID);
         mIndexType = cursor.getColumnIndex(Contract.Budget.TYPE);
         mIndexTarget = cursor.getColumnIndex(Contract.Budget.MONEY);
+        mIndexStartDate = cursor.getColumnIndex(Contract.Budget.START_DATE);
         mIndexEndDate = cursor.getColumnIndex(Contract.Budget.END_DATE);
         mIndexCategoryIcon = cursor.getColumnIndex(Contract.Budget.CATEGORY_ICON);
         mIndexCategoryName = cursor.getColumnIndex(Contract.Budget.CATEGORY_NAME);
@@ -140,6 +167,16 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
         // check if budget is expired
         Context context = holder.mDateTextView.getContext();
         Date endDate = DateUtils.getDateFromSQLDateString(cursor.getString(mIndexEndDate));
+        Date startDate = DateUtils.getDateFromSQLDateString(cursor.getString(mIndexStartDate));
+        long projectedUsage = calculateProjectedUsage(progress, startDate, endDate, new Date());
+        if (projectedUsage >= 0L) {
+            holder.mForecastTextView.setVisibility(View.VISIBLE);
+            int forecastLabel = projectedUsage > target ? R.string.budget_forecast_over : R.string.budget_forecast_usage;
+            holder.mForecastTextView.setText(context.getString(forecastLabel,
+                    mMoneyFormatter.getNotTintedString(currency, projectedUsage)));
+        } else {
+            holder.mForecastTextView.setVisibility(View.GONE);
+        }
         String formattedEndDate = DateFormatter.getFormattedDate(endDate);
         if (DateUtils.isBeforeToday(endDate)) {
             holder.mDateTextView.setText(context.getString(R.string.relative_string_ended_on, formattedEndDate));
@@ -167,6 +204,7 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
         private TextView mAvailableHeaderTextView;
         private TextView mUsageTextView;
         private TextView mDateTextView;
+        private TextView mForecastTextView;
 
         /*package-local*/ ViewHolder(View itemView) {
             super(itemView);
@@ -179,6 +217,7 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
             mAvailableHeaderTextView = itemView.findViewById(R.id.available_header_text_view);
             mUsageTextView = itemView.findViewById(R.id.budget_usage_text_view);
             mDateTextView = itemView.findViewById(R.id.date_text_view);
+            mForecastTextView = itemView.findViewById(R.id.forecast_text_view);
             itemView.setOnClickListener(this);
         }
 

@@ -2,9 +2,27 @@ package com.oriondev.moneywallet.ui.adapter.recycler;
 
 import org.junit.Test;
 
+import java.util.Date;
+
 import static org.junit.Assert.assertEquals;
 
 public class BudgetCursorAdapterTest {
+
+    @Test
+    public void projectedUsageScalesCurrentPaceAcrossTheBudgetPeriod() {
+        Date start = new Date(10L * 86400000L);
+        Date end = new Date(19L * 86400000L);
+        Date today = new Date(14L * 86400000L);
+        assertEquals(2000L, BudgetCursorAdapter.calculateProjectedUsage(1000L, start, end, today));
+    }
+
+    @Test
+    public void projectedUsageRejectsDatesOutsideTheBudgetPeriod() {
+        Date start = new Date(10L * 86400000L);
+        Date end = new Date(19L * 86400000L);
+        assertEquals(-1L, BudgetCursorAdapter.calculateProjectedUsage(1000L, start, end, new Date(9L * 86400000L)));
+        assertEquals(-1L, BudgetCursorAdapter.calculateProjectedUsage(1000L, start, end, new Date(20L * 86400000L)));
+    }
 
     @Test
     public void usagePercentHandlesNormalAndNearLimitValues() {

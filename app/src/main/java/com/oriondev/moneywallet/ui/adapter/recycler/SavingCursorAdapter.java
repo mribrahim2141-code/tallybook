@@ -37,6 +37,7 @@ import com.oriondev.moneywallet.ui.view.MaterialProgressBar;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
+import com.oriondev.moneywallet.utils.MoneyProgressMath;
 
 /**
  * Created by andrea on 06/03/18.
@@ -88,10 +89,12 @@ public class SavingCursorAdapter extends AbstractCursorAdapter<SavingCursorAdapt
             holder.mButtonLayout.setVisibility(View.VISIBLE);
             long startMoney = cursor.getLong(mIndexStartMoney);
             long progress = cursor.getLong(mIndexProgress);
-            long current = startMoney + progress;
-            long needed = Math.max(target - current, 0L);
+            long current = MoneyProgressMath.saturatedAdd(startMoney, progress);
+            long needed = MoneyProgressMath.amountNeeded(target, current);
             holder.mProgressBar.setMaxValue(target);
             holder.mProgressBar.setProgressValue(current);
+            holder.mProgressPercentTextView.setText(holder.itemView.getContext().getString(
+                    R.string.saving_progress_percent, MoneyProgressMath.progressPercent(target, current)));
             mMoneyFormatter.applyNotTinted(holder.mCurrentMoneyTextView, currency, current);
             mMoneyFormatter.applyNotTinted(holder.mNeededMoneyTextView, currency, needed);
             holder.mWithdrawEverythingButton.setVisibility(needed == 0 ? View.VISIBLE : View.GONE);
@@ -103,6 +106,8 @@ public class SavingCursorAdapter extends AbstractCursorAdapter<SavingCursorAdapt
             holder.mButtonLayout.setVisibility(View.GONE);
             holder.mProgressBar.setMaxValue(target);
             holder.mProgressBar.setProgressValue(target);
+            holder.mProgressPercentTextView.setText(holder.itemView.getContext().getString(
+                    R.string.saving_progress_percent, 100));
         }
     }
 
@@ -122,6 +127,7 @@ public class SavingCursorAdapter extends AbstractCursorAdapter<SavingCursorAdapt
         private View mProgressLayout;
         private TextView mCurrentMoneyTextView;
         private TextView mNeededMoneyTextView;
+    private TextView mProgressPercentTextView;
         private View mButtonLayoutFix;
         private ViewGroup mButtonLayout;
         private CardButton mWithdrawEverythingButton;
@@ -137,6 +143,7 @@ public class SavingCursorAdapter extends AbstractCursorAdapter<SavingCursorAdapt
             mProgressLayout = itemView.findViewById(R.id.progress_layout);
             mCurrentMoneyTextView = itemView.findViewById(R.id.current_body_text_view);
             mNeededMoneyTextView = itemView.findViewById(R.id.needed_body_text_view);
+            mProgressPercentTextView = itemView.findViewById(R.id.progress_percent_text_view);
             mButtonLayoutFix = itemView.findViewById(R.id.button_bar_empty_fix);
             mButtonLayout = itemView.findViewById(R.id.button_bar_layout);
             mWithdrawEverythingButton = itemView.findViewById(R.id.withdraw_everything_button);
