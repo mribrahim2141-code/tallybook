@@ -160,6 +160,17 @@ public class ImportExportIntentService extends IntentService {
             throws IOException {
         // initialize the correct data exporter
         AbstractDataExporter dataExporter = getDataExporter(context, dataFormat, folder);
+        return exportTransactions(context, dataFormat, startDate, endDate, wallets,
+                uniqueWallet, optionalColumns, dataExporter);
+    }
+
+    /** Package-private overload so failure cleanup can be tested with a deterministic exporter. */
+    static AbstractDataExporter exportTransactions(@NonNull Context context, @NonNull DataFormat dataFormat,
+                                                    @Nullable Date startDate, @Nullable Date endDate,
+                                                    @Nullable Wallet[] wallets, boolean uniqueWallet,
+                                                    @Nullable String[] optionalColumns,
+                                                    @NonNull AbstractDataExporter dataExporter)
+            throws IOException {
         ContentResolver contentResolver = context.getContentResolver();
         Uri uri = DataContentProvider.CONTENT_CATEGORY_LINES;
         // initialize the selection builder with common variables
