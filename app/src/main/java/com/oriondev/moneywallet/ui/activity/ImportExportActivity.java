@@ -779,16 +779,38 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
         }
         // the display name already carries the right extension, so use a neutral mime
         // type to keep the provider from rewriting the file name
-        DocumentFile target = folder.createFile("application/octet-stream", name);
-        if (target == null) {
-            throw new IOException("unable to create the file in the destination folder");
-        }
-        try (InputStream input = getContentResolver().openInputStream(sourceUri);
-             OutputStream output = getContentResolver().openOutputStream(target.getUri())) {
-            if (input == null || output == null) {
-                throw new IOException("unable to copy the export to the destination");
+        DocumentFile target = null;
+        boolean copied = false;
+        try {
+            target = folder.createFile("application/octet-stream", name);
+            if (target == null) {
+                throw new IOException("unable to create the file in the destination folder");
             }
-            copyStream(input, output);
+            try (InputStream input = getContentResolver().openInputStream(sourceUri);
+                 OutputStream output = getContentResolver().openOutputStream(target.getUri())) {
+                if (input == null || output == null) {
+                    throw new IOException("unable to copy the export to the destination");
+                }
+                copyStream(input, output);
+            }
+            copied = true;
+        } finally {
+            // Never leave a half-written file in the folder the user selected.
+            if (!copied && target != null) {
+                target.delete();
+            }
+            // Keep the source if copying failed so the export can be retried.
+            // On success, remove only the app-owned temporary FileProvider source.
+            if (copied) {
+                deleteExportSource(sourceUri);
+            }
+        }
+    }
+
+    /** Delete only the app-owned cache URI returned by the export service. */
+    void deleteExportSource(Uri sourceUri) {
+        if (sourceUri != null && TextUtils.equals(getPackageName() + ".storage.file", sourceUri.getAuthority())) {
+            getContentResolver().delete(sourceUri, null, null);
         }
     }
 

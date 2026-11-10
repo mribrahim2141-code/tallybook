@@ -2,11 +2,13 @@ package com.oriondev.moneywallet.ui.activity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 
 import android.app.Application;
 
+import androidx.core.content.FileProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.test.core.app.ApplicationProvider;
 
@@ -22,13 +24,17 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.robolectric.Shadows.shadowOf;
 
 /**
@@ -150,6 +156,23 @@ public class ImportExportActivityTest {
         send(new Intent(LocalAction.ACTION_IMPORT_SERVICE_STARTED).putExtra(ImportExportIntentService.TOKEN, token));
         assertNull(lower.get().getSupportFragmentManager().findFragmentByTag(TAG_PROGRESS_DIALOG));
         assertNotNull(upper.get().getSupportFragmentManager().findFragmentByTag(TAG_PROGRESS_DIALOG));
+    }
+
+    @Test
+    public void aCopiedExportDeletesOnlyItsAppOwnedCacheSource() throws Exception {
+        File exportFolder = new File(mContext.getCacheDir(), "export");
+        assertTrue(exportFolder.mkdirs() || exportFolder.isDirectory());
+        File source = new File(exportFolder, "temporary-export.csv");
+        try (FileOutputStream output = new FileOutputStream(source)) {
+            output.write("private transaction data".getBytes("UTF-8"));
+        }
+        Uri sourceUri = FileProvider.getUriForFile(mContext,
+                mContext.getPackageName() + ".storage.file", source);
+        ActivityController<ImportExportActivity> controller = build(ImportExportActivity.MODE_EXPORT).setup();
+
+        controller.get().deleteExportSource(sourceUri);
+
+        assertFalse(source.exists());
     }
 
     private static ArrayList<String> mine() {
