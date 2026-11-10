@@ -951,6 +951,9 @@
     <string name="overview_comparison_title">Change vs previous period</string>
     <string name="overview_comparison_income">Income change</string>
     <string name="overview_comparison_expense">Expense change</string>
+    <string name="overview_comparison_percent_item">%1$s: %2$s</string>
+    <string name="overview_comparison_percent_value">%1$s%2$s%%</string>
+    <string name="overview_comparison_new">New</string>
     <string name="overview_top_expenses_title">Top spending categories</string>
     <string name="overview_top_expense_item">%1$s • %2$s: %3$s</string>
 </resources>
