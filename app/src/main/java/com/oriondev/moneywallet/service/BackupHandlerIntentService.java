@@ -244,24 +244,45 @@ public class BackupHandlerIntentService extends IntentService {
         FileUtils.forceMkdir(temporaryFolder);
         try {
             File databaseFile = getDatabasePath(SQLDatabaseImporter.DATABASE_NAME);
-            importer.importDatabase(temporaryFolder, databaseFile.getParentFile());
-            // the count on a recurrence notification still showing belongs to the ledger just replaced
+            File attachmentFolder = BackupOperation.getAttachmentFolder(this);
+
+            // Build both replacement resources away from the live data first. A bad archive,
+            // wrong password, or full device must leave both the current ledger and attachments
+            // untouched.
+            importer.prepareDatabase(temporaryFolder, databaseFile.getParentFile());
+            importer.prepareAttachments(attachmentFolder);
+
+            // Keep the old attachment directory until the staged database is promoted. If that
+            // promotion fails, the importer can put the previous directory straight back.
+            importer.commitAttachments();
+            try {
+                importer.commitDatabase();
+            } catch (ImportException | RuntimeException commitFailure) {
+                try {
+                    importer.rollbackAttachments();
+                } catch (ImportException rollbackFailure) {
+                    commitFailure.addSuppressed(rollbackFailure);
+                }
+                throw commitFailure;
+            }
+
+            // Both resources are now installed. Only now reset wallet/widget references and
+            // notify observers, so the UI never redraws against a half-restored pair.
+            importer.finishDatabaseRestore();
+            importer.finishAttachmentRestore();
             NotificationManagerCompat.from(this).cancel(NotificationContract.NOTIFICATION_ID_RECURRENCE);
-            // Announced here, between the two, and nowhere else. The ledger is live from the
-            // rename inside importDatabase, so waiting until after the attachments would leave
-            // the current wallet and every widget binding naming rows out of the database that
-            // has just been replaced whenever the attachment pass fails. Announcing in both
-            // places instead is worse. This call writes user state, the current wallet preference
-            // and every widget wallet binding, the app stays interactive for the whole attachment
-            // extraction, and a second announcement would silently undo whatever the user set
-            // during it.
-            //
-            // The currency cache goes with it. It is held in memory and only this reloads it, so
-            // announcing without it makes every screen redraw the restored rows through the
-            // replaced database currencies.
             DataContentProvider.notifyDatabaseIsChanged(this);
             CurrencyManager.invalidateCache(this);
-            importer.importAttachments(BackupOperation.getAttachmentFolder(this));
+        } catch (ImportException | IOException | RuntimeException restoreFailure) {
+            // Also handles failures while preparing either resource. These calls are harmless
+            // when the corresponding staging operation did not get far enough to prepare state.
+            try {
+                importer.rollbackAttachments();
+            } catch (ImportException rollbackFailure) {
+                restoreFailure.addSuppressed(rollbackFailure);
+            }
+            importer.discardPreparedDatabase();
+            throw restoreFailure;
         } finally {
             FileUtils.cleanDirectory(temporaryFolder);
         }
