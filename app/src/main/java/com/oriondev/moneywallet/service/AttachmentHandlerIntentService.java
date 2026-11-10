@@ -32,6 +32,7 @@ import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.Attachment;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.utils.AttachmentFileUtils;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -84,26 +85,44 @@ public class AttachmentHandlerIntentService extends IntentService {
         }
     }
 
-    private File getAttachmentFile(Attachment attachment) throws IOException {
-        File folder = new File(getExternalFilesDir(null), "attachments");
-        FileUtils.forceMkdir(folder);
-        File file = new File(folder, attachment.getFile());
-        if (!file.exists() && !file.createNewFile()) {
-            throw new IOException("Failed to create a new file");
+    /**
+     * Resolve only a flat filename inside the app's attachment directory. Keep this
+     * boundary here as well as in sharing and backup code: database and intent data
+     * must never be allowed to select an arbitrary filesystem path.
+     */
+    static File resolveAttachmentFile(File folder, String fileName) throws IOException {
+        File file = AttachmentFileUtils.resolve(folder, fileName);
+        if (file == null) {
+            throw new IOException("Invalid attachment file path");
         }
         return file;
     }
 
+    private File getAttachmentFile(Attachment attachment) throws IOException {
+        File folder = new File(getExternalFilesDir(null), Attachment.FOLDER_NAME);
+        FileUtils.forceMkdir(folder);
+        return resolveAttachmentFile(folder, attachment.getFile());
+    }
+
     private Uri createAttachment(Uri uri, Attachment attachment) throws IOException {
         ContentResolver contentResolver = getContentResolver();
+        File destination = getAttachmentFile(attachment);
         InputStream inputStream = null;
         OutputStream outputStream = null;
+        boolean completed = false;
         try {
             inputStream = contentResolver.openInputStream(uri);
-            if (inputStream != null) {
-                outputStream = new FileOutputStream(getAttachmentFile(attachment));
-                IOUtils.copy(inputStream, outputStream);
+            if (inputStream == null) {
+                throw new IOException("Unable to open the selected attachment");
             }
+            // Attachment IDs are generated uniquely. Refuse to overwrite an existing file.
+            if (!destination.createNewFile()) {
+                throw new IOException("Attachment file already exists");
+            }
+            outputStream = new FileOutputStream(destination);
+            IOUtils.copy(inputStream, outputStream);
+            outputStream.flush();
+            completed = true;
         } finally {
             if (inputStream != null) {
                 try {inputStream.close();} catch (IOException ignore) {}
@@ -111,20 +130,32 @@ public class AttachmentHandlerIntentService extends IntentService {
             if (outputStream != null) {
                 try {outputStream.close();} catch (IOException ignore) {}
             }
+            if (!completed) {
+                FileUtils.deleteQuietly(destination);
+            }
         }
+
         ContentValues contentValues = new ContentValues();
         contentValues.put(Contract.Attachment.FILE, attachment.getFile());
         contentValues.put(Contract.Attachment.NAME, attachment.getName());
         contentValues.put(Contract.Attachment.TYPE, attachment.getType());
         contentValues.put(Contract.Attachment.SIZE, attachment.getSize());
-        return contentResolver.insert(DataContentProvider.CONTENT_ATTACHMENTS, contentValues);
+        Uri inserted = contentResolver.insert(DataContentProvider.CONTENT_ATTACHMENTS, contentValues);
+        if (inserted == null) {
+            FileUtils.deleteQuietly(destination);
+            throw new IOException("Failed to save attachment metadata");
+        }
+        return inserted;
     }
 
     private void deleteAttachment(Attachment attachment) throws IOException {
         ContentResolver contentResolver = getContentResolver();
+        File file = getAttachmentFile(attachment);
         Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_ATTACHMENTS, attachment.getId());
         contentResolver.delete(uri, null, null);
-        FileUtils.forceDelete(getAttachmentFile(attachment));
+        if (file.exists()) {
+            FileUtils.forceDelete(file);
+        }
     }
 
     private void notifyOperationStarted(Attachment attachment, int action) {
