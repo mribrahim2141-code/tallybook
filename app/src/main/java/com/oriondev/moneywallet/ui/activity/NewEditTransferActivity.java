@@ -772,7 +772,7 @@ public class NewEditTransferActivity extends NewEditItemActivity  implements Cur
                 mConverterPicker.notifyMoneyChanged();
                 break;
             case TAG_TAX_PICKER:
-                mTaxEditText.setText(mMoneyFormatter.getNotTintedStringForInput(currency, money));
+                mTaxEditText.setText(mMoneyFormatter.getNotTintedStringForInput(currency, money, MoneyFormatter.CurrencyMode.USER_PREFERENCE));
                 break;
         }
     }
