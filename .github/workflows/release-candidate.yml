@@ -1,0 +1,67 @@
+name: release-candidate
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-candidate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build unsigned Android release candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Run unit tests, release lint, and build release APK
+        run: |
+          ./gradlew --no-daemon clean testFlossOsmDebugUnitTest lintFlossOsmRelease assembleFlossOsmRelease
+
+      - name: Verify APK output and create checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/flossOsm/release/app-floss-osm-release-unsigned.apk"
+          if [ ! -s "$APK" ]; then
+            echo "Expected unsigned release APK was not produced: $APK"
+            find app/build/outputs/apk -type f -maxdepth 5 -print || true
+            exit 1
+          fi
+          sha256sum "$APK" > "$APK.sha256"
+          {
+            echo "Build type: Release"
+            echo "Flavor: flossOsm"
+            echo "Signing: unsigned (no release keystore is configured in this repository)"
+            echo "Commit: $GITHUB_SHA"
+            echo "Ref: $GITHUB_REF"
+          } > app/build/outputs/apk/flossOsm/release/RELEASE-CANDIDATE.txt
+
+      - name: Upload unsigned release candidate
+        uses: actions/upload-artifact@v7
+        with:
+          name: tallybook-release-unsigned
+          path: |
+            app/build/outputs/apk/flossOsm/release/*.apk
+            app/build/outputs/apk/flossOsm/release/*.sha256
+            app/build/outputs/apk/flossOsm/release/RELEASE-CANDIDATE.txt
+          if-no-files-found: error
+          retention-days: 30
