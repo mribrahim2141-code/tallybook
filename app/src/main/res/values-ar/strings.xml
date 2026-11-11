@@ -927,4 +927,8 @@
     <string name="overview_comparison_new">جديد</string>
     <string name="overview_top_expenses_title">أكثر التصنيفات إنفاقاً</string>
     <string name="overview_top_expense_item">%1$s • %2$s: %3$s</string>
+    <string name="saving_progress_percent">نسبة الإنجاز: %1$d%%</string>
+    <string name="budget_forecast_usage">المتوقع بنهاية الفترة: %1$s</string>
+    <string name="budget_forecast_over">قد يتجاوز الإنفاق الحد المحدد: %1$s</string>
 </resources>
+
