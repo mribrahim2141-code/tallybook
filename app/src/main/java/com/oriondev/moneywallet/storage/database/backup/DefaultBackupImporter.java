@@ -34,6 +34,8 @@ import net.lingala.zip4j.model.FileHeader;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by andrea on 25/10/18.
@@ -122,6 +124,7 @@ public class DefaultBackupImporter extends AbstractBackupImporter {
             if (!zipFile.isValidZipFile()) {
                 throw new ImportException("Invalid backup file: not a zip file");
             }
+            Set<String> attachmentNames = new HashSet<>();
             for (Object obj : zipFile.getFileHeaders()) {
                 FileHeader header = (FileHeader) obj;
                 if (header.isEncrypted()) {
@@ -142,6 +145,11 @@ public class DefaultBackupImporter extends AbstractBackupImporter {
                     if (name.isEmpty() || ".".equals(name) || "..".equals(name)
                             || name.contains("/") || name.contains("\\")) {
                         throw new ImportException("Invalid attachment path in backup");
+                    }
+                    // ZIP archives may contain multiple entries with the same name. Reject them
+                    // rather than letting a later entry silently replace an earlier attachment.
+                    if (!attachmentNames.add(name)) {
+                        throw new ImportException("Duplicate attachment file in backup");
                     }
                     zipFile.extractFile(header, attachmentFolder.getPath(), null, name);
                 }
