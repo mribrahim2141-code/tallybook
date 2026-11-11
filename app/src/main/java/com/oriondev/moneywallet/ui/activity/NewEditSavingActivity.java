@@ -348,7 +348,7 @@ public class NewEditSavingActivity extends NewEditItemActivity implements IconPi
                 }
                 break;
             case TAG_START_MONEY_PICKER:
-                mStartMoneyEditText.setText(mMoneyFormatter.getNotTintedStringForInput(currency, money));
+                mStartMoneyEditText.setText(mMoneyFormatter.getNotTintedStringForInput(currency, money, MoneyFormatter.CurrencyMode.USER_PREFERENCE));
                 break;
         }
     }
