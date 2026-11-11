@@ -504,7 +504,7 @@ public class NewEditDebtActivity extends NewEditItemActivity implements IconPick
         } else {
             mCurrencyTextView.setText("?");
         }
-        mMoneyTextView.setText(mMoneyFormatter.getNotTintedString(currency, money, MoneyFormatter.CurrencyMode.ALWAYS_HIDDEN));
+        mMoneyTextView.setText(mMoneyFormatter.getNotTintedStringForInput(currency, money));
     }
 
     @Override

@@ -49,6 +49,12 @@
             android:summary="@string/setting_summary_ui_dot_matrix_icons"
             android:persistent="false" />
 
+        <com.oriondev.moneywallet.ui.preference.ThemedSwitchPreference
+            android:key="hide_balances"
+            android:title="@string/setting_title_ui_hide_balances"
+            android:summary="@string/setting_summary_ui_hide_balances"
+            android:persistent="false" />
+
         <com.oriondev.moneywallet.ui.preference.ColorPreference
             android:key="income_color"
             android:title="@string/setting_title_ui_income_color" />

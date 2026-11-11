@@ -178,7 +178,18 @@ class MoneyFormatter {
         return getNotTintedString(currencyUnit, money, currencyMode, FlowMode.AUTO_DETECT)
     }
 
-    private fun getNotTintedString(currencyUnit: CurrencyUnit?, money: Long, currencyMode: CurrencyMode?, flowMode: FlowMode): String {
+    /** Amount entry stays readable while the privacy setting masks displayed balances. */
+    fun getNotTintedStringForInput(currencyUnit: CurrencyUnit?, money: Long): String {
+        return getNotTintedString(currencyUnit, money, CurrencyMode.ALWAYS_HIDDEN, FlowMode.AUTO_DETECT, false)
+    }
+
+    private fun getNotTintedString(currencyUnit: CurrencyUnit?, money: Long, currencyMode: CurrencyMode?, flowMode: FlowMode, respectPrivacy: Boolean = true): String {
+        if (respectPrivacy && PreferenceManager.isBalancesHidden()) {
+            val showCurrency = currencyUnit != null &&
+                    (currencyMode === CurrencyMode.ALWAYS_SHOWN ||
+                            (currencyMode === CurrencyMode.USER_PREFERENCE && mCurrencyEnabled))
+            return if (showCurrency) currencyUnit!!.symbol + " ••••" else "••••"
+        }
         val builder = StringBuilder()
         val divider: Double
         if (currencyUnit != null) {
