@@ -600,6 +600,8 @@
     <string name="setting_default_wallet_archived">"%1$s (archived)"</string>
     <string name="setting_title_ui_dot_matrix_icons">"Dot matrix icons"</string>
     <string name="setting_summary_ui_dot_matrix_icons">"Draw category icons as dots on a round tile instead of the classic style"</string>
+    <string name="setting_title_ui_hide_balances">"Hide balances"</string>
+    <string name="setting_summary_ui_hide_balances">"Mask displayed amounts in the app and home screen widget"</string>
     <string name="setting_title_ui_income_color">"Income color"</string>
     <string name="setting_title_ui_expense_color">"Expense color"</string>
     <string name="setting_title_ui_custom_digits">"Display style of digits"</string>

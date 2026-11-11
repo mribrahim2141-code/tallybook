@@ -37,6 +37,7 @@ The F-Droid build is reproducible and carries the developer signature, so the ap
 - **Widget.** A home screen widget shows one wallet's balance.
 - **Backup.** Write to a local folder, to your own WebDAV server such as Nextcloud or a NAS, or through Android's own backup.
 - **Import and export.** CSV in, and CSV, XLS or PDF out, plus the older MoneyWallet backup file.
+- **Privacy.** Optionally hide displayed balances in the app and home screen widget.
 - **Lock.** An optional PIN, pattern or fingerprint when the app opens.
 
 ## Coming from MoneyWallet

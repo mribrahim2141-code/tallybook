@@ -454,6 +454,8 @@
     <string name="setting_default_wallet_archived">%1$s (مؤرشفة)</string>
     <string name="setting_title_ui_dot_matrix_icons">أيقونات بنمط النقاط</string>
     <string name="setting_summary_ui_dot_matrix_icons">عرض أيقونات التصنيفات كنقاط داخل دائرة بدلاً من النمط التقليدي</string>
+    <string name="setting_title_ui_hide_balances">إخفاء الأرصدة</string>
+    <string name="setting_summary_ui_hide_balances">إخفاء المبالغ المعروضة في التطبيق وأداة الشاشة الرئيسية</string>
     <string name="setting_title_ui_income_color">لون الدخل</string>
     <string name="setting_title_ui_expense_color">لون المصروف</string>
     <string name="setting_title_ui_custom_digits">نمط عرض الأرقام</string>

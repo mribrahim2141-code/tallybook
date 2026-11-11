@@ -30,6 +30,10 @@ The database, the attachments, the tile cache and those cached copies are not en
 
 You can lock the app with a PIN, a pattern, or your fingerprint. That locks the screen, not the files.
 
+## Hiding balances
+
+The optional Hide balances setting masks formatted amounts shown inside the app and in its home screen widget. It is a display preference only: it does not encrypt the database, attachments or settings, and it does not change the contents of backups or CSV, XLS and PDF exports. Anyone with access to the app data or an exported or backed up file can still read the underlying amounts.
+
 ## Backups and exports
 
 A backup is a zip file holding your database and your attachments, and you choose the destination: External Memory, a Local folder you pick, or your own WebDAV server. There is no backup password by default. Set one and the contents are encrypted with AES 256. Leave it empty and the zip carries your database and attachments in the clear.

@@ -91,6 +91,7 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
     private Preference mDefaultWalletPreference;
     private SwitchPreferenceCompat mAutoOpenCalculatorPreference;
     private SwitchPreferenceCompat mDotMatrixIconsPreference;
+    private SwitchPreferenceCompat mHideBalancesPreference;
     private SwitchPreferenceCompat mSystemColorsPreference;
     private ColorPreference mColorPrimaryPreference;
     private ColorPreference mColorAccentPreference;
@@ -118,6 +119,7 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
         mDefaultWalletPreference = findPreference("default_wallet");
         mAutoOpenCalculatorPreference = (SwitchPreferenceCompat) findPreference("auto_open_calculator");
         mDotMatrixIconsPreference = (SwitchPreferenceCompat) findPreference("dot_matrix_icons");
+        mHideBalancesPreference = (SwitchPreferenceCompat) findPreference("hide_balances");
         mSystemColorsPreference = (SwitchPreferenceCompat) findPreference("system_colors");
         mColorPrimaryPreference = (ColorPreference) findPreference("theme_color_primary");
         mColorAccentPreference = (ColorPreference) findPreference("theme_color_accent");
@@ -222,6 +224,7 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
         setupCurrentThemeType();
         mAutoOpenCalculatorPreference.setChecked(PreferenceManager.isAutoOpenCalculatorEnabled());
         mDotMatrixIconsPreference.setChecked(PreferenceManager.isDotMatrixIconsEnabled());
+        mHideBalancesPreference.setChecked(PreferenceManager.isBalancesHidden());
         mSystemColorsPreference.setVisible(DynamicColors.isDynamicColorAvailable());
         mSystemColorsPreference.setChecked(ThemeEngine.isSystemColorsEnabled());
         setupThemeColorsVisible();
@@ -335,6 +338,17 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
                 // Every list builds its icons again when its section is opened, but the drawer
                 // around this screen keeps the wallet icons it already has. Recreating the
                 // activity rebuilds it the way a rotation does and comes back to this screen.
+                requireActivity().recreate();
+                return true;
+            }
+
+        });
+        mHideBalancesPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                PreferenceManager.setBalancesHiddenEnabled((Boolean) newValue);
+                // Recreate the visible screens so every already-bound amount is reformatted.
                 requireActivity().recreate();
                 return true;
             }
