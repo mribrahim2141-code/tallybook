@@ -2,6 +2,10 @@ name: connected
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [ feat/arabic-rtl-emerald-glass ]
+  push:
+    branches: [ feat/arabic-rtl-emerald-glass ]
   schedule:
     - cron: '0 6 * * 1'
 
