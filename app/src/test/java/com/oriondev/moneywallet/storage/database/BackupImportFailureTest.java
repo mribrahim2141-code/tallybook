@@ -216,6 +216,55 @@ public class BackupImportFailureTest {
         assertTrue(!new File(attachmentFolder, "receipt.txt").exists());
     }
 
+    @Test
+    public void interruptedRestoreBeforeDatabasePromotionRestoresPreviousAttachments() throws Exception {
+        File attachmentFolder = new File(mContext.getCacheDir(), "crash-restore-before-db");
+        File previous = new File(attachmentFolder.getParentFile(), attachmentFolder.getName() + ".restore-previous");
+        File journal = new File(attachmentFolder.getParentFile(), attachmentFolder.getName() + ".restore-journal");
+        File stagedDatabase = mContext.getDatabasePath(SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        org.apache.commons.io.FileUtils.deleteQuietly(attachmentFolder);
+        org.apache.commons.io.FileUtils.deleteQuietly(previous);
+        assertTrue(previous.mkdirs());
+        Files.write(new File(previous, "old.txt").toPath(), "old".getBytes(StandardCharsets.UTF_8));
+        assertTrue(attachmentFolder.mkdirs());
+        Files.write(new File(attachmentFolder, "new.txt").toPath(), "new".getBytes(StandardCharsets.UTF_8));
+        Files.write(journal.toPath(), "hadPrevious=true".getBytes(StandardCharsets.UTF_8));
+        Files.write(stagedDatabase.toPath(), "staged".getBytes(StandardCharsets.UTF_8));
+
+        com.oriondev.moneywallet.storage.database.backup.AbstractBackupImporter
+                .recoverInterruptedRestore(mContext, attachmentFolder);
+
+        assertTrue(new File(attachmentFolder, "old.txt").isFile());
+        assertTrue(!new File(attachmentFolder, "new.txt").exists());
+        assertTrue(!previous.exists());
+        assertTrue(!journal.exists());
+        org.apache.commons.io.FileUtils.deleteQuietly(stagedDatabase);
+    }
+
+    @Test
+    public void interruptedRestoreAfterDatabasePromotionKeepsNewAttachments() throws Exception {
+        File attachmentFolder = new File(mContext.getCacheDir(), "crash-restore-after-db");
+        File previous = new File(attachmentFolder.getParentFile(), attachmentFolder.getName() + ".restore-previous");
+        File journal = new File(attachmentFolder.getParentFile(), attachmentFolder.getName() + ".restore-journal");
+        File stagedDatabase = mContext.getDatabasePath(SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        org.apache.commons.io.FileUtils.deleteQuietly(attachmentFolder);
+        org.apache.commons.io.FileUtils.deleteQuietly(previous);
+        org.apache.commons.io.FileUtils.deleteQuietly(stagedDatabase);
+        assertTrue(previous.mkdirs());
+        Files.write(new File(previous, "old.txt").toPath(), "old".getBytes(StandardCharsets.UTF_8));
+        assertTrue(attachmentFolder.mkdirs());
+        Files.write(new File(attachmentFolder, "new.txt").toPath(), "new".getBytes(StandardCharsets.UTF_8));
+        Files.write(journal.toPath(), "hadPrevious=true".getBytes(StandardCharsets.UTF_8));
+
+        com.oriondev.moneywallet.storage.database.backup.AbstractBackupImporter
+                .recoverInterruptedRestore(mContext, attachmentFolder);
+
+        assertTrue(new File(attachmentFolder, "new.txt").isFile());
+        assertTrue(!new File(attachmentFolder, "old.txt").exists());
+        assertTrue(!previous.exists());
+        assertTrue(!journal.exists());
+    }
+
     private File zipRawEntry(String backupName, String entryName) throws Exception {
         File backup = new File(mContext.getCacheDir(), backupName);
         ZipOutputStream output = new ZipOutputStream(new FileOutputStream(backup));
