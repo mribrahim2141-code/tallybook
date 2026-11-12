@@ -32,6 +32,8 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 /**
@@ -99,6 +101,7 @@ public abstract class AbstractBackupImporter {
     private File mPreviousAttachmentFolder;
     private boolean mHadPreviousAttachments;
     private boolean mAttachmentsCommitted;
+    private File mRestoreJournal;
 
     public void importDatabase(@NonNull File temporaryFolder, @NonNull File databaseFolder) throws ImportException {
         prepareDatabase(temporaryFolder, databaseFolder);
@@ -157,6 +160,58 @@ public abstract class AbstractBackupImporter {
     protected abstract void importDatabase(@NonNull File temporaryFolder) throws ImportException;
 
     /**
+     * Recover an interrupted two-resource restore before the application starts using its data.
+     * If the staged database still exists, promotion did not happen and the old attachment
+     * directory must be restored. If it is gone, the database rename completed, so the new
+     * attachments are retained and the old directory can be discarded.
+     */
+    public static void recoverInterruptedRestore(@NonNull Context context, @NonNull File attachmentFolder)
+            throws IOException {
+        File parent = attachmentFolder.getAbsoluteFile().getParentFile();
+        if (parent == null) {
+            return;
+        }
+        File journal = new File(parent, attachmentFolder.getName() + ".restore-journal");
+        if (!journal.isFile()) {
+            return;
+        }
+        File previous = new File(parent, attachmentFolder.getName() + ".restore-previous");
+        File staging = new File(parent, attachmentFolder.getName() + ".restore-staging");
+        File stagedDatabase = new File(context.getDatabasePath(SQLDatabaseImporter.DATABASE_NAME).getParentFile(),
+                SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        String journalState = org.apache.commons.io.FileUtils.readFileToString(journal, StandardCharsets.UTF_8);
+        boolean hadPrevious = journalState.contains("hadPrevious=true");
+
+        if (stagedDatabase.exists()) {
+            // The live database was not promoted. Put the original attachments back.
+            if (previous.exists()) {
+                FileUtils.deleteQuietly(attachmentFolder);
+                if (!previous.renameTo(attachmentFolder)) {
+                    throw new IOException("Cannot recover the previous attachment folder");
+                }
+            } else if (!hadPrevious) {
+                FileUtils.deleteQuietly(attachmentFolder);
+            }
+        } else {
+            // Database promotion completed. Keep the new attachments and discard the old copy.
+            FileUtils.deleteQuietly(previous);
+        }
+        FileUtils.deleteQuietly(staging);
+        FileUtils.deleteQuietly(journal);
+    }
+
+    private static void writeRestoreJournal(@NonNull File journal, boolean hadPrevious) throws IOException {
+        File parent = journal.getAbsoluteFile().getParentFile();
+        if (parent != null) {
+            FileUtils.forceMkdir(parent);
+        }
+        try (FileOutputStream output = new FileOutputStream(journal, false)) {
+            output.write(("hadPrevious=" + hadPrevious).getBytes(StandardCharsets.UTF_8));
+            output.getFD().sync();
+        }
+    }
+
+    /**
      * Restore attachments into a sibling staging directory first. The current folder is not
      * touched until every entry has been extracted successfully, so a bad archive, wrong
      * password, or full device cannot erase the user's existing attachments.
@@ -169,6 +224,11 @@ public abstract class AbstractBackupImporter {
      * Extract attachments into a sibling staging directory without touching the live folder.
      */
     public void prepareAttachments(@NonNull File attachmentFolder) throws ImportException {
+        try {
+            recoverInterruptedRestore(mContext, attachmentFolder);
+        } catch (IOException recoveryFailure) {
+            throw new ImportException(recoveryFailure.getMessage());
+        }
         File parent = attachmentFolder.getAbsoluteFile().getParentFile();
         File staging = new File(parent, attachmentFolder.getName() + ".restore-staging");
         File previous = new File(parent, attachmentFolder.getName() + ".restore-previous");
@@ -205,6 +265,9 @@ public abstract class AbstractBackupImporter {
         }
         try {
             mHadPreviousAttachments = mPreparedAttachmentFolder.exists();
+            mRestoreJournal = new File(mPreparedAttachmentFolder.getAbsoluteFile().getParentFile(),
+                    mPreparedAttachmentFolder.getName() + ".restore-journal");
+            writeRestoreJournal(mRestoreJournal, mHadPreviousAttachments);
             if (mHadPreviousAttachments && !mPreparedAttachmentFolder.renameTo(mPreviousAttachmentFolder)) {
                 throw new IOException("Cannot move the current attachment folder");
             }
@@ -238,6 +301,9 @@ public abstract class AbstractBackupImporter {
         } catch (IOException e) {
             throw new ImportException(e.getMessage());
         } finally {
+            if (mRestoreJournal != null) {
+                FileUtils.deleteQuietly(mRestoreJournal);
+            }
             clearAttachmentRestoreState();
         }
     }
@@ -246,6 +312,9 @@ public abstract class AbstractBackupImporter {
     public void finishAttachmentRestore() {
         if (mPreviousAttachmentFolder != null) {
             FileUtils.deleteQuietly(mPreviousAttachmentFolder);
+        }
+        if (mRestoreJournal != null) {
+            FileUtils.deleteQuietly(mRestoreJournal);
         }
         clearAttachmentRestoreState();
     }
@@ -273,6 +342,7 @@ public abstract class AbstractBackupImporter {
         mPreparedAttachmentFolder = null;
         mStagedAttachmentFolder = null;
         mPreviousAttachmentFolder = null;
+        mRestoreJournal = null;
         mHadPreviousAttachments = false;
         mAttachmentsCommitted = false;
     }
