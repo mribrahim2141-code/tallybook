@@ -83,8 +83,8 @@ public class ThemeEngine implements ITheme {
 
     private static final int[] DEFAULT_HINT_TEXT_COLOR = new int[] {
             Color.parseColor("#61536078"), // OK
-            Color.parseColor("#80D0DDD4"), // OK
-            Color.parseColor("#80D0DDD4")  // OK
+            Color.parseColor("#80AAB5C8"), // OK
+            Color.parseColor("#80AAB5C8")  // OK
     };
 
     private static final int[] DEFAULT_COLOR_CARD_BACKGROUND = new int[] {
