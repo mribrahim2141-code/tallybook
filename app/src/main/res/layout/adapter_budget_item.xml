@@ -32,14 +32,14 @@
     android:layout_marginRight="@dimen/material_component_lists_card_end_margin"
     android:layout_marginEnd="@dimen/material_component_lists_card_end_margin"
     android:foreground="?attr/selectableItemBackground"
-    app:cardCornerRadius="22dp"
-    app:cardElevation="4dp"
-    app:cardUseCompatPadding="true">
+    app:cardCornerRadius="24dp"
+    app:cardElevation="2dp"
+    app:cardUseCompatPadding="true"\n    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"\n    app:strokeColor="?attr/colorOutlineVariant"\n    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical" >
+        android:orientation="vertical" \n        android:background="@drawable/bg_glass_surface">
 
         <!-- Top layout: icon, description, money and progress -->
 
