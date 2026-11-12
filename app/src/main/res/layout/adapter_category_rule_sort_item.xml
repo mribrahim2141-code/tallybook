@@ -24,6 +24,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/material_component_lists_two_line_with_icon_height"
+    android:layout_marginStart="6dp"
+    android:layout_marginEnd="6dp"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="2dp"
+    android:background="@drawable/bg_glass_surface"
+    android:foreground="?attr/selectableItemBackground"
     app:theme_backgroundColor="colorWindowForeground">
 
     <androidx.constraintlayout.widget.Guideline
