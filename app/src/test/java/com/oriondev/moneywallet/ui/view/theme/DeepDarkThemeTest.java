@@ -161,7 +161,7 @@ public class DeepDarkThemeTest {
                 View header = inflater.inflate(R.layout.layout_header_show_icon_name_item,
                         new FrameLayout(activity), true);
                 ThemeEngine.applyTheme(header, true);
-                assertEquals(0xFFFFFFFF, ((TextView) header.findViewById(R.id.name_text_view)).getCurrentTextColor());
+                assertEquals(0xFFE8EDF7, ((TextView) header.findViewById(R.id.name_text_view)).getCurrentTextColor());
             });
         } finally {
             ThemeEngine.setColorPrimary(original);
@@ -193,7 +193,7 @@ public class DeepDarkThemeTest {
             try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
                 scenario.onActivity(activity -> {
                     assertEquals(0xFF000000, backgroundColor(activity.findViewById(R.id.navigation_drawer_header)));
-                    assertEquals(0xFFFFFFFF, ((TextView) activity.findViewById(R.id.wallet_name_text_view)).getCurrentTextColor());
+                    assertEquals(0xFFE8EDF7, ((TextView) activity.findViewById(R.id.wallet_name_text_view)).getCurrentTextColor());
                 });
             }
         } finally {
