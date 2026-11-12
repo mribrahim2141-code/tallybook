@@ -277,6 +277,24 @@ import java.util.function.Supplier;
     private static final ReentrantReadWriteLock sSwapLock = new ReentrantReadWriteLock();
 
     /**
+     * Excludes every database writer while a restore is prepared and committed. The restore
+     * thread may still acquire the read side reentrantly for its own staging imports; other
+     * threads wait and then write to the newly installed live database instead of being lost
+     * when the staged database replaces it.
+     */
+    /*package-local*/ static void beginRestoreBarrier() {
+        sSwapLock.writeLock().lock();
+    }
+
+    /** Releases the restore-wide writer barrier acquired by beginRestoreBarrier. */
+    /*package-local*/ static void endRestoreBarrier() {
+        if (!sSwapLock.isWriteLockedByCurrentThread()) {
+            throw new IllegalStateException("restore barrier is not held by this thread");
+        }
+        sSwapLock.writeLock().unlock();
+    }
+
+    /**
      * Resolves the shared helper and runs the body inside one transaction on it. This is how
      * DataContentProvider starts every write. SyncContentProvider does not come through here, its
      * three writes are one statement each, which SQLite already runs atomically, so they take no
