@@ -334,6 +334,25 @@ public class ThemeEngine implements ITheme {
     private ThemeEngine(Context context) {
         mContext = context.getApplicationContext();
         mPreferences = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
+
+        // Migrate only the previous built-in palette. A color explicitly chosen by the user
+        // is preserved, while existing installs move to the new TallyBook identity.
+        SharedPreferences.Editor editor = mPreferences.edit();
+        boolean changed = false;
+        if (mPreferences.getInt(COLOR_PRIMARY, DEFAULT_COLOR_PRIMARY)
+                == Color.parseColor("#006C50")) {
+            editor.putInt(COLOR_PRIMARY, DEFAULT_COLOR_PRIMARY);
+            editor.putInt(COLOR_PRIMARY_DARK, DEFAULT_COLOR_PRIMARY_DARK);
+            changed = true;
+        }
+        if (mPreferences.getInt(COLOR_ACCENT, DEFAULT_COLOR_ACCENT)
+                == Color.parseColor("#00A878")) {
+            editor.putInt(COLOR_ACCENT, DEFAULT_COLOR_ACCENT);
+            changed = true;
+        }
+        if (changed) {
+            editor.apply();
+        }
     }
 
     // Each getter holds the override it read, since it can be cleared between a null check
