@@ -134,7 +134,8 @@ public class SyncContentProvider extends ContentProvider {
      * The same helper DataContentProvider uses, read on every use instead of held in a field.
      * One helper means one connection on one file, so the two providers cannot end up with a
      * transaction on one and a write on the other. A field would be a closed handle after a
-     * restore, since resetShared closes what it replaces.
+     * restore, since resetShared closes what it replaces. Every write below takes the shared
+     * transaction lock so a restore cannot replace the database while one is in flight.
      *
      * A restore resolves its own staging helper through here. Its rows travel through this
      * provider on the one thread the import runs on, and getShared answers that thread with the
