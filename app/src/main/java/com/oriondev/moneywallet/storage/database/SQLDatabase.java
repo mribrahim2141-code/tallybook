@@ -99,10 +99,10 @@ import java.util.function.Supplier;
      * would make the live name movable, and a caller holding a helper across the promote would
      * then reopen a name that had been renamed away, which SQLiteOpenHelper creates empty.
      *
-     * What it costs is that a write from another thread during a restore goes into the live
-     * database and is replaced with it, so that write is lost. That is what this app already
-     * did. The alternative was not keeping the write, it was landing it in a half imported
-     * database whose ids name different rows, with foreign keys on.
+     * A restore holds the exclusive side of sSwapLock from before staging starts until after
+     * the database and attachment commit. All writes, including sync-provider writes, take the
+     * shared side. Other threads therefore wait and then resolve the replacement database; they
+     * cannot commit to the old file while it is being prepared or replaced.
      */
     private static final ThreadLocal<SQLDatabase> sStaging = new ThreadLocal<>();
 
@@ -171,10 +171,9 @@ import java.util.function.Supplier;
      * half is already committed. That is what the lock makes unreachable, and it is the only
      * thing the lock makes unreachable.
      *
-     * What it does NOT cover, stated because it is easy to read the lock as wider than it is.
-     * SyncContentProvider's own writes do not come through inSharedTransaction, so they are
-     * outside the lock. A restore's rows travel that path too, and they are not what this leaves
-     * open, since they go into its own staging file and it closes that before any rename here.
+     * SyncContentProvider writes now use inSharedTransaction too, so they participate in the
+     * same barrier. Queries remain unlocked: they read the old live ledger while staging is built
+     * and may briefly contend with the SQLite connection during the final helper replacement.
      */
     /*package-local*/ static void resetShared(Context context) {
         resetShared(context, null);
@@ -295,10 +294,9 @@ import java.util.function.Supplier;
     }
 
     /**
-     * Resolves the shared helper and runs the body inside one transaction on it. This is how
-     * DataContentProvider starts every write. SyncContentProvider does not come through here, its
-     * three writes are one statement each, which SQLite already runs atomically, so they take no
-     * transaction and no lock.
+     * Resolves the shared helper and runs the body inside one transaction on it. Both
+     * DataContentProvider and SyncContentProvider use this entry point, so every database write
+     * participates in the restore barrier and commits as one transaction.
      */
     /*package-local*/ static <T> T inSharedTransaction(Context context, Function<SQLDatabase, T> body) {
         sSwapLock.readLock().lock();
