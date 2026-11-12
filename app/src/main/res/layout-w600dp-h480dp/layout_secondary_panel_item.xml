@@ -92,6 +92,9 @@
                 android:id="@+id/body_secondary_panel_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:padding="8dp"
+                android:background="@drawable/bg_glass_surface"
                 android:orientation="vertical"
                 app:theme_backgroundColor="colorWindowForeground" >
 
