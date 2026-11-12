@@ -110,7 +110,7 @@ public class DeepDarkThemeTest {
         assertEquals(0xFF000000, theme.getColorCardBackground());
         assertEquals(0xFF000000, theme.getColorWindowBackground());
         assertEquals(0xFF000000, theme.getDrawerBackgroundColor());
-        assertEquals(0xFF29483A, theme.getDrawerSelectedItemColor());
+        assertEquals(0xFF1C3159, theme.getDrawerSelectedItemColor());
     }
 
     @Test
@@ -145,12 +145,12 @@ public class DeepDarkThemeTest {
                 Toolbar toolbar = activity.findViewById(R.id.primary_toolbar);
                 assertEquals(0xFF000000, backgroundColor(toolbar));
                 TextView title = ReflectionHelpers.getField(toolbar, "mTitleTextView");
-                assertEquals(0xFFE8EDF7, title.getCurrentTextColor());
+                assertEquals(0xFFFFFFFF, title.getCurrentTextColor());
                 assertEquals(0xFF000000, backgroundColor(activity.findViewById(R.id.app_bar_container)));
                 assertEquals(0xFF000000, backgroundColor(activity.findViewById(R.id.keypad_container)));
                 TextView key = activity.findViewById(R.id.keyboard_clear_button);
                 assertEquals(0xFF000000, backgroundColor(key));
-                assertEquals(0xFFE8EDF7, key.getCurrentTextColor());
+                assertEquals(0xFFFFFFFF, key.getCurrentTextColor());
                 assertFalse(bars(activity).isAppearanceLightStatusBars());
                 assertFalse(bars(activity).isAppearanceLightNavigationBars());
 
@@ -187,13 +187,13 @@ public class DeepDarkThemeTest {
                     assertFalse(bars(activity).isAppearanceLightStatusBars());
                     assertFalse(bars(activity).isAppearanceLightNavigationBars());
                     PatternLockView pattern = activity.findViewById(R.id.pattern_lock_view);
-                    assertEquals(0xFFE8EDF7, pattern.getNormalStateColor());
+                    assertEquals(0xFFFFFFFF, pattern.getNormalStateColor());
                 });
             }
             try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
                 scenario.onActivity(activity -> {
                     assertEquals(0xFF000000, backgroundColor(activity.findViewById(R.id.navigation_drawer_header)));
-                    assertEquals(0xFFE8EDF7, ((TextView) activity.findViewById(R.id.wallet_name_text_view)).getCurrentTextColor());
+                    assertEquals(0xFFFFFFFF, ((TextView) activity.findViewById(R.id.wallet_name_text_view)).getCurrentTextColor());
                 });
             }
         } finally {
