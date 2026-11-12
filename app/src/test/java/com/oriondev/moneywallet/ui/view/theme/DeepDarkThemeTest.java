@@ -98,6 +98,7 @@ public class DeepDarkThemeTest {
         assertEquals(0xFFF6F4EF, theme.getColorWindowBackground());
         assertEquals(0xFFF0EEE8, theme.getDrawerBackgroundColor());
         assertEquals(0xFFE3EBFF, theme.getDrawerSelectedItemColor());
+        assertEquals(0x61536078, theme.getHintTextColor());
 
         // Keep the dark-mode assertions aligned with the premium navy palette.
         ThemeEngine.setMode(ThemeEngine.Mode.DARK);
@@ -105,12 +106,14 @@ public class DeepDarkThemeTest {
         assertEquals(0xFF0B1220, theme.getColorWindowBackground());
         assertEquals(0xFF172338, theme.getDrawerBackgroundColor());
         assertEquals(0xFF1C3159, theme.getDrawerSelectedItemColor());
+        assertEquals(0x80AAB5C8, theme.getHintTextColor());
 
         ThemeEngine.setMode(ThemeEngine.Mode.DEEP_DARK);
         assertEquals(0xFF000000, theme.getColorCardBackground());
         assertEquals(0xFF000000, theme.getColorWindowBackground());
         assertEquals(0xFF000000, theme.getDrawerBackgroundColor());
         assertEquals(0xFF1C3159, theme.getDrawerSelectedItemColor());
+        assertEquals(0x80AAB5C8, theme.getHintTextColor());
     }
 
     @Test
