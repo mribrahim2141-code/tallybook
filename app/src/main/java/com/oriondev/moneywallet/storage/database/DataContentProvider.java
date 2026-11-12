@@ -848,8 +848,8 @@ public class DataContentProvider extends ContentProvider {
      * thread, so there is one transaction and one commit.
      *
      * This covers SyncContentProvider's writes as well as this provider's. Both resolve the same
-     * shared helper, so a transaction opened on it here encloses whatever either of them writes on
-     * this thread. Of the two only this provider announces anything, and those announcements are
+     * shared helper and use inSharedTransaction, so a transaction opened on it here encloses
+     * whatever either of them writes on this thread. Of the two only this provider announces anything, and those announcements are
      * held back until the commit. The one thing that is not held back is the preference a wallet
      * delete writes, which is out of the database entirely and is described where it happens.
      *
