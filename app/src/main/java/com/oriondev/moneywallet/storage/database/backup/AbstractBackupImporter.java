@@ -286,6 +286,7 @@ public abstract class AbstractBackupImporter {
         if (mPreparedAttachmentFolder == null) {
             return;
         }
+        boolean rollbackCompleted = false;
         try {
             boolean previousExists = mPreviousAttachmentFolder != null && mPreviousAttachmentFolder.exists();
             if (previousExists) {
@@ -298,10 +299,12 @@ public abstract class AbstractBackupImporter {
             } else if (mAttachmentsCommitted && !mHadPreviousAttachments && mPreparedAttachmentFolder.exists()) {
                 FileUtils.deleteDirectory(mPreparedAttachmentFolder);
             }
+            rollbackCompleted = true;
         } catch (IOException e) {
             throw new ImportException(e.getMessage());
         } finally {
-            if (mRestoreJournal != null) {
+            // Keep the durable journal if rollback itself failed so startup recovery can retry.
+            if (rollbackCompleted && mRestoreJournal != null) {
                 FileUtils.deleteQuietly(mRestoreJournal);
             }
             clearAttachmentRestoreState();
