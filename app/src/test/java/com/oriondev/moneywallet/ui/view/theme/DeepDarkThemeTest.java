@@ -145,7 +145,7 @@ public class DeepDarkThemeTest {
                 Toolbar toolbar = activity.findViewById(R.id.primary_toolbar);
                 assertEquals(0xFF000000, backgroundColor(toolbar));
                 TextView title = ReflectionHelpers.getField(toolbar, "mTitleTextView");
-                assertEquals(0xFFFFFFFF, title.getCurrentTextColor());
+                assertEquals(0xFFE8EDF7, title.getCurrentTextColor());
                 assertEquals(0xFF000000, backgroundColor(activity.findViewById(R.id.app_bar_container)));
                 assertEquals(0xFF000000, backgroundColor(activity.findViewById(R.id.keypad_container)));
                 TextView key = activity.findViewById(R.id.keyboard_clear_button);
