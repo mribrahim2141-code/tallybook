@@ -46,93 +46,93 @@ public class ThemeEngine implements ITheme {
     private static final String MODE = "mode";
     private static final String SYSTEM_COLORS = "system_colors";
 
-    private static final int DEFAULT_COLOR_PRIMARY = Color.parseColor("#006C50");
-    private static final int DEFAULT_COLOR_PRIMARY_DARK = Color.parseColor("#00513F");
-    private static final int DEFAULT_COLOR_ACCENT = Color.parseColor("#00A878");
+    private static final int DEFAULT_COLOR_PRIMARY = Color.parseColor("#2457D6");
+    private static final int DEFAULT_COLOR_PRIMARY_DARK = Color.parseColor("#173B9B");
+    private static final int DEFAULT_COLOR_ACCENT = Color.parseColor("#3D75F2");
     private static final Mode DEFAULT_MODE = Mode.LIGHT;
 
     private static final int[] DEFAULT_TEXT_COLOR_PRIMARY = new int[] {
-            Color.parseColor("#DE101D18"), // OK
-            Color.parseColor("#FFFFFFFF"), // OK
-            Color.parseColor("#FFFFFFFF")  // OK
+            Color.parseColor("#DE171D2B"), // OK
+            Color.parseColor("#FFE8EDF7"), // OK
+            Color.parseColor("#FFE8EDF7")  // OK
     };
 
     private static final int[] DEFAULT_TEXT_COLOR_PRIMARY_INVERSE = new int[] {
-            Color.parseColor("#DEE1EAE4"), // OK
+            Color.parseColor("#DEE8EDF7"), // OK
             Color.parseColor("#FF000000"), // OK
             Color.parseColor("#FF000000")  // OK
     };
 
     private static final int[] DEFAULT_TEXT_COLOR_SECONDARY = new int[] {
-            Color.parseColor("#8A34483E"), // OK
-            Color.parseColor("#B3D0DDD4"), // OK
-            Color.parseColor("#B3D0DDD4")  // OK
+            Color.parseColor("#8A536078"), // OK
+            Color.parseColor("#B3AAB5C8"), // OK
+            Color.parseColor("#B3AAB5C8")  // OK
     };
 
     private static final int[] DEFAULT_TEXT_COLOR_SECONDARY_INVERSE = new int[] {
-            Color.parseColor("#8AD0DDD4"), // OK
-            Color.parseColor("#B334483E"), // OK
-            Color.parseColor("#B334483E")
+            Color.parseColor("#8AAAB5C8"), // OK
+            Color.parseColor("#B3536078"), // OK
+            Color.parseColor("#B3536078")
     };
 
     private static final int[] DEFAULT_ICON_COLOR = new int[] {
-            Color.parseColor("#8A34483E"), // OK
-            Color.parseColor("#8AD0DDD4"), // OK
-            Color.parseColor("#8AD0DDD4")  // OK
+            Color.parseColor("#8A536078"), // OK
+            Color.parseColor("#8AAAB5C8"), // OK
+            Color.parseColor("#8AAAB5C8")  // OK
     };
 
     private static final int[] DEFAULT_HINT_TEXT_COLOR = new int[] {
-            Color.parseColor("#6134483E"), // OK
-            Color.parseColor("#80D0DDD4"), // OK
-            Color.parseColor("#80D0DDD4")  // OK
+            Color.parseColor("#61536078"), // OK
+            Color.parseColor("#80AAB5C8"), // OK
+            Color.parseColor("#80AAB5C8")  // OK
     };
 
     private static final int[] DEFAULT_COLOR_CARD_BACKGROUND = new int[] {
             Color.parseColor("#FFFFFF"), // OK
-            Color.parseColor("#26332D"), // OK
+            Color.parseColor("#172338"), // OK
             Color.parseColor("#000000")  // OK
     };
 
     private static final int[] DEFAULT_COLOR_WINDOW_FOREGROUND = new int[] {
             Color.parseColor("#FFFFFF"), // OK
-            Color.parseColor("#26332D"), // OK
+            Color.parseColor("#172338"), // OK
             Color.parseColor("#000000")  // OK
     };
 
     private static final int[] DEFAULT_COLOR_WINDOW_BACKGROUND = new int[] {
-            Color.parseColor("#FAFAFA"), // OK
-            Color.parseColor("#17211C"), // OK
+            Color.parseColor("#F6F4EF"), // OK
+            Color.parseColor("#0B1220"), // OK
             Color.parseColor("#000000")  // OK
     };
 
     private static final int[] DEFAULT_COLOR_RIPPLE = new int[] {
-            Color.parseColor("#1F006C50"), // OK
+            Color.parseColor("#1F2457D6"), // OK
             Color.parseColor("#33ffffff"), // OK
             Color.parseColor("#33ffffff") // OK
     };
 
     private static final int[] DRAWER_BACKGROUND_COLOR = new int[] {
-            Color.parseColor("#F1F8F3"),
-            Color.parseColor("#26332D"),
+            Color.parseColor("#F0EEE8"),
+            Color.parseColor("#172338"),
             Color.parseColor("#000000")
     };
 
     private static final int[] DRAWER_ICON_COLOR = new int[] {
-            Color.parseColor("#8A34483E"),
-            Color.parseColor("#8AD0DDD4"),
-            Color.parseColor("#8AD0DDD4")
+            Color.parseColor("#8A536078"),
+            Color.parseColor("#8AAAB5C8"),
+            Color.parseColor("#8AAAB5C8")
     };
 
     private static final int[] DRAWER_TEXT_COLOR = new int[] {
-            Color.parseColor("#DE101D18"),
-            Color.parseColor("#DEE1EAE4"),
-            Color.parseColor("#DEE1EAE4")
+            Color.parseColor("#DE171D2B"),
+            Color.parseColor("#DEE8EDF7"),
+            Color.parseColor("#DEE8EDF7")
     };
 
     private static final int[] DRAWER_SELECTED_ITEM_COLOR = new int[] {
-            Color.parseColor("#D7EFE2"),
-            Color.parseColor("#29483A"),
-            Color.parseColor("#29483A")
+            Color.parseColor("#E3EBFF"),
+            Color.parseColor("#1C3159"),
+            Color.parseColor("#1C3159")
     };
 
     private static final int INDEX_MODE_LIGHT = 0;
@@ -334,6 +334,25 @@ public class ThemeEngine implements ITheme {
     private ThemeEngine(Context context) {
         mContext = context.getApplicationContext();
         mPreferences = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
+
+        // Migrate only the previous built-in palette. A color explicitly chosen by the user
+        // is preserved, while existing installs move to the new TallyBook identity.
+        SharedPreferences.Editor editor = mPreferences.edit();
+        boolean changed = false;
+        if (mPreferences.getInt(COLOR_PRIMARY, DEFAULT_COLOR_PRIMARY)
+                == Color.parseColor("#006C50")) {
+            editor.putInt(COLOR_PRIMARY, DEFAULT_COLOR_PRIMARY);
+            editor.putInt(COLOR_PRIMARY_DARK, DEFAULT_COLOR_PRIMARY_DARK);
+            changed = true;
+        }
+        if (mPreferences.getInt(COLOR_ACCENT, DEFAULT_COLOR_ACCENT)
+                == Color.parseColor("#00A878")) {
+            editor.putInt(COLOR_ACCENT, DEFAULT_COLOR_ACCENT);
+            changed = true;
+        }
+        if (changed) {
+            editor.apply();
+        }
     }
 
     // Each getter holds the override it read, since it can be cleared between a null check

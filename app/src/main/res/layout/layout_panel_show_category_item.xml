@@ -36,6 +36,9 @@
         android:id="@+id/secondary_panel_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="@drawable/bg_glass_surface"
+        android:padding="12dp"
         android:orientation="vertical" >
 
         <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialTextView

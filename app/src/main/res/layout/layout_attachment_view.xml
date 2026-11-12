@@ -30,6 +30,12 @@
         android:id="@+id/attachment_header"
         android:layout_width="match_parent"
         android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="2dp"
+        android:background="@drawable/bg_glass_surface"
+        android:foreground="?attr/selectableItemBackground"
         android:paddingLeft="16dp"
         android:paddingRight="16dp">
 

@@ -19,19 +19,19 @@
   -->
 
 <resources>
-    <color name="colorPrimary">#006C50</color>
-    <color name="colorAccent">#00A878</color>
-    <color name="textPrimary">#DE101D18</color>
-    <color name="textSecondary">#8A34483E</color>
-    <color name="textPrimaryInverted">#DEE1EAE4</color>
-    <color name="textSecondaryInverted">#8AD0DDD4</color>
+    <color name="colorPrimary">#2457D6</color>
+    <color name="colorAccent">#3D75F2</color>
+    <color name="textPrimary">#DE171D2B</color>
+    <color name="textSecondary">#8A536078</color>
+    <color name="textPrimaryInverted">#DEE8EDF7</color>
+    <color name="textSecondaryInverted">#8AAAB5C8</color>
 
     <!-- The dark alert dialog palette. These are the values Theme.AppCompat.Dialog.Alert resolves
          to, kept by hand because the AppCompat resources behind them are private. -->
-    <color name="dialogDarkBackground">#FF26332D</color>
+    <color name="dialogDarkBackground">#FF172338</color>
     <color name="dialogDarkTextPrimary">#FFFFFFFF</color>
-    <color name="dialogDarkTextSecondary">#B3D0DDD4</color>
-    <color name="dialogDarkTextHint">#80D0DDD4</color>
+    <color name="dialogDarkTextSecondary">#B3AAB5C8</color>
+    <color name="dialogDarkTextHint">#80AAB5C8</color>
     <color name="dialogDarkControlHighlight">#33FFFFFF</color>
 
     <!--

@@ -95,22 +95,25 @@ public class DeepDarkThemeTest {
 
         ThemeEngine.setMode(ThemeEngine.Mode.LIGHT);
         assertEquals(0xFFFFFFFF, theme.getColorCardBackground());
-        assertEquals(0xFFFAFAFA, theme.getColorWindowBackground());
-        assertEquals(0xFFF1F8F3, theme.getDrawerBackgroundColor());
-        assertEquals(0xFFD7EFE2, theme.getDrawerSelectedItemColor());
+        assertEquals(0xFFF6F4EF, theme.getColorWindowBackground());
+        assertEquals(0xFFF0EEE8, theme.getDrawerBackgroundColor());
+        assertEquals(0xFFE3EBFF, theme.getDrawerSelectedItemColor());
+        assertEquals(0x61536078, theme.getHintTextColor());
 
-        // Keep the dark-mode assertions aligned with the current emerald palette.
+        // Keep the dark-mode assertions aligned with the premium navy palette.
         ThemeEngine.setMode(ThemeEngine.Mode.DARK);
-        assertEquals(0xFF26332D, theme.getColorCardBackground());
-        assertEquals(0xFF17211C, theme.getColorWindowBackground());
-        assertEquals(0xFF26332D, theme.getDrawerBackgroundColor());
-        assertEquals(0xFF29483A, theme.getDrawerSelectedItemColor());
+        assertEquals(0xFF172338, theme.getColorCardBackground());
+        assertEquals(0xFF0B1220, theme.getColorWindowBackground());
+        assertEquals(0xFF172338, theme.getDrawerBackgroundColor());
+        assertEquals(0xFF1C3159, theme.getDrawerSelectedItemColor());
+        assertEquals(0x80AAB5C8, theme.getHintTextColor());
 
         ThemeEngine.setMode(ThemeEngine.Mode.DEEP_DARK);
         assertEquals(0xFF000000, theme.getColorCardBackground());
         assertEquals(0xFF000000, theme.getColorWindowBackground());
         assertEquals(0xFF000000, theme.getDrawerBackgroundColor());
-        assertEquals(0xFF29483A, theme.getDrawerSelectedItemColor());
+        assertEquals(0xFF1C3159, theme.getDrawerSelectedItemColor());
+        assertEquals(0x80AAB5C8, theme.getHintTextColor());
     }
 
     @Test
@@ -145,7 +148,7 @@ public class DeepDarkThemeTest {
                 Toolbar toolbar = activity.findViewById(R.id.primary_toolbar);
                 assertEquals(0xFF000000, backgroundColor(toolbar));
                 TextView title = ReflectionHelpers.getField(toolbar, "mTitleTextView");
-                assertEquals(0xFFFFFFFF, title.getCurrentTextColor());
+                assertEquals(0xFFE8EDF7, title.getCurrentTextColor());
                 assertEquals(0xFF000000, backgroundColor(activity.findViewById(R.id.app_bar_container)));
                 assertEquals(0xFF000000, backgroundColor(activity.findViewById(R.id.keypad_container)));
                 TextView key = activity.findViewById(R.id.keyboard_clear_button);
@@ -161,7 +164,7 @@ public class DeepDarkThemeTest {
                 View header = inflater.inflate(R.layout.layout_header_show_icon_name_item,
                         new FrameLayout(activity), true);
                 ThemeEngine.applyTheme(header, true);
-                assertEquals(0xFFFFFFFF, ((TextView) header.findViewById(R.id.name_text_view)).getCurrentTextColor());
+                assertEquals(0xFFE8EDF7, ((TextView) header.findViewById(R.id.name_text_view)).getCurrentTextColor());
             });
         } finally {
             ThemeEngine.setColorPrimary(original);
@@ -193,7 +196,7 @@ public class DeepDarkThemeTest {
             try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
                 scenario.onActivity(activity -> {
                     assertEquals(0xFF000000, backgroundColor(activity.findViewById(R.id.navigation_drawer_header)));
-                    assertEquals(0xFFFFFFFF, ((TextView) activity.findViewById(R.id.wallet_name_text_view)).getCurrentTextColor());
+                    assertEquals(0xFFE8EDF7, ((TextView) activity.findViewById(R.id.wallet_name_text_view)).getCurrentTextColor());
                 });
             }
         } finally {
