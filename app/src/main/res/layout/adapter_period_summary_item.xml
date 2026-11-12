@@ -32,8 +32,7 @@
     android:foreground="?attr/selectableItemBackground"
     android:minHeight="@dimen/material_component_lists_one_line_with_avatar_height"
     android:paddingTop="8dp"
-    android:paddingBottom="8dp"
-    android:background="?attr/selectableItemBackground" >
+    android:paddingBottom="8dp" >
 
     <!--
       The vertical chain is carried by the name and not by the amount. The name takes the room
