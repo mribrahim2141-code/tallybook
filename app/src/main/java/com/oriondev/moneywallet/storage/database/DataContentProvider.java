@@ -940,6 +940,16 @@ public class DataContentProvider extends ContentProvider {
      * Public, and here, because SQLDatabase is package local and the importers that replace the
      * database file sit in a sub package, so they cannot name it.
      */
+    /** Pause all database writers until the restore has safely installed its replacement. */
+    public static void beginRestoreBarrier() {
+        SQLDatabase.beginRestoreBarrier();
+    }
+
+    /** Release the writer barrier after restore preparation and commit have completed. */
+    public static void endRestoreBarrier() {
+        SQLDatabase.endRestoreBarrier();
+    }
+
     public static void replaceDatabaseFile(Context context, Runnable swap) {
         SQLDatabase.resetShared(context, swap);
     }
