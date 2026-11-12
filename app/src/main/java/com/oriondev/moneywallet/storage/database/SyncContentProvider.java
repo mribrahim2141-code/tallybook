@@ -227,30 +227,36 @@ public class SyncContentProvider extends ContentProvider {
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
-        String table = getTable(uri);
-        if (table != null) {
-            long id = db().getWritableDatabase().insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE);
-            return ContentUris.withAppendedId(uri, id);
-        }
-        return null;
+        return SQLDatabase.inSharedTransaction(getContext(), database -> {
+            String table = getTable(uri);
+            if (table != null) {
+                long id = database.getWritableDatabase().insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                return ContentUris.withAppendedId(uri, id);
+            }
+            return null;
+        });
     }
 
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
-        String table = getTable(uri);
-        if (table != null) {
-            return db().getWritableDatabase().delete(table, selection, selectionArgs);
-        }
-        return 0;
+        return SQLDatabase.inSharedTransaction(getContext(), database -> {
+            String table = getTable(uri);
+            if (table != null) {
+                return database.getWritableDatabase().delete(table, selection, selectionArgs);
+            }
+            return 0;
+        });
     }
 
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
-        String table = getTable(uri);
-        if (table != null) {
-            return db().getWritableDatabase().update(table, values, selection, selectionArgs);
-        }
-        return 0;
+        return SQLDatabase.inSharedTransaction(getContext(), database -> {
+            String table = getTable(uri);
+            if (table != null) {
+                return database.getWritableDatabase().update(table, values, selection, selectionArgs);
+            }
+            return 0;
+        });
     }
 
     @SuppressLint("Recycle")
