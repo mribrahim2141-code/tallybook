@@ -28,7 +28,6 @@ import java.io.IOException
 import com.oriondev.moneywallet.broadcast.AutoBackupBroadcastReceiver
 import com.oriondev.moneywallet.broadcast.DailyBroadcastReceiver
 import com.oriondev.moneywallet.broadcast.RecurrenceBroadcastReceiver
-import com.oriondev.moneywallet.storage.database.SQLDatabaseImporter
 import com.oriondev.moneywallet.storage.database.backup.AbstractBackupImporter
 import com.oriondev.moneywallet.storage.database.SystemCategoryLocalizer
 import com.oriondev.moneywallet.storage.preference.BackendManager
