@@ -935,6 +935,8 @@
     <string name="overview_top_expense_item">%1$s • %2$s: %3$s (%4$s من المصروفات)</string>
     <string name="overview_upcoming_events_title">المواعيد القادمة</string>
     <string name="overview_upcoming_event_item">%1$s — %2$s</string>
+    <string name="overview_upcoming_debts_title">استحقاقات الديون القادمة</string>
+    <string name="overview_upcoming_debt_item">%1$s — %2$s</string>
     <string name="saving_progress_percent">نسبة الإنجاز: %1$d%%</string>
     <string name="budget_forecast_usage">المتوقع بنهاية الفترة: %1$s</string>
     <string name="budget_forecast_near_limit">توقع باقتراب الإنفاق من الحد (%1$d%%): %2$s</string>

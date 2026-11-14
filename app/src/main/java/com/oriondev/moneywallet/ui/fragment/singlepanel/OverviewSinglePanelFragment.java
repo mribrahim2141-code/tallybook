@@ -98,6 +98,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
     private TextView mTopExpensesTextView;
     private View mUpcomingEventsContainer;
     private TextView mUpcomingEventsTextView;
+    private View mUpcomingDebtsContainer;
+    private TextView mUpcomingDebtsTextView;
 
     private BroadcastReceiver mBroadcastReceiver;
 
@@ -135,6 +137,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         mTopExpensesTextView = view.findViewById(R.id.summary_top_expenses_value);
         mUpcomingEventsContainer = view.findViewById(R.id.summary_upcoming_events_container);
         mUpcomingEventsTextView = view.findViewById(R.id.summary_upcoming_events_value);
+        mUpcomingDebtsContainer = view.findViewById(R.id.summary_upcoming_debts_container);
+        mUpcomingDebtsTextView = view.findViewById(R.id.summary_upcoming_debts_value);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         // initialize adapters
         mViewPagerAdapter = new OverviewChartViewPagerAdapter();
@@ -218,6 +222,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         mTopExpensesTextView.setText(topExpenses.toString());
         mTopExpensesContainer.setVisibility(topExpenses.length() > 0 ? View.VISIBLE : View.GONE);
         updateUpcomingEvents();
+        updateUpcomingDebts();
         // PeriodMoney follows the selected chart filter. The comparison shows both income and
         // expense changes, so it is only meaningful when the chart includes the complete net flow.
         OverviewSetting currentSetting = mOverviewSettingPicker.getCurrentSettings();
@@ -285,6 +290,53 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         }
         mUpcomingEventsTextView.setText(upcoming.toString());
         mUpcomingEventsContainer.setVisibility(upcoming.length() > 0 ? View.VISIBLE : View.GONE);
+    }
+
+    /**
+     * Shows the next three unsettled debt or credit due dates without changing stored records.
+     */
+    private void updateUpcomingDebts() {
+        if (getActivity() == null || mUpcomingDebtsContainer == null) {
+            return;
+        }
+        String[] projection = new String[] {
+                Contract.Debt.DESCRIPTION,
+                Contract.Debt.EXPIRATION_DATE
+        };
+        Cursor cursor = null;
+        StringBuilder upcoming = new StringBuilder();
+        try {
+            cursor = getActivity().getContentResolver().query(
+                    DataContentProvider.CONTENT_DEBTS,
+                    projection,
+                    "DATE(" + Contract.Debt.EXPIRATION_DATE + ") >= DATE('now', 'localtime')"
+                            + " AND " + Contract.Debt.ARCHIVED + " = 0"
+                            + " AND " + Contract.Debt.MONEY + " > ABS(" + Contract.Debt.PROGRESS + ")",
+                    null,
+                    Contract.Debt.EXPIRATION_DATE + " ASC");
+            if (cursor != null && cursor.moveToFirst()) {
+                int shown = 0;
+                do {
+                    String description = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.DESCRIPTION));
+                    String expirationValue = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.EXPIRATION_DATE));
+                    java.util.Date expirationDate = DateUtils.getDateFromSQLDateString(expirationValue);
+                    if (upcoming.length() > 0) {
+                        upcoming.append('\\n');
+                    }
+                    upcoming.append(getString(R.string.overview_upcoming_debt_item,
+                            description, DateFormatter.getFormattedDate(expirationDate)));
+                    shown++;
+                } while (shown < 3 && cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        mUpcomingDebtsTextView.setText(upcoming.toString());
+        mUpcomingDebtsContainer.setVisibility(upcoming.length() > 0 ? View.VISIBLE : View.GONE);
     }
 
     private void updateSavingsRate(Money incomes, Money expenses) {
