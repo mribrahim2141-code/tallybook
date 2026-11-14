@@ -400,7 +400,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
                             CurrencyManager.getCurrency(currencyCode), remaining);
                     java.util.Date expirationDate = DateUtils.getDateFromSQLDateString(expirationValue);
                     if (overdue.length() > 0) {
-                        overdue.append('\\n');
+                        overdue.append('\n');
                     }
                     overdue.append(getString(R.string.overview_overdue_debt_item,
                             description, DateFormatter.getFormattedDate(expirationDate), remainingText));
