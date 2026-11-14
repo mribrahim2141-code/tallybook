@@ -284,6 +284,36 @@
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/summary_savings_rate_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/overview_savings_rate_title"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        app:theme_textColor="textColorSecondary" />
+
+                    <TextView
+                        android:id="@+id/summary_savings_rate_value"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:maxLines="5"
+                        android:ellipsize="end"
+                        android:textColor="?attr/colorOnSurface"
+                        tools:text="SAR: +25.0%" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
