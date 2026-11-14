@@ -86,6 +86,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
     private TextView mExpenseChangeTextView;
     private TextView mIncomeChangePercentTextView;
     private TextView mExpenseChangePercentTextView;
+    private TextView mNetChangeTextView;
+    private TextView mNetChangePercentTextView;
     private View mTopExpensesContainer;
     private TextView mTopExpensesTextView;
 
@@ -119,6 +121,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         mExpenseChangeTextView = view.findViewById(R.id.summary_expense_change_value);
         mIncomeChangePercentTextView = view.findViewById(R.id.summary_income_change_percent);
         mExpenseChangePercentTextView = view.findViewById(R.id.summary_expense_change_percent);
+        mNetChangeTextView = view.findViewById(R.id.summary_net_change_value);
+        mNetChangePercentTextView = view.findViewById(R.id.summary_net_change_percent);
         mTopExpensesContainer = view.findViewById(R.id.summary_top_expenses_container);
         mTopExpensesTextView = view.findViewById(R.id.summary_top_expenses_value);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -219,6 +223,12 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
                     previous.getIncomes(), latest.getIncomes()));
             mExpenseChangePercentTextView.setText(formatPercentageChanges(
                     previous.getExpenses(), latest.getExpenses()));
+            Money netChange = new Money();
+            netChange.addMoney(latest.getNetIncomes());
+            netChange.removeMoney(previous.getNetIncomes());
+            formatter.applyNotTinted(mNetChangeTextView, netChange);
+            mNetChangePercentTextView.setText(formatPercentageChanges(
+                    previous.getNetIncomes(), latest.getNetIncomes()));
         }
     }
 
