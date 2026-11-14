@@ -24,6 +24,8 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 
+import com.oriondev.moneywallet.R;
+
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
