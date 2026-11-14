@@ -276,7 +276,7 @@ public class BackupImportFailureTest {
         database.insertOrThrow(Schema.Transfer.TABLE, null, transfer);
 
         String before = financialRestoreSnapshot(database);
-        assertEquals("10000|1750|4|1200|1", before);
+        assertEquals("10000|900|250|1200|1|300|300", before);
 
         File backup = exportBackup();
         android.content.ContentValues changedWallet = new android.content.ContentValues();
@@ -290,6 +290,7 @@ public class BackupImportFailureTest {
         File liveDatabase = mContext.getDatabasePath(SQLDatabaseImporter.DATABASE_NAME);
         importer.prepareDatabase(importFolder(), liveDatabase.getParentFile());
         importer.commitDatabase();
+        importer.finishDatabaseRestore();
 
         android.database.sqlite.SQLiteDatabase restored =
                 SQLDatabase.getShared(mContext).getReadableDatabase();
@@ -317,10 +318,12 @@ public class BackupImportFailureTest {
         android.database.Cursor cursor = database.rawQuery(
                 "SELECT " +
                 "(SELECT wallet_start_money FROM wallets WHERE uuid = 'restore-test-wallet') || '|' || " +
-                "(SELECT SUM(transaction_money) FROM transactions WHERE uuid LIKE 'restore-%') || '|' || " +
-                "(SELECT COUNT(*) FROM transactions WHERE uuid LIKE 'restore-%') || '|' || " +
-                "(SELECT SUM(debt_money) FROM debts WHERE uuid = 'restore-test-debt') || '|' || " +
-                "(SELECT COUNT(*) FROM transfers WHERE uuid = 'restore-test-transfer')", null);
+                "(SELECT transaction_money FROM transactions WHERE uuid = 'restore-income') || '|' || " +
+                "(SELECT transaction_money FROM transactions WHERE uuid = 'restore-expense') || '|' || " +
+                "(SELECT debt_money FROM debts WHERE uuid = 'restore-test-debt') || '|' || " +
+                "(SELECT COUNT(*) FROM transfers WHERE uuid = 'restore-test-transfer') || '|' || " +
+                "(SELECT transaction_money FROM transactions WHERE uuid = 'restore-transfer-from') || '|' || " +
+                "(SELECT transaction_money FROM transactions WHERE uuid = 'restore-transfer-to')", null);
         try {
             assertTrue(cursor.moveToFirst());
             return cursor.getString(0);
