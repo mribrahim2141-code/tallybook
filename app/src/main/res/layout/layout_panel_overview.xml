@@ -285,6 +285,44 @@
                     </LinearLayout>
                 </LinearLayout>
 
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="vertical">
+
+                        <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/overview_comparison_net"
+                            android:textSize="11sp"
+                            app:theme_textColor="textColorSecondary" />
+
+                        <TextView
+                            android:id="@+id/summary_net_change_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:maxLines="2"
+                            android:ellipsize="end"
+                            android:textColor="?attr/colorOnSurface"
+                            tools:text="SAR 380" />
+
+                        <TextView
+                            android:id="@+id/summary_net_change_percent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textSize="11sp"
+                            android:maxLines="3"
+                            android:ellipsize="end"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            tools:text="SAR: +12.0%" />
+                    </LinearLayout>
+                </LinearLayout>
+
                 <LinearLayout
                     android:id="@+id/summary_savings_rate_container"
                     android:layout_width="match_parent"
