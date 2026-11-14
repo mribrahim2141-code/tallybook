@@ -397,6 +397,48 @@
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/summary_upcoming_events_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/bg_glass_surface">
+
+                <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/overview_upcoming_events_title"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    app:theme_textColor="textColorPrimary" />
+
+                <TextView
+                    android:id="@+id/summary_upcoming_events_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="Family trip — 20 Nov 2026&#10;Insurance renewal — 24 Nov 2026" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="@dimen/view_pie_chart_height"
             android:layout_marginStart="12dp"

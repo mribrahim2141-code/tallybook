@@ -963,4 +963,6 @@
     <string name="overview_comparison_new">New</string>
     <string name="overview_top_expenses_title">Top spending categories</string>
     <string name="overview_top_expense_item">%1$s • %2$s: %3$s (%4$s of expenses)</string>
+    <string name="overview_upcoming_events_title">Upcoming events</string>
+    <string name="overview_upcoming_event_item">%1$s — %2$s</string>
 </resources>

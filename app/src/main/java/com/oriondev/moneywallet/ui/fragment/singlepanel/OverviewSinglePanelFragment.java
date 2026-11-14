@@ -22,6 +22,8 @@ package com.oriondev.moneywallet.ui.fragment.singlepanel;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import androidx.annotation.MenuRes;
 import androidx.annotation.NonNull;
@@ -45,12 +47,16 @@ import com.oriondev.moneywallet.model.OverviewData;
 import com.oriondev.moneywallet.model.OverviewSetting;
 import com.oriondev.moneywallet.model.PeriodMoney;
 import com.oriondev.moneywallet.picker.OverviewSettingPicker;
+import com.oriondev.moneywallet.storage.database.Contract;
+import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.preference.CurrentWalletController;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.PeriodDetailActivity;
 import com.oriondev.moneywallet.ui.adapter.pager.OverviewChartViewPagerAdapter;
 import com.oriondev.moneywallet.ui.adapter.recycler.OverviewItemAdapter;
 import com.oriondev.moneywallet.ui.fragment.base.SinglePanelFragment;
+import com.oriondev.moneywallet.utils.DateFormatter;
+import com.oriondev.moneywallet.utils.DateUtils;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
 
 import java.math.BigDecimal;
@@ -90,6 +96,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
     private TextView mNetChangePercentTextView;
     private View mTopExpensesContainer;
     private TextView mTopExpensesTextView;
+    private View mUpcomingEventsContainer;
+    private TextView mUpcomingEventsTextView;
 
     private BroadcastReceiver mBroadcastReceiver;
 
@@ -125,6 +133,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         mNetChangePercentTextView = view.findViewById(R.id.summary_net_change_percent);
         mTopExpensesContainer = view.findViewById(R.id.summary_top_expenses_container);
         mTopExpensesTextView = view.findViewById(R.id.summary_top_expenses_value);
+        mUpcomingEventsContainer = view.findViewById(R.id.summary_upcoming_events_container);
+        mUpcomingEventsTextView = view.findViewById(R.id.summary_upcoming_events_value);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         // initialize adapters
         mViewPagerAdapter = new OverviewChartViewPagerAdapter();
@@ -207,6 +217,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         }
         mTopExpensesTextView.setText(topExpenses.toString());
         mTopExpensesContainer.setVisibility(topExpenses.length() > 0 ? View.VISIBLE : View.GONE);
+        updateUpcomingEvents();
         // PeriodMoney follows the selected chart filter. The comparison shows both income and
         // expense changes, so it is only meaningful when the chart includes the complete net flow.
         OverviewSetting currentSetting = mOverviewSettingPicker.getCurrentSettings();
@@ -230,6 +241,50 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
             mNetChangePercentTextView.setText(formatPercentageChanges(
                     previous.getNetIncomes(), latest.getNetIncomes()));
         }
+    }
+
+    /**
+     * Shows the next three events on the overview without changing or copying event records.
+     */
+    private void updateUpcomingEvents() {
+        if (getActivity() == null || mUpcomingEventsContainer == null) {
+            return;
+        }
+        Uri uri = DataContentProvider.CONTENT_EVENTS;
+        String[] projection = new String[] {
+                Contract.Event.NAME,
+                Contract.Event.END_DATE
+        };
+        Cursor cursor = null;
+        StringBuilder upcoming = new StringBuilder();
+        try {
+            cursor = getActivity().getContentResolver().query(
+                    uri,
+                    projection,
+                    "DATE(" + Contract.Event.END_DATE + ") >= DATE('now')",
+                    null,
+                    Contract.Event.END_DATE + " ASC");
+            if (cursor != null && cursor.moveToFirst()) {
+                int shown = 0;
+                do {
+                    String name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.Event.NAME));
+                    String endDateValue = cursor.getString(cursor.getColumnIndexOrThrow(Contract.Event.END_DATE));
+                    java.util.Date endDate = DateUtils.getDateFromSQLDateString(endDateValue);
+                    if (upcoming.length() > 0) {
+                        upcoming.append('\n');
+                    }
+                    upcoming.append(getString(R.string.overview_upcoming_event_item,
+                            name, DateFormatter.getFormattedDate(endDate)));
+                    shown++;
+                } while (shown < 3 && cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        mUpcomingEventsTextView.setText(upcoming.toString());
+        mUpcomingEventsContainer.setVisibility(upcoming.length() > 0 ? View.VISIBLE : View.GONE);
     }
 
     private void updateSavingsRate(Money incomes, Money expenses) {
