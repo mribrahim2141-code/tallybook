@@ -23,6 +23,14 @@ object OverviewChangeMath {
             .divide(BigDecimal.valueOf(income), 1, RoundingMode.HALF_UP)
     }
 
+    /** Percentage of the same-currency expense total represented by one category. */
+    @JvmStatic
+    fun expenseShare(categoryAmount: Long, totalExpenses: Long): BigDecimal? {
+        if (categoryAmount < 0L || totalExpenses <= 0L) return null
+        return BigDecimal.valueOf(categoryAmount).multiply(BigDecimal.valueOf(100))
+            .divide(BigDecimal.valueOf(totalExpenses), 1, RoundingMode.HALF_UP)
+    }
+
     @JvmStatic
     fun percentageChange(previous: Long, current: Long): BigDecimal? {
         if (previous == 0L) {
