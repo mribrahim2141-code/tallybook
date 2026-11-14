@@ -30,8 +30,10 @@ import android.text.TextUtils
 
 import com.oriondev.moneywallet.R
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog
+import com.oriondev.moneywallet.utils.AttachmentFileUtils
 
 import java.io.File
+import java.io.IOException
 import java.util.UUID
 
 /**
@@ -137,7 +139,14 @@ class Attachment : Parcelable, Identifiable {
     fun getUri(context: Context?): Uri? {
         val authority = context!!.packageName + ".storage.file"
         val folder = File(context.getExternalFilesDir(null), FOLDER_NAME)
-        val attachment = File(folder, mFile)
+        val attachment = try {
+            AttachmentFileUtils.resolve(folder, mFile)
+        } catch (e: IOException) {
+            throw IllegalArgumentException("Invalid attachment file path", e)
+        }
+        if (attachment == null || !attachment.isFile) {
+            throw IllegalArgumentException("Invalid attachment file path")
+        }
         return FileProvider.getUriForFile(context, authority, attachment)
     }
 

@@ -1481,7 +1481,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
         } else {
             mCurrencyTextView.setText("?");
         }
-        mMoneyTextView.setText(mMoneyFormatter.getNotTintedString(currency, money, MoneyFormatter.CurrencyMode.ALWAYS_HIDDEN));
+        mMoneyTextView.setText(mMoneyFormatter.getNotTintedStringForInput(currency, money));
         mSplitPartsEditor.showParts();
     }
 

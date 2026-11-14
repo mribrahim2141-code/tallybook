@@ -992,7 +992,7 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
 
     @Override
     public void onMoneyChanged(String tag, CurrencyUnit currency, long money) {
-        mMoneyTextView.setText(mMoneyFormatter.getNotTintedString(currency, money, MoneyFormatter.CurrencyMode.ALWAYS_HIDDEN));
+        mMoneyTextView.setText(mMoneyFormatter.getNotTintedStringForInput(currency, money));
         if (currency != null) {
             mCurrencyTextView.setText(currency.getSymbol());
         } else {

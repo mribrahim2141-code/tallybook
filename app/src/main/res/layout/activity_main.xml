@@ -44,6 +44,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:maxWidth="320dp"
+        android:elevation="16dp"
         app:headerLayout="@layout/layout_navigation_drawer_header"
         app:insetForeground="@color/system_bar_scrim_dark"
         app:startInsetScrimEnabled="false"

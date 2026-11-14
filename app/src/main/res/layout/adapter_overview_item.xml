@@ -24,10 +24,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginStart="12dp"
+    android:layout_marginEnd="12dp"
+    android:layout_marginTop="3dp"
+    android:layout_marginBottom="3dp"
     android:minHeight="@dimen/material_component_lists_one_line_with_avatar_height"
     android:paddingTop="8dp"
     android:paddingBottom="8dp"
-    android:background="?attr/selectableItemBackground" >
+    android:background="@drawable/bg_glass_surface"
+    android:foreground="?attr/selectableItemBackground" >
 
     <!--
       The same 80dp floor the period summary row puts under its name, and for the same reason: an

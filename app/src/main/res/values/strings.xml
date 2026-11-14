@@ -385,6 +385,13 @@
     <string name="adapter_needed_money">"Needed:"</string>
     <string name="adapter_used_money">"Used:"</string>
     <string name="adapter_available_money">"Available:"</string>
+    <string name="budget_over_by">"Over by:"</string>
+    <string name="budget_usage_percent">"Used %1$d%%"</string>
+    <string name="saving_progress_percent">"Progress: %1$d%%"</string>
+    <string name="budget_usage_near_limit">"Near limit · %1$d%% used"</string>
+    <string name="budget_usage_exceeded">"Target exceeded · %1$d%% used"</string>
+    <string name="budget_forecast_usage">"Forecast by period end: %1$s"</string>
+    <string name="budget_forecast_over">"Forecast may exceed the limit: %1$s"</string>
     <string name="adapter_tax_money">"Tax:"</string>
 
     <string name="header_debts_to_pay">"To pay:"</string>
@@ -593,6 +600,8 @@
     <string name="setting_default_wallet_archived">"%1$s (archived)"</string>
     <string name="setting_title_ui_dot_matrix_icons">"Dot matrix icons"</string>
     <string name="setting_summary_ui_dot_matrix_icons">"Draw category icons as dots on a round tile instead of the classic style"</string>
+    <string name="setting_title_ui_hide_balances">"Hide balances"</string>
+    <string name="setting_summary_ui_hide_balances">"Mask displayed amounts in the app and home screen widget"</string>
     <string name="setting_title_ui_income_color">"Income color"</string>
     <string name="setting_title_ui_expense_color">"Expense color"</string>
     <string name="setting_title_ui_custom_digits">"Display style of digits"</string>
@@ -939,4 +948,14 @@
     <string name="search_sort_description">"Sort, %1$s"</string>
     <string name="search_currency_header">"%1$s (%2$s)"</string>
 
+    <string name="overview_summary_title">Selected period summary</string>
+    <string name="overview_summary_balance">Current balance</string>
+    <string name="overview_comparison_title">Change vs previous period</string>
+    <string name="overview_comparison_income">Income change</string>
+    <string name="overview_comparison_expense">Expense change</string>
+    <string name="overview_comparison_percent_item">%1$s: %2$s</string>
+    <string name="overview_comparison_percent_value">%1$s%2$s%%</string>
+    <string name="overview_comparison_new">New</string>
+    <string name="overview_top_expenses_title">Top spending categories</string>
+    <string name="overview_top_expense_item">%1$s • %2$s: %3$s</string>
 </resources>

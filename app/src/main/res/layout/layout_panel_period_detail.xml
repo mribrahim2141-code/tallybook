@@ -36,7 +36,9 @@
             android:id="@+id/chart_view_pager"
             android:layout_width="match_parent"
             android:layout_height="@dimen/view_pie_chart_height"
-            android:layout_marginBottom="@dimen/view_pie_chart_margin_bottom">
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginBottom="@dimen/view_pie_chart_margin_bottom"
+            android:background="@drawable/bg_glass_surface">
 
             <com.oriondev.moneywallet.ui.view.theme.ThemedViewPagerIndicator
                 android:id="@+id/view_pager_indicator"

@@ -24,7 +24,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/material_component_lists_header_height"
-    android:background="?attr/selectableItemBackground">
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="2dp"
+    android:background="@drawable/bg_glass_surface_horizontal_inset"
+    android:foreground="?attr/selectableItemBackground">
 
     <!--
       Five screens show this row and three of them put an amount on the right. A Total wallet joins

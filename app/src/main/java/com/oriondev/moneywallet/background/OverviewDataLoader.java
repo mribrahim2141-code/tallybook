@@ -40,6 +40,7 @@ import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Money;
 import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.model.OverviewData;
+import com.oriondev.moneywallet.model.OverviewExpenseCategory;
 import com.oriondev.moneywallet.model.OverviewSetting;
 import com.oriondev.moneywallet.model.PeriodMoney;
 import com.oriondev.moneywallet.storage.database.Contract;
@@ -49,6 +50,10 @@ import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.DateUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -81,14 +86,19 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
 
     @Override
     public OverviewData loadInBackground() {
+        Money totalIncomes = new Money();
+        Money totalExpenses = new Money();
         Money totalNetIncomes = new Money();
+        Money chartNetIncomes = new Money();
+        Money totalTransfers = new Money();
         List<PeriodMoney> periodMoneyList = new ArrayList<>();
         Uri uri = DataContentProvider.CONTENT_CATEGORY_LINES;
         String[] projection = new String[] {
                 Contract.Transaction.DATE,
                 Contract.Transaction.DIRECTION,
                 Contract.Transaction.WALLET_CURRENCY,
-                Contract.Transaction.MONEY
+                Contract.Transaction.MONEY,
+                Contract.Transaction.CATEGORY_TAG
         };
         String selection;
         String[] selectionArgs;
@@ -139,12 +149,21 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
                             int direction = cursor.getInt(cursor.getColumnIndex(Contract.Transaction.DIRECTION));
                             String currency = cursor.getString(cursor.getColumnIndex(Contract.Transaction.WALLET_CURRENCY));
                             long money = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY));
-                            if (direction == Contract.Direction.INCOME) {
+                            String categoryTag = cursor.getString(cursor.getColumnIndexOrThrow(Contract.Transaction.CATEGORY_TAG));
+                            boolean incoming = direction == Contract.Direction.INCOME;
+                            if (Contract.CategoryTag.TRANSFER.equals(categoryTag)) {
+                                currentPeriod.addTransfer(currency, money, incoming);
+                                if (incoming) {
+                                    chartNetIncomes.addMoney(currency, money);
+                                } else {
+                                    chartNetIncomes.removeMoney(currency, money);
+                                }
+                            } else if (incoming) {
                                 currentPeriod.addIncome(currency, money);
-                                totalNetIncomes.addMoney(currency, money);
+                                chartNetIncomes.addMoney(currency, money);
                             } else if (direction == Contract.Direction.EXPENSE) {
                                 currentPeriod.addExpense(currency, money);
-                                totalNetIncomes.removeMoney(currency, money);
+                                chartNetIncomes.removeMoney(currency, money);
                             }
                         } else {
                             break;
@@ -155,11 +174,14 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
             }
             cursor.close();
         }
+        // Summary figures are independent of the chart's selected cash-flow/category filter.
+        loadSummaryTotals(totalIncomes, totalExpenses, totalNetIncomes, totalTransfers);
+
         // generate chart data
         List<IBarDataSet> barDataSets = new ArrayList<>();
         List<ILineDataSet> lineDataSets = new ArrayList<>();
         List<IRadarDataSet> radarDataSets = new ArrayList<>();
-        for (String currency : totalNetIncomes.getCurrencies()) {
+        for (String currency : chartNetIncomes.getCurrencies()) {
             // for each currency we have to iterate the list of period money and generate
             // a valid chart data set for each chart types.
             List<BarEntry> barEntryList = new ArrayList<>();
@@ -178,19 +200,20 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
                 lineEntryList.add(new Entry(i, value));
                 radarEntryList.add(new RadarEntry(value));
             }
-            // generate one data set for each chart
+            // Keep one stable color for this currency across all three chart types.
+            int color = COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length];
             BarDataSet barDataSet = new BarDataSet(barEntryList, currency);
-            barDataSet.setColor(COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length]);
+            barDataSet.setColor(color);
             barDataSets.add(barDataSet);
             LineDataSet lineDataSet = new LineDataSet(lineEntryList, currency);
-            lineDataSet.setColor(COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length]);
-            lineDataSet.setCircleColor(COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length]);
+            lineDataSet.setColor(color);
+            lineDataSet.setCircleColor(color);
             lineDataSet.setCircleRadius(0.3f);
             lineDataSet.setLineWidth(1f);
             lineDataSets.add(lineDataSet);
             RadarDataSet radarDataSet = new RadarDataSet(radarEntryList, currency);
-            radarDataSet.setColor(COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length]);
-            radarDataSet.setFillColor(COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length]);
+            radarDataSet.setColor(color);
+            radarDataSet.setFillColor(color);
             radarDataSet.setDrawFilled(true);
             radarDataSets.add(radarDataSet);
         }
@@ -214,7 +237,208 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
             radarData = new RadarData(radarDataSets);
         }
         // return generated data
-        return new OverviewData(barData, lineData, radarData, periodMoneyList);
+        Money totalBalance = loadWalletBalance();
+        List<OverviewExpenseCategory> topExpenseCategories = loadTopExpenseCategories();
+        return new OverviewData(barData, lineData, radarData, periodMoneyList,
+                totalIncomes, totalExpenses, totalNetIncomes, totalTransfers, totalBalance,
+                topExpenseCategories);
+    }
+
+
+    /**
+     * Loads period-wide income, expense, transfer, and net totals independently from the chart
+     * filter. Selecting an income/expense chart or drilling into a category must not change
+     * the summary card's meaning.
+     */
+    private void loadSummaryTotals(Money totalIncomes, Money totalExpenses,
+                                   Money totalNetIncomes, Money totalTransfers) {
+        String[] projection = new String[] {
+                Contract.Transaction.DIRECTION,
+                Contract.Transaction.WALLET_CURRENCY,
+                Contract.Transaction.MONEY,
+                Contract.Transaction.CATEGORY_TAG
+        };
+        long currentWallet = PreferenceManager.getCurrentWallet();
+        String selection;
+        String[] selectionArgs;
+        if (currentWallet == PreferenceManager.TOTAL_WALLET_ID) {
+            selection = Contract.Transaction.WALLET_COUNT_IN_TOTAL + " = 1";
+            selectionArgs = null;
+        } else {
+            selection = Contract.Transaction.WALLET_ID + " = ?";
+            selectionArgs = new String[] {String.valueOf(currentWallet)};
+        }
+        selection += " AND " + Contract.Transaction.CONFIRMED + " = '1' AND "
+                + Contract.Transaction.COUNT_IN_TOTAL + " = '1'";
+        selection += " AND " + Contract.Transaction.REPORT_FILTER;
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('now', 'localtime')";
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") >= DATETIME('"
+                + DateUtils.getSQLDateTimeString(mOverviewSetting.getStartDate()) + "')";
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('"
+                + DateUtils.getSQLDateTimeString(mOverviewSetting.getEndDate()) + "')";
+
+        Cursor cursor = getContext().getContentResolver().query(
+                DataContentProvider.CONTENT_CATEGORY_LINES, projection, selection, selectionArgs,
+                Contract.Transaction.DATE + " ASC");
+        if (cursor == null) {
+            return;
+        }
+        try {
+            while (cursor.moveToNext()) {
+                int direction = cursor.getInt(cursor.getColumnIndexOrThrow(
+                        Contract.Transaction.DIRECTION));
+                String currency = cursor.getString(cursor.getColumnIndexOrThrow(
+                        Contract.Transaction.WALLET_CURRENCY));
+                long amount = cursor.getLong(cursor.getColumnIndexOrThrow(
+                        Contract.Transaction.MONEY));
+                String categoryTag = cursor.getString(cursor.getColumnIndexOrThrow(
+                        Contract.Transaction.CATEGORY_TAG));
+                if (Contract.CategoryTag.TRANSFER.equals(categoryTag)) {
+                    if (direction == Contract.Direction.INCOME) {
+                        totalTransfers.addMoney(currency, amount);
+                        totalNetIncomes.addMoney(currency, amount);
+                    } else if (direction == Contract.Direction.EXPENSE) {
+                        totalTransfers.removeMoney(currency, amount);
+                        totalNetIncomes.removeMoney(currency, amount);
+                    }
+                } else if (direction == Contract.Direction.INCOME) {
+                    totalIncomes.addMoney(currency, amount);
+                    totalNetIncomes.addMoney(currency, amount);
+                } else if (direction == Contract.Direction.EXPENSE) {
+                    totalExpenses.addMoney(currency, amount);
+                    totalNetIncomes.removeMoney(currency, amount);
+                }
+            }
+        } finally {
+            cursor.close();
+        }
+    }
+
+    /**
+     * Ranks expense categories independently for each currency. Amounts in different currencies
+     * are never compared or combined, and the same report filters as the period detail are used.
+     */
+    private List<OverviewExpenseCategory> loadTopExpenseCategories() {
+        Map<String, Map<Long, OverviewExpenseCategory>> byCurrency = new HashMap<>();
+        String[] projection = new String[] {
+                Contract.Transaction.CATEGORY_ID,
+                Contract.Transaction.CATEGORY_NAME,
+                Contract.Transaction.MONEY,
+                Contract.Transaction.WALLET_CURRENCY
+        };
+        long currentWallet = PreferenceManager.getCurrentWallet();
+        String selection;
+        String[] selectionArgs;
+        if (currentWallet == PreferenceManager.TOTAL_WALLET_ID) {
+            selection = Contract.Transaction.WALLET_COUNT_IN_TOTAL + " = 1";
+            selectionArgs = null;
+        } else {
+            selection = Contract.Transaction.WALLET_ID + " = ?";
+            selectionArgs = new String[] {String.valueOf(currentWallet)};
+        }
+        selection += " AND " + Contract.Transaction.CONFIRMED + " = '1' AND "
+                + Contract.Transaction.COUNT_IN_TOTAL + " = '1'";
+        selection += " AND " + Contract.Transaction.REPORT_FILTER;
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('now', 'localtime')";
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") >= DATETIME('"
+                + DateUtils.getSQLDateTimeString(mOverviewSetting.getStartDate()) + "')";
+        selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('"
+                + DateUtils.getSQLDateTimeString(mOverviewSetting.getEndDate()) + "')";
+        selection += " AND " + Contract.Transaction.DIRECTION + " = "
+                + Contract.Direction.EXPENSE + " AND " + Contract.Transaction.NOT_TRANSFER;
+
+        Cursor cursor = getContext().getContentResolver().query(
+                DataContentProvider.CONTENT_CATEGORY_LINES, projection, selection, selectionArgs,
+                Contract.Transaction.CATEGORY_ID);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    long categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(
+                            Contract.Transaction.CATEGORY_ID));
+                    String name = cursor.getString(cursor.getColumnIndexOrThrow(
+                            Contract.Transaction.CATEGORY_NAME));
+                    String currency = cursor.getString(cursor.getColumnIndexOrThrow(
+                            Contract.Transaction.WALLET_CURRENCY));
+                    long amount = cursor.getLong(cursor.getColumnIndexOrThrow(
+                            Contract.Transaction.MONEY));
+                    Map<Long, OverviewExpenseCategory> categories = byCurrency.get(currency);
+                    if (categories == null) {
+                        categories = new HashMap<>();
+                        byCurrency.put(currency, categories);
+                    }
+                    OverviewExpenseCategory category = categories.get(categoryId);
+                    if (category == null) {
+                        categories.put(categoryId, new OverviewExpenseCategory(
+                                categoryId, name, currency, amount));
+                    } else {
+                        category.addAmount(amount);
+                    }
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+
+        List<String> currencies = new ArrayList<>(byCurrency.keySet());
+        Collections.sort(currencies);
+        List<OverviewExpenseCategory> result = new ArrayList<>();
+        for (String currency : currencies) {
+            List<OverviewExpenseCategory> categories = new ArrayList<>(
+                    byCurrency.get(currency).values());
+            Collections.sort(categories, new Comparator<OverviewExpenseCategory>() {
+                @Override
+                public int compare(OverviewExpenseCategory left, OverviewExpenseCategory right) {
+                    int amountOrder = Long.compare(right.getAmount(), left.getAmount());
+                    if (amountOrder != 0) {
+                        return amountOrder;
+                    }
+                    String leftName = left.getName() == null ? "" : left.getName();
+                    String rightName = right.getName() == null ? "" : right.getName();
+                    return String.CASE_INSENSITIVE_ORDER.compare(leftName, rightName);
+                }
+            });
+            for (int i = 0; i < Math.min(3, categories.size()); i++) {
+                result.add(categories.get(i));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Reads the live balance from the existing wallet projection. The projection's transaction
+     * total does not include the wallet's opening amount, so both are added here. A total-wallet
+     * view keeps currencies separate and includes only wallets configured to count in the total.
+     */
+    private Money loadWalletBalance() {
+        Money balance = new Money();
+        String[] projection = new String[] {
+                Contract.Wallet.CURRENCY,
+                Contract.Wallet.START_MONEY,
+                Contract.Wallet.TOTAL_MONEY
+        };
+        long currentWallet = PreferenceManager.getCurrentWallet();
+        String selection;
+        String[] selectionArgs;
+        if (currentWallet == PreferenceManager.TOTAL_WALLET_ID) {
+            selection = Contract.Wallet.COUNT_IN_TOTAL + " = 1";
+            selectionArgs = null;
+        } else {
+            selection = Contract.Wallet.ID + " = ?";
+            selectionArgs = new String[] {String.valueOf(currentWallet)};
+        }
+        Cursor cursor = getContext().getContentResolver().query(
+                DataContentProvider.CONTENT_WALLETS, projection, selection, selectionArgs, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    String currency = cursor.getString(cursor.getColumnIndexOrThrow(Contract.Wallet.CURRENCY));
+                    long opening = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.Wallet.START_MONEY));
+                    long transactions = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.Wallet.TOTAL_MONEY));
+                    balance.addMoney(currency, opening + transactions);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+        return balance;
     }
 
     private String[] appendSelectionArgs(String[] oldArgs, String... newArgs) {

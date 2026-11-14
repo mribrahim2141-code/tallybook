@@ -59,6 +59,7 @@ public class PreferenceManager {
     private static final String COLOR_INCOME = "color_income";
     private static final String COLOR_EXPENSE = "color_expense";
     private static final String SHOW_CURRENCY = "show_currency";
+    private static final String HIDE_BALANCES = "hide_balances";
     private static final String GROUP_DIGITS = "group_digits";
     private static final String ROUND_DECIMALS = "round_decimals";
     private static final String SHOW_PLUS_MINUS_SYMBOL = "show_plus_minus_symbol";
@@ -246,6 +247,11 @@ public class PreferenceManager {
         WalletWidgetObserver.requestUpdate();
     }
 
+    public static void setBalancesHiddenEnabled(boolean enabled) {
+        mPreferences.edit().putBoolean(HIDE_BALANCES, enabled).apply();
+        WalletWidgetObserver.requestUpdate();
+    }
+
     public static void setGroupDigitsEnabled(boolean enabled) {
         mPreferences.edit().putBoolean(GROUP_DIGITS, enabled).apply();
         WalletWidgetObserver.requestUpdate();
@@ -372,6 +378,10 @@ public class PreferenceManager {
 
     public static boolean isCurrencyEnabled() {
         return mPreferences.getBoolean(SHOW_CURRENCY, true);
+    }
+
+    public static boolean isBalancesHidden() {
+        return mPreferences.getBoolean(HIDE_BALANCES, false);
     }
 
     public static boolean isGroupDigitEnabled() {

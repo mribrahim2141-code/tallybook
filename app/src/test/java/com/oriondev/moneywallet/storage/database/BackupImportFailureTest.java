@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.oriondev.moneywallet.storage.database.backup.DefaultBackupExporter;
 import com.oriondev.moneywallet.storage.database.backup.DefaultBackupImporter;
+import com.oriondev.moneywallet.storage.database.SQLDatabaseImporter;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 
 import net.lingala.zip4j.model.ZipParameters;
@@ -23,8 +24,11 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -104,6 +108,139 @@ public class BackupImportFailureTest {
         File backup = zipJson("boundary.mwbx", head + new String(padding) + tail);
 
         new DefaultBackupImporter(mContext, backup, null).importDatabase(importFolder());
+    }
+
+    @Test
+    public void failedAttachmentExtractionKeepsTheExistingFolder() throws Exception {
+        File attachmentFolder = new File(mContext.getCacheDir(), "restore-attachments");
+        assertTrue(attachmentFolder.mkdirs() || attachmentFolder.isDirectory());
+        File existing = new File(attachmentFolder, "existing.txt");
+        Files.write(existing.toPath(), "keep me".getBytes(StandardCharsets.UTF_8));
+        File invalidBackup = new File(mContext.getCacheDir(), "invalid-attachments.mwbx");
+        Files.write(invalidBackup.toPath(), "not a zip".getBytes(StandardCharsets.UTF_8));
+
+        try {
+            new DefaultBackupImporter(mContext, invalidBackup, null).importAttachments(attachmentFolder);
+            fail("invalid archive should not be imported");
+        } catch (ImportException expected) {
+            assertTrue(expected.getMessage().contains("Invalid backup file"));
+        }
+
+        assertEquals("keep me", new String(Files.readAllBytes(existing.toPath()), StandardCharsets.UTF_8));
+        assertTrue(attachmentFolder.isDirectory());
+        assertTrue(!new File(attachmentFolder.getParentFile(), attachmentFolder.getName() +
+                ".restore-staging").exists());
+    }
+
+    @Test
+    public void validAttachmentRestoreReplacesTheFolderAfterExtraction() throws Exception {
+        File attachmentFolder = new File(mContext.getCacheDir(), "restore-attachments-valid");
+        assertTrue(attachmentFolder.mkdirs() || attachmentFolder.isDirectory());
+        File existing = new File(attachmentFolder, "old.txt");
+        Files.write(existing.toPath(), "old".getBytes(StandardCharsets.UTF_8));
+        File backup = zipAttachment("valid-attachments.mwbx", "receipt.txt", "restored");
+
+        new DefaultBackupImporter(mContext, backup, null).importAttachments(attachmentFolder);
+
+        assertTrue(!existing.exists());
+        File restored = new File(attachmentFolder, "receipt.txt");
+        assertEquals("restored", new String(Files.readAllBytes(restored.toPath()), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void maliciousAttachmentPathsAreRejectedWithoutChangingExistingFiles() throws Exception {
+        String[] maliciousPaths = {
+                "attachments/../escape.txt",
+                "attachments/nested/receipt.txt",
+                "attachments/..\\\\escape.txt"
+        };
+        for (int i = 0; i < maliciousPaths.length; i++) {
+            File attachmentFolder = new File(mContext.getCacheDir(), "unsafe-attachments-" + i);
+            assertTrue(attachmentFolder.mkdirs() || attachmentFolder.isDirectory());
+            File existing = new File(attachmentFolder, "existing.txt");
+            Files.write(existing.toPath(), "keep me".getBytes(StandardCharsets.UTF_8));
+            File backup = zipRawEntry("unsafe-" + i + ".mwbx", maliciousPaths[i]);
+
+            try {
+                new DefaultBackupImporter(mContext, backup, null).importAttachments(attachmentFolder);
+                fail("malicious attachment path should be rejected: " + maliciousPaths[i]);
+            } catch (ImportException expected) {
+                assertTrue(expected.getMessage().contains("Invalid attachment path"));
+            }
+
+            assertEquals("keep me", new String(Files.readAllBytes(existing.toPath()), StandardCharsets.UTF_8));
+            assertTrue(attachmentFolder.isDirectory());
+            assertTrue(!new File(attachmentFolder.getParentFile(), attachmentFolder.getName() +
+                    ".restore-staging").exists());
+        }
+    }
+
+    @Test
+    public void preparedDatabaseDoesNotReplaceTheLiveDatabaseUntilCommit() throws Exception {
+        File liveDatabase = mContext.getDatabasePath(SQLDatabaseImporter.DATABASE_NAME);
+        assertTrue(liveDatabase.isFile());
+        byte[] original = Files.readAllBytes(liveDatabase.toPath());
+        File backup = exportBackup();
+        DefaultBackupImporter importer = new DefaultBackupImporter(mContext, backup, null);
+
+        importer.prepareDatabase(importFolder(), liveDatabase.getParentFile());
+
+        assertArrayEquals(original, Files.readAllBytes(liveDatabase.toPath()));
+        importer.discardPreparedDatabase();
+        assertArrayEquals(original, Files.readAllBytes(liveDatabase.toPath()));
+    }
+
+    @Test
+    public void preparedAttachmentRestoreCanBeRolledBackAfterCommit() throws Exception {
+        File attachmentFolder = new File(mContext.getCacheDir(), "restore-attachments-rollback");
+        assertTrue(attachmentFolder.mkdirs() || attachmentFolder.isDirectory());
+        File existing = new File(attachmentFolder, "existing.txt");
+        Files.write(existing.toPath(), "keep me".getBytes(StandardCharsets.UTF_8));
+        File backup = zipAttachment("rollback-attachments.mwbx", "receipt.txt", "restored");
+        DefaultBackupImporter importer = new DefaultBackupImporter(mContext, backup, null);
+
+        importer.prepareAttachments(attachmentFolder);
+
+        assertEquals("keep me", new String(Files.readAllBytes(existing.toPath()), StandardCharsets.UTF_8));
+        assertTrue(!new File(attachmentFolder, "receipt.txt").exists());
+
+        importer.commitAttachments();
+
+        assertTrue(!existing.exists());
+        assertEquals("restored", new String(Files.readAllBytes(
+                new File(attachmentFolder, "receipt.txt").toPath()), StandardCharsets.UTF_8));
+
+        importer.rollbackAttachments();
+
+        assertEquals("keep me", new String(Files.readAllBytes(existing.toPath()), StandardCharsets.UTF_8));
+        assertTrue(!new File(attachmentFolder, "receipt.txt").exists());
+    }
+
+    private File zipRawEntry(String backupName, String entryName) throws Exception {
+        File backup = new File(mContext.getCacheDir(), backupName);
+        ZipOutputStream output = new ZipOutputStream(new FileOutputStream(backup));
+        try {
+            output.putNextEntry(new ZipEntry(entryName));
+            output.write("untrusted".getBytes(StandardCharsets.UTF_8));
+            output.closeEntry();
+        } finally {
+            output.close();
+        }
+        return backup;
+    }
+
+    private File zipAttachment(String backupName, String entryName, String value) throws Exception {
+        File sourceFolder = new File(mContext.getCacheDir(), "attachment-source");
+        assertTrue(sourceFolder.mkdirs() || sourceFolder.isDirectory());
+        File source = new File(sourceFolder, entryName);
+        Files.write(source.toPath(), value.getBytes(StandardCharsets.UTF_8));
+        File backup = new File(mContext.getCacheDir(), backupName);
+        ZipParameters parameters = new ZipParameters();
+        parameters.setRootFolderInZip("attachments/");
+        parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+        parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+        new net.lingala.zip4j.core.ZipFile(backup).addFile(source, parameters);
+        return backup;
     }
 
     private String restoreFailure(File backup) throws Exception {

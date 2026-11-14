@@ -31,12 +31,19 @@
     android:layout_marginStart="@dimen/material_component_lists_card_start_margin"
     android:layout_marginRight="@dimen/material_component_lists_card_end_margin"
     android:layout_marginEnd="@dimen/material_component_lists_card_end_margin"
-    android:foreground="?attr/selectableItemBackground">
+    android:foreground="?attr/selectableItemBackground"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="2dp"
+    app:cardUseCompatPadding="true"
+    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical" >
+        android:orientation="vertical" 
+        android:background="@drawable/bg_glass_surface">
 
         <!-- Top layout: icon, description, money and progress -->
 
@@ -144,7 +151,6 @@
                 android:text="@string/adapter_needed_money"
                 app:layout_constraintTop_toBottomOf="@+id/current_body_text_view"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:theme_textColor="textColorSecondary" />
 
             <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
@@ -155,9 +161,21 @@
                 app:layout_constraintTop_toBottomOf="@+id/current_header_text_view"
                 app:layout_constraintStart_toEndOf="@+id/needed_header_text_view"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:theme_textColor="textColorSecondary"
                 tools:text="€ 0,00" />
+
+            <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                android:id="@+id/progress_percent_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:layout_marginTop="2dp"
+                app:layout_constraintTop_toBottomOf="@+id/needed_body_text_view"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:theme_textColor="textColorSecondary"
+                tools:text="Progress: 45%" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

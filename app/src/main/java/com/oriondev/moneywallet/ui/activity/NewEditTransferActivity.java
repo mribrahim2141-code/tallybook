@@ -768,11 +768,11 @@ public class NewEditTransferActivity extends NewEditItemActivity  implements Cur
                 } else {
                     mCurrencyTextView.setText("?");
                 }
-                mMoneyTextView.setText(mMoneyFormatter.getNotTintedString(currency, money, MoneyFormatter.CurrencyMode.ALWAYS_HIDDEN));
+                mMoneyTextView.setText(mMoneyFormatter.getNotTintedStringForInput(currency, money));
                 mConverterPicker.notifyMoneyChanged();
                 break;
             case TAG_TAX_PICKER:
-                mMoneyFormatter.applyNotTinted(mTaxEditText, currency, money);
+                mTaxEditText.setText(mMoneyFormatter.getNotTintedStringForInput(currency, money, MoneyFormatter.CurrencyMode.USER_PREFERENCE));
                 break;
         }
     }

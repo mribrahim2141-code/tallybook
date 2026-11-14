@@ -36,8 +36,8 @@ import com.github.mikephil.charting.data.RadarData;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.OverviewData;
-
-import java.util.Locale;
+import com.oriondev.moneywallet.model.PeriodMoney;
+import com.oriondev.moneywallet.utils.DateFormatter;
 
 /**
  * Created by andrea on 17/08/18.
@@ -50,16 +50,29 @@ public class OverviewChartViewPagerAdapter extends PagerAdapter {
     private static final int POSITION_LINE_CHART = 1;
     private static final int POSITION_RADAR_CHART = 2;
 
-    private static final ValueFormatter PERIOD_NUMBER_FORMATTER = new ValueFormatter() {
-
-        @Override
-        public String getFormattedValue(float value) {
-            return String.format(Locale.getDefault(), "%d", (int) value + 1);
-        }
-
-    };
-
     private OverviewData mOverviewData;
+
+    /**
+     * Names each plotted point with the dates of the period it represents. The chart values
+     * remain zero-based, including the half-step positions used by grouped bars.
+     */
+    private ValueFormatter createPeriodDateFormatter(final ViewGroup container) {
+        return new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                int index = (int) value;
+                if (mOverviewData == null || index < 0 || index >= mOverviewData.getPeriodCount()) {
+                    return "";
+                }
+                PeriodMoney period = mOverviewData.getPeriodMoney(index);
+                if (period.getStartDate() == null || period.getEndDate() == null) {
+                    return String.valueOf(index + 1);
+                }
+                return DateFormatter.getDateRange(container.getContext(),
+                        period.getStartDate(), period.getEndDate());
+            }
+        };
+    }
 
     @NonNull
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
@@ -88,7 +101,7 @@ public class OverviewChartViewPagerAdapter extends PagerAdapter {
                             xAxis.setAxisMinimum(-0.5f);
                             xAxis.setAxisMaximum(mOverviewData.getPeriodCount() - 0.5f);
                         }
-                        xAxis.setValueFormatter(PERIOD_NUMBER_FORMATTER);
+                        xAxis.setValueFormatter(createPeriodDateFormatter(container));
                         YAxis leftAxis = barChart.getAxisLeft();
                         leftAxis.setSpaceTop(35f);
                         barChart.getAxisRight().setEnabled(false);
@@ -110,7 +123,7 @@ public class OverviewChartViewPagerAdapter extends PagerAdapter {
                         xAxis.setGranularity(1f);
                         xAxis.setAxisMinimum(-0.5f);
                         xAxis.setAxisMaximum(mOverviewData.getPeriodCount() - 0.5f);
-                        xAxis.setValueFormatter(PERIOD_NUMBER_FORMATTER);
+                        xAxis.setValueFormatter(createPeriodDateFormatter(container));
                         YAxis leftAxis = lineChart.getAxisLeft();
                         leftAxis.setSpaceTop(35f);
                         lineChart.getAxisRight().setEnabled(false);
@@ -128,7 +141,7 @@ public class OverviewChartViewPagerAdapter extends PagerAdapter {
                     radarChart.setData(radarData);
                     if (radarData != null) {
                         XAxis xAxis = radarChart.getXAxis();
-                        xAxis.setValueFormatter(PERIOD_NUMBER_FORMATTER);
+                        xAxis.setValueFormatter(createPeriodDateFormatter(container));
                         radarData.setValueTextColor(xAxis.getTextColor());
                     }
                 }
