@@ -42,6 +42,8 @@ import android.widget.TextView;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.background.OverviewDataLoader;
 import com.oriondev.moneywallet.model.Money;
+import com.oriondev.moneywallet.utils.CurrencyManager;
+import com.oriondev.moneywallet.utils.MoneyProgressMath;
 import com.oriondev.moneywallet.model.OverviewChangeMath;
 import com.oriondev.moneywallet.model.OverviewData;
 import com.oriondev.moneywallet.model.OverviewSetting;
@@ -301,7 +303,10 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         }
         String[] projection = new String[] {
                 Contract.Debt.DESCRIPTION,
-                Contract.Debt.EXPIRATION_DATE
+                Contract.Debt.EXPIRATION_DATE,
+                Contract.Debt.MONEY,
+                Contract.Debt.PROGRESS,
+                Contract.Debt.WALLET_CURRENCY
         };
         Cursor cursor = null;
         StringBuilder upcoming = new StringBuilder();
@@ -321,12 +326,20 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
                             cursor.getColumnIndexOrThrow(Contract.Debt.DESCRIPTION));
                     String expirationValue = cursor.getString(
                             cursor.getColumnIndexOrThrow(Contract.Debt.EXPIRATION_DATE));
+                    long target = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.Debt.MONEY));
+                    long progress = MoneyProgressMath.safeAbs(
+                            cursor.getLong(cursor.getColumnIndexOrThrow(Contract.Debt.PROGRESS)));
+                    long remaining = MoneyProgressMath.remaining(target, progress);
+                    String currencyCode = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.WALLET_CURRENCY));
+                    String remainingText = MoneyFormatter.getInstance().getNotTintedString(
+                            CurrencyManager.getCurrency(currencyCode), remaining);
                     java.util.Date expirationDate = DateUtils.getDateFromSQLDateString(expirationValue);
                     if (upcoming.length() > 0) {
                         upcoming.append('\n');
                     }
                     upcoming.append(getString(R.string.overview_upcoming_debt_item,
-                            description, DateFormatter.getFormattedDate(expirationDate)));
+                            description, DateFormatter.getFormattedDate(expirationDate), remainingText));
                     shown++;
                 } while (shown < 3 && cursor.moveToNext());
             }

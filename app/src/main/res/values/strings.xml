@@ -966,5 +966,5 @@
     <string name="overview_upcoming_events_title">Upcoming events</string>
     <string name="overview_upcoming_event_item">%1$s — %2$s</string>
     <string name="overview_upcoming_debts_title">Upcoming debt due dates</string>
-    <string name="overview_upcoming_debt_item">%1$s — %2$s</string>
+    <string name="overview_upcoming_debt_item">%1$s — %2$s — remaining: %3$s</string>
 </resources>
