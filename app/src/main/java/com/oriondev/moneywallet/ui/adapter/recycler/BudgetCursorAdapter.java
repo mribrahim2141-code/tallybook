@@ -79,6 +79,12 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
         return projected >= Long.MAX_VALUE ? Long.MAX_VALUE : (long) projected;
     }
 
+    static int calculateForecastStatus(long target, long projectedUsage) {
+        if (target <= 0L || projectedUsage < 0L) return 0;
+        if (projectedUsage > target) return 2;
+        return calculateUsagePercent(target, projectedUsage) >= 80 ? 1 : 0;
+    }
+
     private static long utcDay(Date date) {
         Calendar local = Calendar.getInstance();
         local.setTime(date);
@@ -171,9 +177,18 @@ public class BudgetCursorAdapter extends AbstractCursorAdapter<BudgetCursorAdapt
         long projectedUsage = calculateProjectedUsage(progress, startDate, endDate, new Date());
         if (projectedUsage >= 0L) {
             holder.mForecastTextView.setVisibility(View.VISIBLE);
-            int forecastLabel = projectedUsage > target ? R.string.budget_forecast_over : R.string.budget_forecast_usage;
-            holder.mForecastTextView.setText(context.getString(forecastLabel,
-                    mMoneyFormatter.getNotTintedString(currency, projectedUsage)));
+            int forecastStatus = calculateForecastStatus(target, projectedUsage);
+            if (forecastStatus == 2) {
+                holder.mForecastTextView.setText(context.getString(R.string.budget_forecast_over,
+                        mMoneyFormatter.getNotTintedString(currency, projectedUsage)));
+            } else if (forecastStatus == 1) {
+                holder.mForecastTextView.setText(context.getString(R.string.budget_forecast_near_limit,
+                        calculateUsagePercent(target, projectedUsage),
+                        mMoneyFormatter.getNotTintedString(currency, projectedUsage)));
+            } else {
+                holder.mForecastTextView.setText(context.getString(R.string.budget_forecast_usage,
+                        mMoneyFormatter.getNotTintedString(currency, projectedUsage)));
+            }
         } else {
             holder.mForecastTextView.setVisibility(View.GONE);
         }

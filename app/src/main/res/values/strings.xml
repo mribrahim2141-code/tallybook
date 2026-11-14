@@ -391,6 +391,7 @@
     <string name="budget_usage_near_limit">"Near limit · %1$d%% used"</string>
     <string name="budget_usage_exceeded">"Target exceeded · %1$d%% used"</string>
     <string name="budget_forecast_usage">"Forecast by period end: %1$s"</string>
+    <string name="budget_forecast_near_limit">"Forecast nearing the limit (%1$d%%): %2$s"</string>
     <string name="budget_forecast_over">"Forecast may exceed the limit: %1$s"</string>
     <string name="adapter_tax_money">"Tax:"</string>
 
