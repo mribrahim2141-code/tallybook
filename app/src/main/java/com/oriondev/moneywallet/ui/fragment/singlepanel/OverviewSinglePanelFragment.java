@@ -22,6 +22,8 @@ package com.oriondev.moneywallet.ui.fragment.singlepanel;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import androidx.annotation.MenuRes;
 import androidx.annotation.NonNull;
@@ -40,17 +42,23 @@ import android.widget.TextView;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.background.OverviewDataLoader;
 import com.oriondev.moneywallet.model.Money;
+import com.oriondev.moneywallet.utils.CurrencyManager;
+import com.oriondev.moneywallet.utils.MoneyProgressMath;
 import com.oriondev.moneywallet.model.OverviewChangeMath;
 import com.oriondev.moneywallet.model.OverviewData;
 import com.oriondev.moneywallet.model.OverviewSetting;
 import com.oriondev.moneywallet.model.PeriodMoney;
 import com.oriondev.moneywallet.picker.OverviewSettingPicker;
+import com.oriondev.moneywallet.storage.database.Contract;
+import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.preference.CurrentWalletController;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.PeriodDetailActivity;
 import com.oriondev.moneywallet.ui.adapter.pager.OverviewChartViewPagerAdapter;
 import com.oriondev.moneywallet.ui.adapter.recycler.OverviewItemAdapter;
 import com.oriondev.moneywallet.ui.fragment.base.SinglePanelFragment;
+import com.oriondev.moneywallet.utils.DateFormatter;
+import com.oriondev.moneywallet.utils.DateUtils;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
 
 import java.math.BigDecimal;
@@ -79,13 +87,23 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
     private TextView mExpenseSummaryTextView;
     private TextView mNetSummaryTextView;
     private TextView mBalanceSummaryTextView;
+    private View mSavingsRateContainer;
+    private TextView mSavingsRateTextView;
     private View mComparisonContainer;
     private TextView mIncomeChangeTextView;
     private TextView mExpenseChangeTextView;
     private TextView mIncomeChangePercentTextView;
     private TextView mExpenseChangePercentTextView;
+    private TextView mNetChangeTextView;
+    private TextView mNetChangePercentTextView;
     private View mTopExpensesContainer;
     private TextView mTopExpensesTextView;
+    private View mUpcomingEventsContainer;
+    private TextView mUpcomingEventsTextView;
+    private View mUpcomingDebtsContainer;
+    private TextView mUpcomingDebtsTextView;
+    private View mOverdueDebtsContainer;
+    private TextView mOverdueDebtsTextView;
 
     private BroadcastReceiver mBroadcastReceiver;
 
@@ -110,13 +128,23 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         mExpenseSummaryTextView = view.findViewById(R.id.summary_expense_value);
         mNetSummaryTextView = view.findViewById(R.id.summary_net_value);
         mBalanceSummaryTextView = view.findViewById(R.id.summary_balance_value);
+        mSavingsRateContainer = view.findViewById(R.id.summary_savings_rate_container);
+        mSavingsRateTextView = view.findViewById(R.id.summary_savings_rate_value);
         mComparisonContainer = view.findViewById(R.id.summary_comparison_container);
         mIncomeChangeTextView = view.findViewById(R.id.summary_income_change_value);
         mExpenseChangeTextView = view.findViewById(R.id.summary_expense_change_value);
         mIncomeChangePercentTextView = view.findViewById(R.id.summary_income_change_percent);
         mExpenseChangePercentTextView = view.findViewById(R.id.summary_expense_change_percent);
+        mNetChangeTextView = view.findViewById(R.id.summary_net_change_value);
+        mNetChangePercentTextView = view.findViewById(R.id.summary_net_change_percent);
         mTopExpensesContainer = view.findViewById(R.id.summary_top_expenses_container);
         mTopExpensesTextView = view.findViewById(R.id.summary_top_expenses_value);
+        mUpcomingEventsContainer = view.findViewById(R.id.summary_upcoming_events_container);
+        mUpcomingEventsTextView = view.findViewById(R.id.summary_upcoming_events_value);
+        mUpcomingDebtsContainer = view.findViewById(R.id.summary_upcoming_debts_container);
+        mUpcomingDebtsTextView = view.findViewById(R.id.summary_upcoming_debts_value);
+        mOverdueDebtsContainer = view.findViewById(R.id.summary_overdue_debts_container);
+        mOverdueDebtsTextView = view.findViewById(R.id.summary_overdue_debts_value);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         // initialize adapters
         mViewPagerAdapter = new OverviewChartViewPagerAdapter();
@@ -181,18 +209,27 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
                 data.getTotalExpenses(), MoneyFormatter.TintMode.EXPENSE));
         mNetSummaryTextView.setText(formatter.getTintedString(data.getTotalNetIncomes()));
         mBalanceSummaryTextView.setText(formatter.getTintedString(data.getTotalBalance()));
+        updateSavingsRate(data.getTotalIncomes(), data.getTotalExpenses());
         StringBuilder topExpenses = new StringBuilder();
         for (com.oriondev.moneywallet.model.OverviewExpenseCategory category : data.getTopExpenseCategories()) {
             if (topExpenses.length() > 0) {
                 topExpenses.append('\n');
             }
+            BigDecimal share = OverviewChangeMath.expenseShare(
+                    category.getAmount(), data.getTotalExpenses().getMoney(category.getCurrency()));
+            String shareText = share == null ? getString(R.string.overview_savings_rate_unavailable)
+                    : getString(R.string.overview_comparison_percent_value, "",
+                            NumberFormat.getNumberInstance().format(share));
             topExpenses.append(getString(R.string.overview_top_expense_item,
                     category.getCurrency(), category.getName(),
                     formatter.getNotTintedString(new com.oriondev.moneywallet.model.Money(
-                            category.getCurrency(), category.getAmount()))));
+                            category.getCurrency(), category.getAmount())), shareText));
         }
         mTopExpensesTextView.setText(topExpenses.toString());
         mTopExpensesContainer.setVisibility(topExpenses.length() > 0 ? View.VISIBLE : View.GONE);
+        updateUpcomingEvents();
+        updateUpcomingDebts();
+        updateOverdueDebts();
         // PeriodMoney follows the selected chart filter. The comparison shows both income and
         // expense changes, so it is only meaningful when the chart includes the complete net flow.
         OverviewSetting currentSetting = mOverviewSettingPicker.getCurrentSettings();
@@ -209,7 +246,208 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
                     previous.getIncomes(), latest.getIncomes()));
             mExpenseChangePercentTextView.setText(formatPercentageChanges(
                     previous.getExpenses(), latest.getExpenses()));
+            Money netChange = new Money();
+            netChange.addMoney(latest.getNetIncomes());
+            netChange.removeMoney(previous.getNetIncomes());
+            formatter.applyNotTinted(mNetChangeTextView, netChange);
+            mNetChangePercentTextView.setText(formatPercentageChanges(
+                    previous.getNetIncomes(), latest.getNetIncomes()));
         }
+    }
+
+    /**
+     * Shows the next three events on the overview without changing or copying event records.
+     */
+    private void updateUpcomingEvents() {
+        if (getActivity() == null || mUpcomingEventsContainer == null) {
+            return;
+        }
+        Uri uri = DataContentProvider.CONTENT_EVENTS;
+        String[] projection = new String[] {
+                Contract.Event.NAME,
+                Contract.Event.END_DATE
+        };
+        Cursor cursor = null;
+        StringBuilder upcoming = new StringBuilder();
+        try {
+            cursor = getActivity().getContentResolver().query(
+                    uri,
+                    projection,
+                    "DATE(" + Contract.Event.END_DATE + ") >= DATE('now', 'localtime')",
+                    null,
+                    Contract.Event.END_DATE + " ASC");
+            if (cursor != null && cursor.moveToFirst()) {
+                int shown = 0;
+                do {
+                    String name = cursor.getString(cursor.getColumnIndexOrThrow(Contract.Event.NAME));
+                    String endDateValue = cursor.getString(cursor.getColumnIndexOrThrow(Contract.Event.END_DATE));
+                    java.util.Date endDate = DateUtils.getDateFromSQLDateString(endDateValue);
+                    if (upcoming.length() > 0) {
+                        upcoming.append('\n');
+                    }
+                    upcoming.append(getString(R.string.overview_upcoming_event_item,
+                            name, DateFormatter.getFormattedDate(endDate)));
+                    shown++;
+                } while (shown < 3 && cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        mUpcomingEventsTextView.setText(upcoming.toString());
+        mUpcomingEventsContainer.setVisibility(upcoming.length() > 0 ? View.VISIBLE : View.GONE);
+    }
+
+    /**
+     * Shows the next three unsettled debt or credit due dates without changing stored records.
+     */
+    private void updateUpcomingDebts() {
+        if (getActivity() == null || mUpcomingDebtsContainer == null) {
+            return;
+        }
+        String[] projection = new String[] {
+                Contract.Debt.DESCRIPTION,
+                Contract.Debt.EXPIRATION_DATE,
+                Contract.Debt.MONEY,
+                Contract.Debt.PROGRESS,
+                Contract.Debt.WALLET_CURRENCY
+        };
+        Cursor cursor = null;
+        StringBuilder upcoming = new StringBuilder();
+        try {
+            cursor = getActivity().getContentResolver().query(
+                    DataContentProvider.CONTENT_DEBTS,
+                    projection,
+                    "DATE(" + Contract.Debt.EXPIRATION_DATE + ") >= DATE('now', 'localtime')"
+                            + " AND " + Contract.Debt.ARCHIVED + " = 0"
+                            + " AND " + Contract.Debt.MONEY + " > COALESCE(ABS(" + Contract.Debt.PROGRESS + "), 0)",
+                    null,
+                    Contract.Debt.EXPIRATION_DATE + " ASC");
+            if (cursor != null && cursor.moveToFirst()) {
+                int shown = 0;
+                do {
+                    String description = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.DESCRIPTION));
+                    String expirationValue = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.EXPIRATION_DATE));
+                    long target = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.Debt.MONEY));
+                    long progress = MoneyProgressMath.safeAbs(
+                            cursor.getLong(cursor.getColumnIndexOrThrow(Contract.Debt.PROGRESS)));
+                    long remaining = MoneyProgressMath.remaining(target, progress);
+                    String currencyCode = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.WALLET_CURRENCY));
+                    String remainingText = MoneyFormatter.getInstance().getNotTintedString(
+                            CurrencyManager.getCurrency(currencyCode), remaining);
+                    java.util.Date expirationDate = DateUtils.getDateFromSQLDateString(expirationValue);
+                    if (upcoming.length() > 0) {
+                        upcoming.append('\n');
+                    }
+                    upcoming.append(getString(R.string.overview_upcoming_debt_item,
+                            description, DateFormatter.getFormattedDate(expirationDate), remainingText));
+                    shown++;
+                } while (shown < 3 && cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        mUpcomingDebtsTextView.setText(upcoming.toString());
+        mUpcomingDebtsContainer.setVisibility(upcoming.length() > 0 ? View.VISIBLE : View.GONE);
+    }
+
+    /**
+     * Highlights the three oldest unpaid debts whose due dates have passed.
+     * Reads existing debt records only; no stored data is modified.
+     */
+    private void updateOverdueDebts() {
+        if (getActivity() == null || mOverdueDebtsContainer == null) {
+            return;
+        }
+        String[] projection = new String[] {
+                Contract.Debt.DESCRIPTION,
+                Contract.Debt.EXPIRATION_DATE,
+                Contract.Debt.MONEY,
+                Contract.Debt.PROGRESS,
+                Contract.Debt.WALLET_CURRENCY
+        };
+        Cursor cursor = null;
+        StringBuilder overdue = new StringBuilder();
+        try {
+            cursor = getActivity().getContentResolver().query(
+                    DataContentProvider.CONTENT_DEBTS,
+                    projection,
+                    "DATE(" + Contract.Debt.EXPIRATION_DATE + ") < DATE('now', 'localtime')"
+                            + " AND " + Contract.Debt.ARCHIVED + " = 0"
+                            + " AND " + Contract.Debt.MONEY + " > COALESCE(ABS(" + Contract.Debt.PROGRESS + "), 0)",
+                    null,
+                    Contract.Debt.EXPIRATION_DATE + " ASC");
+            if (cursor != null && cursor.moveToFirst()) {
+                int shown = 0;
+                do {
+                    String description = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.DESCRIPTION));
+                    String expirationValue = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.EXPIRATION_DATE));
+                    long target = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.Debt.MONEY));
+                    long progress = MoneyProgressMath.safeAbs(
+                            cursor.getLong(cursor.getColumnIndexOrThrow(Contract.Debt.PROGRESS)));
+                    long remaining = MoneyProgressMath.remaining(target, progress);
+                    String currencyCode = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.WALLET_CURRENCY));
+                    String remainingText = MoneyFormatter.getInstance().getNotTintedString(
+                            CurrencyManager.getCurrency(currencyCode), remaining);
+                    java.util.Date expirationDate = DateUtils.getDateFromSQLDateString(expirationValue);
+                    if (overdue.length() > 0) {
+                        overdue.append('\n');
+                    }
+                    overdue.append(getString(R.string.overview_overdue_debt_item,
+                            description, DateFormatter.getFormattedDate(expirationDate), remainingText));
+                    shown++;
+                } while (shown < 3 && cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        mOverdueDebtsTextView.setText(overdue.toString());
+        mOverdueDebtsContainer.setVisibility(overdue.length() > 0 ? View.VISIBLE : View.GONE);
+    }
+
+    private void updateSavingsRate(Money incomes, Money expenses) {
+        Set<String> currencySet = new LinkedHashSet<>();
+        for (String currency : incomes.getCurrencies()) {
+            if (currency != null) currencySet.add(currency);
+        }
+        for (String currency : expenses.getCurrencies()) {
+            if (currency != null) currencySet.add(currency);
+        }
+        List<String> currencies = new ArrayList<>(currencySet);
+        Collections.sort(currencies);
+        if (currencies.isEmpty()) {
+            mSavingsRateContainer.setVisibility(View.GONE);
+            return;
+        }
+
+        NumberFormat numberFormat = NumberFormat.getNumberInstance();
+        numberFormat.setMinimumFractionDigits(1);
+        numberFormat.setMaximumFractionDigits(1);
+        StringBuilder result = new StringBuilder();
+        for (String currency : currencies) {
+            if (result.length() > 0) result.append('\n');
+            BigDecimal rate = OverviewChangeMath.savingsRate(
+                    incomes.getMoney(currency), expenses.getMoney(currency));
+            String value = rate == null
+                    ? getString(R.string.overview_savings_rate_unavailable)
+                    : getString(R.string.overview_comparison_percent_value,
+                            rate.signum() < 0 ? "−" : (rate.signum() > 0 ? "+" : ""),
+                            numberFormat.format(rate.abs()));
+            result.append(getString(R.string.overview_savings_rate_item, currency, value));
+        }
+        mSavingsRateTextView.setText(result.toString());
+        mSavingsRateContainer.setVisibility(View.VISIBLE);
     }
 
     private String formatPercentageChanges(Money previous, Money current) {

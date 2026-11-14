@@ -283,6 +283,73 @@
                                 tools:text="SAR: +8.0%" />
                         </LinearLayout>
                     </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="vertical">
+
+                        <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/overview_comparison_net"
+                            android:textSize="11sp"
+                            app:theme_textColor="textColorSecondary" />
+
+                        <TextView
+                            android:id="@+id/summary_net_change_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:maxLines="2"
+                            android:ellipsize="end"
+                            android:textColor="?attr/colorOnSurface"
+                            tools:text="SAR 380" />
+
+                        <TextView
+                            android:id="@+id/summary_net_change_percent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textSize="11sp"
+                            android:maxLines="3"
+                            android:ellipsize="end"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            tools:text="SAR: +12.0%" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/summary_savings_rate_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/overview_savings_rate_title"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        app:theme_textColor="textColorSecondary" />
+
+                    <TextView
+                        android:id="@+id/summary_savings_rate_value"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:maxLines="5"
+                        android:ellipsize="end"
+                        android:textColor="?attr/colorOnSurface"
+                        tools:text="SAR: +25.0%" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -326,6 +393,132 @@
                     android:lineSpacingExtra="3dp"
                     android:textColor="?attr/colorOnSurface"
                     tools:text="SAR • Groceries: 450.00&#10;SAR • Transport: 220.00" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/summary_upcoming_events_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/bg_glass_surface">
+
+                <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/overview_upcoming_events_title"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    app:theme_textColor="textColorPrimary" />
+
+                <TextView
+                    android:id="@+id/summary_upcoming_events_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="Family trip — 20 Nov 2026&#10;Insurance renewal — 24 Nov 2026" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/summary_upcoming_debts_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/bg_glass_surface">
+
+                <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/overview_upcoming_debts_title"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    app:theme_textColor="textColorPrimary" />
+
+                <TextView
+                    android:id="@+id/summary_upcoming_debts_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="Installment — 25 Nov 2026&#10;Personal loan — 30 Nov 2026" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/summary_overdue_debts_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/bg_glass_surface">
+
+                <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/overview_overdue_debts_title"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    app:theme_textColor="textColorPrimary" />
+
+                <TextView
+                    android:id="@+id/summary_overdue_debts_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="Late installment — 10 Nov 2026 — remaining: SAR 350" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
