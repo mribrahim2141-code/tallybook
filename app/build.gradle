@@ -52,7 +52,7 @@ android {
             }
         }
         debug {
-            applicationIdSuffix ".dev"
+            applicationIdSuffix ".fresh"
             debuggable true
         }
     }
