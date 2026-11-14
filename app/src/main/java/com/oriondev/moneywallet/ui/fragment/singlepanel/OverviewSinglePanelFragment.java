@@ -79,6 +79,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
     private TextView mExpenseSummaryTextView;
     private TextView mNetSummaryTextView;
     private TextView mBalanceSummaryTextView;
+    private View mSavingsRateContainer;
+    private TextView mSavingsRateTextView;
     private View mComparisonContainer;
     private TextView mIncomeChangeTextView;
     private TextView mExpenseChangeTextView;
@@ -110,6 +112,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         mExpenseSummaryTextView = view.findViewById(R.id.summary_expense_value);
         mNetSummaryTextView = view.findViewById(R.id.summary_net_value);
         mBalanceSummaryTextView = view.findViewById(R.id.summary_balance_value);
+        mSavingsRateContainer = view.findViewById(R.id.summary_savings_rate_container);
+        mSavingsRateTextView = view.findViewById(R.id.summary_savings_rate_value);
         mComparisonContainer = view.findViewById(R.id.summary_comparison_container);
         mIncomeChangeTextView = view.findViewById(R.id.summary_income_change_value);
         mExpenseChangeTextView = view.findViewById(R.id.summary_expense_change_value);
@@ -181,6 +185,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
                 data.getTotalExpenses(), MoneyFormatter.TintMode.EXPENSE));
         mNetSummaryTextView.setText(formatter.getTintedString(data.getTotalNetIncomes()));
         mBalanceSummaryTextView.setText(formatter.getTintedString(data.getTotalBalance()));
+        updateSavingsRate(data.getTotalIncomes(), data.getTotalExpenses());
         StringBuilder topExpenses = new StringBuilder();
         for (com.oriondev.moneywallet.model.OverviewExpenseCategory category : data.getTopExpenseCategories()) {
             if (topExpenses.length() > 0) {
@@ -210,6 +215,40 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
             mExpenseChangePercentTextView.setText(formatPercentageChanges(
                     previous.getExpenses(), latest.getExpenses()));
         }
+    }
+
+    private void updateSavingsRate(Money incomes, Money expenses) {
+        Set<String> currencySet = new LinkedHashSet<>();
+        for (String currency : incomes.getCurrencies()) {
+            if (currency != null) currencySet.add(currency);
+        }
+        for (String currency : expenses.getCurrencies()) {
+            if (currency != null) currencySet.add(currency);
+        }
+        List<String> currencies = new ArrayList<>(currencySet);
+        Collections.sort(currencies);
+        if (currencies.isEmpty()) {
+            mSavingsRateContainer.setVisibility(View.GONE);
+            return;
+        }
+
+        NumberFormat numberFormat = NumberFormat.getNumberInstance();
+        numberFormat.setMinimumFractionDigits(1);
+        numberFormat.setMaximumFractionDigits(1);
+        StringBuilder result = new StringBuilder();
+        for (String currency : currencies) {
+            if (result.length() > 0) result.append('\n');
+            BigDecimal rate = OverviewChangeMath.savingsRate(
+                    incomes.getMoney(currency), expenses.getMoney(currency));
+            String value = rate == null
+                    ? getString(R.string.overview_savings_rate_unavailable)
+                    : getString(R.string.overview_comparison_percent_value,
+                            rate.signum() < 0 ? "−" : (rate.signum() > 0 ? "+" : ""),
+                            numberFormat.format(rate.abs()));
+            result.append(getString(R.string.overview_savings_rate_item, currency, value));
+        }
+        mSavingsRateTextView.setText(result.toString());
+        mSavingsRateContainer.setVisibility(View.VISIBLE);
     }
 
     private String formatPercentageChanges(Money previous, Money current) {
