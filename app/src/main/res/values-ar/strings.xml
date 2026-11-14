@@ -921,6 +921,9 @@
     <string name="keyboard_commit">></string>
     <string name="overview_summary_title">ملخص الفترة المحددة</string>
     <string name="overview_summary_balance">الرصيد الحالي</string>
+    <string name="overview_savings_rate_title">معدل الادخار</string>
+    <string name="overview_savings_rate_item">%1$s: %2$s</string>
+    <string name="overview_savings_rate_unavailable">غير متاح لعدم وجود دخل</string>
     <string name="overview_comparison_title">التغير عن الفترة السابقة</string>
     <string name="overview_comparison_income">تغير الدخل</string>
     <string name="overview_comparison_expense">تغير المصروفات</string>
