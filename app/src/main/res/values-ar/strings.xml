@@ -927,6 +927,7 @@
     <string name="overview_comparison_title">التغير عن الفترة السابقة</string>
     <string name="overview_comparison_income">تغير الدخل</string>
     <string name="overview_comparison_expense">تغير المصروفات</string>
+    <string name="overview_comparison_net">تغير صافي التدفق النقدي</string>
     <string name="overview_comparison_percent_item">%1$s: %2$s</string>
     <string name="overview_comparison_percent_value">%1$s%2$s%%</string>
     <string name="overview_comparison_new">جديد</string>
