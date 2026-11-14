@@ -323,7 +323,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
                             cursor.getColumnIndexOrThrow(Contract.Debt.EXPIRATION_DATE));
                     java.util.Date expirationDate = DateUtils.getDateFromSQLDateString(expirationValue);
                     if (upcoming.length() > 0) {
-                        upcoming.append('\\n');
+                        upcoming.append('\n');
                     }
                     upcoming.append(getString(R.string.overview_upcoming_debt_item,
                             description, DateFormatter.getFormattedDate(expirationDate)));
