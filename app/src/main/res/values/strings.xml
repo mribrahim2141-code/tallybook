@@ -950,6 +950,9 @@
 
     <string name="overview_summary_title">Selected period summary</string>
     <string name="overview_summary_balance">Current balance</string>
+    <string name="overview_savings_rate_title">Savings rate</string>
+    <string name="overview_savings_rate_item">%1$s: %2$s</string>
+    <string name="overview_savings_rate_unavailable">Not available</string>
     <string name="overview_comparison_title">Change vs previous period</string>
     <string name="overview_comparison_income">Income change</string>
     <string name="overview_comparison_expense">Expense change</string>
