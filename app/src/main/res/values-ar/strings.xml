@@ -937,6 +937,8 @@
     <string name="overview_upcoming_event_item">%1$s — %2$s</string>
     <string name="overview_upcoming_debts_title">استحقاقات الديون القادمة</string>
     <string name="overview_upcoming_debt_item">%1$s — %2$s — المتبقي: %3$s</string>
+    <string name="overview_overdue_debts_title">ديون متأخرة عن موعد السداد</string>
+    <string name="overview_overdue_debt_item">%1$s — تاريخ الاستحقاق: %2$s — المتبقي: %3$s</string>
     <string name="saving_progress_percent">نسبة الإنجاز: %1$d%%</string>
     <string name="budget_forecast_usage">المتوقع بنهاية الفترة: %1$s</string>
     <string name="budget_forecast_near_limit">توقع باقتراب الإنفاق من الحد (%1$d%%): %2$s</string>

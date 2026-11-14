@@ -102,6 +102,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
     private TextView mUpcomingEventsTextView;
     private View mUpcomingDebtsContainer;
     private TextView mUpcomingDebtsTextView;
+    private View mOverdueDebtsContainer;
+    private TextView mOverdueDebtsTextView;
 
     private BroadcastReceiver mBroadcastReceiver;
 
@@ -141,6 +143,8 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         mUpcomingEventsTextView = view.findViewById(R.id.summary_upcoming_events_value);
         mUpcomingDebtsContainer = view.findViewById(R.id.summary_upcoming_debts_container);
         mUpcomingDebtsTextView = view.findViewById(R.id.summary_upcoming_debts_value);
+        mOverdueDebtsContainer = view.findViewById(R.id.summary_overdue_debts_container);
+        mOverdueDebtsTextView = view.findViewById(R.id.summary_overdue_debts_value);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         // initialize adapters
         mViewPagerAdapter = new OverviewChartViewPagerAdapter();
@@ -225,6 +229,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         mTopExpensesContainer.setVisibility(topExpenses.length() > 0 ? View.VISIBLE : View.GONE);
         updateUpcomingEvents();
         updateUpcomingDebts();
+        updateOverdueDebts();
         // PeriodMoney follows the selected chart filter. The comparison shows both income and
         // expense changes, so it is only meaningful when the chart includes the complete net flow.
         OverviewSetting currentSetting = mOverviewSettingPicker.getCurrentSettings();
@@ -350,6 +355,65 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         }
         mUpcomingDebtsTextView.setText(upcoming.toString());
         mUpcomingDebtsContainer.setVisibility(upcoming.length() > 0 ? View.VISIBLE : View.GONE);
+    }
+
+    /**
+     * Highlights the three oldest unpaid debts whose due dates have passed.
+     * Reads existing debt records only; no stored data is modified.
+     */
+    private void updateOverdueDebts() {
+        if (getActivity() == null || mOverdueDebtsContainer == null) {
+            return;
+        }
+        String[] projection = new String[] {
+                Contract.Debt.DESCRIPTION,
+                Contract.Debt.EXPIRATION_DATE,
+                Contract.Debt.MONEY,
+                Contract.Debt.PROGRESS,
+                Contract.Debt.WALLET_CURRENCY
+        };
+        Cursor cursor = null;
+        StringBuilder overdue = new StringBuilder();
+        try {
+            cursor = getActivity().getContentResolver().query(
+                    DataContentProvider.CONTENT_DEBTS,
+                    projection,
+                    "DATE(" + Contract.Debt.EXPIRATION_DATE + ") < DATE('now', 'localtime')"
+                            + " AND " + Contract.Debt.ARCHIVED + " = 0"
+                            + " AND " + Contract.Debt.MONEY + " > ABS(" + Contract.Debt.PROGRESS + ")",
+                    null,
+                    Contract.Debt.EXPIRATION_DATE + " ASC");
+            if (cursor != null && cursor.moveToFirst()) {
+                int shown = 0;
+                do {
+                    String description = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.DESCRIPTION));
+                    String expirationValue = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.EXPIRATION_DATE));
+                    long target = cursor.getLong(cursor.getColumnIndexOrThrow(Contract.Debt.MONEY));
+                    long progress = MoneyProgressMath.safeAbs(
+                            cursor.getLong(cursor.getColumnIndexOrThrow(Contract.Debt.PROGRESS)));
+                    long remaining = MoneyProgressMath.remaining(target, progress);
+                    String currencyCode = cursor.getString(
+                            cursor.getColumnIndexOrThrow(Contract.Debt.WALLET_CURRENCY));
+                    String remainingText = MoneyFormatter.getInstance().getNotTintedString(
+                            CurrencyManager.getCurrency(currencyCode), remaining);
+                    java.util.Date expirationDate = DateUtils.getDateFromSQLDateString(expirationValue);
+                    if (overdue.length() > 0) {
+                        overdue.append('\\n');
+                    }
+                    overdue.append(getString(R.string.overview_overdue_debt_item,
+                            description, DateFormatter.getFormattedDate(expirationDate), remainingText));
+                    shown++;
+                } while (shown < 3 && cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        mOverdueDebtsTextView.setText(overdue.toString());
+        mOverdueDebtsContainer.setVisibility(overdue.length() > 0 ? View.VISIBLE : View.GONE);
     }
 
     private void updateSavingsRate(Money incomes, Money expenses) {
