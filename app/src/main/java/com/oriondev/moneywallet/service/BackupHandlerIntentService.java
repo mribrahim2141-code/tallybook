@@ -233,6 +233,18 @@ public class BackupHandlerIntentService extends IntentService {
     }
 
     private void restoreLocalBackupFile(@NonNull File backup, @Nullable String password) throws ImportException, IOException {
+        // Hold the exclusive writer barrier for the entire prepare/commit window. Writes from
+        // UI, recurrence jobs and sync providers wait here, then resolve the newly restored DB.
+        // The import thread can re-enter the read side while writing its private staging DB.
+        DataContentProvider.beginRestoreBarrier();
+        try {
+            restoreLocalBackupFileWhileWritesPaused(backup, password);
+        } finally {
+            DataContentProvider.endRestoreBarrier();
+        }
+    }
+
+    private void restoreLocalBackupFileWhileWritesPaused(@NonNull File backup, @Nullable String password) throws ImportException, IOException {
         AbstractBackupImporter importer;
         String fileName = backup.getName();
         if (fileName.endsWith(BackupManager.BACKUP_EXTENSION_LEGACY)) {

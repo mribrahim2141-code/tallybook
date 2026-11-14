@@ -43,4 +43,34 @@ public class DataContentProviderRestoreTest {
         DataContentProvider.notifyDatabaseIsChanged(context);
         assertEquals(PreferenceManager.NO_DEFAULT_WALLET, PreferenceManager.getDefaultWallet());
     }
+    @Test
+    public void writesFromOtherThreadsWaitUntilRestoreFinishes() throws Exception {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final java.util.concurrent.ExecutorService executor =
+                java.util.concurrent.Executors.newSingleThreadExecutor();
+        final java.util.concurrent.CountDownLatch attemptingWrite =
+                new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.Future<Boolean> write;
+
+        DataContentProvider.beginRestoreBarrier();
+        try {
+            write = executor.submit(() -> {
+                attemptingWrite.countDown();
+                return SQLDatabase.inSharedTransaction(context, database -> true);
+            });
+            org.junit.Assert.assertTrue(attemptingWrite.await(5,
+                    java.util.concurrent.TimeUnit.SECONDS));
+            // The write must not enter the shared database while the restore owns the barrier.
+            org.junit.Assert.assertFalse(write.isDone());
+        } finally {
+            DataContentProvider.endRestoreBarrier();
+        }
+
+        try {
+            org.junit.Assert.assertTrue(write.get(5, java.util.concurrent.TimeUnit.SECONDS));
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
 }

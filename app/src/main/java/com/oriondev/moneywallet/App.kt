@@ -22,10 +22,13 @@ package com.oriondev.moneywallet
 import android.app.Application
 import android.content.res.Configuration
 import android.os.LocaleList
+import java.io.File
+import java.io.IOException
 
 import com.oriondev.moneywallet.broadcast.AutoBackupBroadcastReceiver
 import com.oriondev.moneywallet.broadcast.DailyBroadcastReceiver
 import com.oriondev.moneywallet.broadcast.RecurrenceBroadcastReceiver
+import com.oriondev.moneywallet.storage.database.backup.AbstractBackupImporter
 import com.oriondev.moneywallet.storage.database.SystemCategoryLocalizer
 import com.oriondev.moneywallet.storage.preference.BackendManager
 import com.oriondev.moneywallet.storage.preference.PreferenceManager
@@ -44,6 +47,22 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         mLocales = resources.configuration.locales
+        // Providers are registered before Application.onCreate, but they do not open the
+        // database until first use. Recover a process-interrupted restore before any app
+        // component initializes currencies, widgets, or scheduled work from mixed resources.
+        val externalFiles = getExternalFilesDir(null)
+        if (externalFiles != null) {
+            try {
+                AbstractBackupImporter.recoverInterruptedRestore(
+                    this,
+                    File(externalFiles, "attachments")
+                )
+            } catch (recoveryFailure: IOException) {
+                // Fail closed: continuing with an unknown database/attachment pairing risks
+                // presenting or editing inconsistent financial records.
+                throw IllegalStateException("Cannot recover interrupted backup restore", recoveryFailure)
+            }
+        }
         PreferenceManager.initialize(this)
         BackendManager.initialize(this)
         ThemeEngine.initialize(this)

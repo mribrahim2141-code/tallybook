@@ -216,6 +216,165 @@ public class BackupImportFailureTest {
         assertTrue(!new File(attachmentFolder, "receipt.txt").exists());
     }
 
+    @Test
+    public void financialLedgerValuesSurviveBackupRestoreRoundTrip() throws Exception {
+        android.database.sqlite.SQLiteDatabase database =
+                SQLDatabase.getShared(mContext).getWritableDatabase();
+        long now = 1700000000000L;
+
+        // TestDatabases.useFreshDatabase() seeds the real default currency set, including USD.
+        // Re-inserting USD here violates the currencies table's ISO primary-key constraint.
+
+        android.content.ContentValues wallet = new android.content.ContentValues();
+        wallet.put(Schema.Wallet.NAME, "Restore test wallet");
+        wallet.put(Schema.Wallet.CURRENCY, "USD");
+        wallet.put(Schema.Wallet.START_MONEY, 10000L);
+        wallet.put(Schema.Wallet.COUNT_IN_TOTAL, 1);
+        wallet.put(Schema.Wallet.UUID, "restore-test-wallet");
+        wallet.put(Schema.Wallet.LAST_EDIT, now);
+        long walletId = database.insertOrThrow(Schema.Wallet.TABLE, null, wallet);
+
+        android.content.ContentValues category = new android.content.ContentValues();
+        category.put(Schema.Category.NAME, "Restore test category");
+        category.put(Schema.Category.ICON, "test");
+        category.put(Schema.Category.TYPE, 0);
+        category.put(Schema.Category.UUID, "restore-test-category");
+        category.put(Schema.Category.LAST_EDIT, now);
+        long categoryId = database.insertOrThrow(Schema.Category.TABLE, null, category);
+
+        android.content.ContentValues debt = new android.content.ContentValues();
+        debt.put(Schema.Debt.TYPE, 0);
+        debt.put(Schema.Debt.ICON, "test");
+        debt.put(Schema.Debt.DESCRIPTION, "Restore test debt");
+        debt.put(Schema.Debt.DATE, "2026-01-01");
+        debt.put(Schema.Debt.WALLET, walletId);
+        debt.put(Schema.Debt.MONEY, 1200L);
+        debt.put(Schema.Debt.UUID, "restore-test-debt");
+        debt.put(Schema.Debt.LAST_EDIT, now);
+        database.insertOrThrow(Schema.Debt.TABLE, null, debt);
+
+        insertRestoreTestTransaction(database, walletId, categoryId, 900L, 0, "restore-income", now);
+        insertRestoreTestTransaction(database, walletId, categoryId, 250L, 1, "restore-expense", now);
+        long transferFrom = insertRestoreTestTransaction(
+                database, walletId, categoryId, 300L, 1, "restore-transfer-from", now);
+        long transferTo = insertRestoreTestTransaction(
+                database, walletId, categoryId, 300L, 0, "restore-transfer-to", now);
+        android.content.ContentValues transfer = new android.content.ContentValues();
+        transfer.put(Schema.Transfer.DATE, "2026-01-02");
+        transfer.put(Schema.Transfer.TRANSACTION_FROM, transferFrom);
+        transfer.put(Schema.Transfer.TRANSACTION_TO, transferTo);
+        transfer.put(Schema.Transfer.CONFIRMED, 1);
+        transfer.put(Schema.Transfer.COUNT_IN_TOTAL, 1);
+        transfer.put(Schema.Transfer.UUID, "restore-test-transfer");
+        transfer.put(Schema.Transfer.LAST_EDIT, now);
+        database.insertOrThrow(Schema.Transfer.TABLE, null, transfer);
+
+        String before = financialRestoreSnapshot(database);
+        assertEquals("10000|900|250|1200|1|300|300", before);
+
+        File backup = exportBackup();
+        android.content.ContentValues changedWallet = new android.content.ContentValues();
+        changedWallet.put(Schema.Wallet.START_MONEY, 777L);
+        database.update(Schema.Wallet.TABLE, changedWallet,
+                Schema.Wallet.UUID + " = ?", new String[]{"restore-test-wallet"});
+        database.delete(Schema.Debt.TABLE,
+                Schema.Debt.UUID + " = ?", new String[]{"restore-test-debt"});
+
+        DefaultBackupImporter importer = new DefaultBackupImporter(mContext, backup, null);
+        File liveDatabase = mContext.getDatabasePath(SQLDatabaseImporter.DATABASE_NAME);
+        importer.prepareDatabase(importFolder(), liveDatabase.getParentFile());
+        importer.commitDatabase();
+        importer.finishDatabaseRestore();
+
+        android.database.sqlite.SQLiteDatabase restored =
+                SQLDatabase.getShared(mContext).getReadableDatabase();
+        assertEquals(before, financialRestoreSnapshot(restored));
+    }
+
+    private static long insertRestoreTestTransaction(
+            android.database.sqlite.SQLiteDatabase database, long walletId, long categoryId,
+            long money, int direction, String uuid, long now) {
+        android.content.ContentValues transaction = new android.content.ContentValues();
+        transaction.put(Schema.Transaction.MONEY, money);
+        transaction.put(Schema.Transaction.DATE, "2026-01-02");
+        transaction.put(Schema.Transaction.CATEGORY, categoryId);
+        transaction.put(Schema.Transaction.DIRECTION, direction);
+        transaction.put(Schema.Transaction.TYPE, 0);
+        transaction.put(Schema.Transaction.WALLET, walletId);
+        transaction.put(Schema.Transaction.CONFIRMED, 1);
+        transaction.put(Schema.Transaction.COUNT_IN_TOTAL, 1);
+        transaction.put(Schema.Transaction.UUID, uuid);
+        transaction.put(Schema.Transaction.LAST_EDIT, now);
+        return database.insertOrThrow(Schema.Transaction.TABLE, null, transaction);
+    }
+
+    private static String financialRestoreSnapshot(android.database.sqlite.SQLiteDatabase database) {
+        android.database.Cursor cursor = database.rawQuery(
+                "SELECT " +
+                "(SELECT wallet_start_money FROM wallets WHERE uuid = 'restore-test-wallet') || '|' || " +
+                "(SELECT transaction_money FROM transactions WHERE uuid = 'restore-income') || '|' || " +
+                "(SELECT transaction_money FROM transactions WHERE uuid = 'restore-expense') || '|' || " +
+                "(SELECT debt_money FROM debts WHERE uuid = 'restore-test-debt') || '|' || " +
+                "(SELECT COUNT(*) FROM transfers WHERE uuid = 'restore-test-transfer') || '|' || " +
+                "(SELECT transaction_money FROM transactions WHERE uuid = 'restore-transfer-from') || '|' || " +
+                "(SELECT transaction_money FROM transactions WHERE uuid = 'restore-transfer-to')", null);
+        try {
+            assertTrue(cursor.moveToFirst());
+            return cursor.getString(0);
+        } finally {
+            cursor.close();
+        }
+    }
+
+    @Test
+    public void interruptedRestoreBeforeDatabasePromotionRestoresPreviousAttachments() throws Exception {
+        File attachmentFolder = new File(mContext.getCacheDir(), "crash-restore-before-db");
+        File previous = new File(attachmentFolder.getParentFile(), attachmentFolder.getName() + ".restore-previous");
+        File journal = new File(attachmentFolder.getParentFile(), attachmentFolder.getName() + ".restore-journal");
+        File stagedDatabase = mContext.getDatabasePath(SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        org.apache.commons.io.FileUtils.deleteQuietly(attachmentFolder);
+        org.apache.commons.io.FileUtils.deleteQuietly(previous);
+        assertTrue(previous.mkdirs());
+        Files.write(new File(previous, "old.txt").toPath(), "old".getBytes(StandardCharsets.UTF_8));
+        assertTrue(attachmentFolder.mkdirs());
+        Files.write(new File(attachmentFolder, "new.txt").toPath(), "new".getBytes(StandardCharsets.UTF_8));
+        Files.write(journal.toPath(), "hadPrevious=true".getBytes(StandardCharsets.UTF_8));
+        Files.write(stagedDatabase.toPath(), "staged".getBytes(StandardCharsets.UTF_8));
+
+        com.oriondev.moneywallet.storage.database.backup.AbstractBackupImporter
+                .recoverInterruptedRestore(mContext, attachmentFolder);
+
+        assertTrue(new File(attachmentFolder, "old.txt").isFile());
+        assertTrue(!new File(attachmentFolder, "new.txt").exists());
+        assertTrue(!previous.exists());
+        assertTrue(!journal.exists());
+        org.apache.commons.io.FileUtils.deleteQuietly(stagedDatabase);
+    }
+
+    @Test
+    public void interruptedRestoreAfterDatabasePromotionKeepsNewAttachments() throws Exception {
+        File attachmentFolder = new File(mContext.getCacheDir(), "crash-restore-after-db");
+        File previous = new File(attachmentFolder.getParentFile(), attachmentFolder.getName() + ".restore-previous");
+        File journal = new File(attachmentFolder.getParentFile(), attachmentFolder.getName() + ".restore-journal");
+        File stagedDatabase = mContext.getDatabasePath(SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        org.apache.commons.io.FileUtils.deleteQuietly(attachmentFolder);
+        org.apache.commons.io.FileUtils.deleteQuietly(previous);
+        org.apache.commons.io.FileUtils.deleteQuietly(stagedDatabase);
+        assertTrue(previous.mkdirs());
+        Files.write(new File(previous, "old.txt").toPath(), "old".getBytes(StandardCharsets.UTF_8));
+        assertTrue(attachmentFolder.mkdirs());
+        Files.write(new File(attachmentFolder, "new.txt").toPath(), "new".getBytes(StandardCharsets.UTF_8));
+        Files.write(journal.toPath(), "hadPrevious=true".getBytes(StandardCharsets.UTF_8));
+
+        com.oriondev.moneywallet.storage.database.backup.AbstractBackupImporter
+                .recoverInterruptedRestore(mContext, attachmentFolder);
+
+        assertTrue(new File(attachmentFolder, "new.txt").isFile());
+        assertTrue(!new File(attachmentFolder, "old.txt").exists());
+        assertTrue(!previous.exists());
+        assertTrue(!journal.exists());
+    }
+
     private File zipRawEntry(String backupName, String entryName) throws Exception {
         File backup = new File(mContext.getCacheDir(), backupName);
         ZipOutputStream output = new ZipOutputStream(new FileOutputStream(backup));
