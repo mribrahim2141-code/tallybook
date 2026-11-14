@@ -273,7 +273,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
             cursor = getActivity().getContentResolver().query(
                     uri,
                     projection,
-                    "DATE(" + Contract.Event.END_DATE + ") >= DATE('now')",
+                    "DATE(" + Contract.Event.END_DATE + ") >= DATE('now', 'localtime')",
                     null,
                     Contract.Event.END_DATE + " ASC");
             if (cursor != null && cursor.moveToFirst()) {
