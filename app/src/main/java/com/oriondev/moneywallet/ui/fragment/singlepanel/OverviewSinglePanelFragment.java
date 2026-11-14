@@ -191,10 +191,15 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
             if (topExpenses.length() > 0) {
                 topExpenses.append('\n');
             }
+            BigDecimal share = OverviewChangeMath.expenseShare(
+                    category.getAmount(), data.getTotalExpenses().getMoney(category.getCurrency()));
+            String shareText = share == null ? getString(R.string.overview_savings_rate_unavailable)
+                    : getString(R.string.overview_comparison_percent_value, "",
+                            NumberFormat.getNumberInstance().format(share));
             topExpenses.append(getString(R.string.overview_top_expense_item,
                     category.getCurrency(), category.getName(),
                     formatter.getNotTintedString(new com.oriondev.moneywallet.model.Money(
-                            category.getCurrency(), category.getAmount()))));
+                            category.getCurrency(), category.getAmount())), shareText));
         }
         mTopExpensesTextView.setText(topExpenses.toString());
         mTopExpensesContainer.setVisibility(topExpenses.length() > 0 ? View.VISIBLE : View.GONE);
