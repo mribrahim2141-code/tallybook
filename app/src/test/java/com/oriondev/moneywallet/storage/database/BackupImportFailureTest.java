@@ -217,6 +217,119 @@ public class BackupImportFailureTest {
     }
 
     @Test
+    public void financialLedgerValuesSurviveBackupRestoreRoundTrip() throws Exception {
+        android.database.sqlite.SQLiteDatabase database =
+                SQLDatabase.getShared(mContext).getWritableDatabase();
+        long now = 1700000000000L;
+
+        android.content.ContentValues currency = new android.content.ContentValues();
+        currency.put(Schema.Currency.ISO, "USD");
+        currency.put(Schema.Currency.NAME, "US Dollar");
+        currency.put(Schema.Currency.SYMBOL, "$");
+        currency.put(Schema.Currency.DECIMALS, 2);
+        currency.put(Schema.Currency.UUID, "restore-test-currency");
+        currency.put(Schema.Currency.LAST_EDIT, now);
+        database.insertOrThrow(Schema.Currency.TABLE, null, currency);
+
+        android.content.ContentValues wallet = new android.content.ContentValues();
+        wallet.put(Schema.Wallet.NAME, "Restore test wallet");
+        wallet.put(Schema.Wallet.CURRENCY, "USD");
+        wallet.put(Schema.Wallet.START_MONEY, 10000L);
+        wallet.put(Schema.Wallet.COUNT_IN_TOTAL, 1);
+        wallet.put(Schema.Wallet.UUID, "restore-test-wallet");
+        wallet.put(Schema.Wallet.LAST_EDIT, now);
+        long walletId = database.insertOrThrow(Schema.Wallet.TABLE, null, wallet);
+
+        android.content.ContentValues category = new android.content.ContentValues();
+        category.put(Schema.Category.NAME, "Restore test category");
+        category.put(Schema.Category.ICON, "test");
+        category.put(Schema.Category.TYPE, 0);
+        category.put(Schema.Category.UUID, "restore-test-category");
+        category.put(Schema.Category.LAST_EDIT, now);
+        long categoryId = database.insertOrThrow(Schema.Category.TABLE, null, category);
+
+        android.content.ContentValues debt = new android.content.ContentValues();
+        debt.put(Schema.Debt.TYPE, 0);
+        debt.put(Schema.Debt.ICON, "test");
+        debt.put(Schema.Debt.DESCRIPTION, "Restore test debt");
+        debt.put(Schema.Debt.DATE, "2026-01-01");
+        debt.put(Schema.Debt.WALLET, walletId);
+        debt.put(Schema.Debt.MONEY, 1200L);
+        debt.put(Schema.Debt.UUID, "restore-test-debt");
+        debt.put(Schema.Debt.LAST_EDIT, now);
+        database.insertOrThrow(Schema.Debt.TABLE, null, debt);
+
+        insertRestoreTestTransaction(database, walletId, categoryId, 900L, 0, "restore-income", now);
+        insertRestoreTestTransaction(database, walletId, categoryId, 250L, 1, "restore-expense", now);
+        long transferFrom = insertRestoreTestTransaction(
+                database, walletId, categoryId, 300L, 1, "restore-transfer-from", now);
+        long transferTo = insertRestoreTestTransaction(
+                database, walletId, categoryId, 300L, 0, "restore-transfer-to", now);
+        android.content.ContentValues transfer = new android.content.ContentValues();
+        transfer.put(Schema.Transfer.DATE, "2026-01-02");
+        transfer.put(Schema.Transfer.TRANSACTION_FROM, transferFrom);
+        transfer.put(Schema.Transfer.TRANSACTION_TO, transferTo);
+        transfer.put(Schema.Transfer.CONFIRMED, 1);
+        transfer.put(Schema.Transfer.COUNT_IN_TOTAL, 1);
+        transfer.put(Schema.Transfer.UUID, "restore-test-transfer");
+        transfer.put(Schema.Transfer.LAST_EDIT, now);
+        database.insertOrThrow(Schema.Transfer.TABLE, null, transfer);
+
+        String before = financialRestoreSnapshot(database);
+        assertEquals("10000|1750|4|1200|1", before);
+
+        File backup = exportBackup();
+        android.content.ContentValues changedWallet = new android.content.ContentValues();
+        changedWallet.put(Schema.Wallet.START_MONEY, 777L);
+        database.update(Schema.Wallet.TABLE, changedWallet,
+                Schema.Wallet.UUID + " = ?", new String[]{"restore-test-wallet"});
+        database.delete(Schema.Debt.TABLE,
+                Schema.Debt.UUID + " = ?", new String[]{"restore-test-debt"});
+
+        DefaultBackupImporter importer = new DefaultBackupImporter(mContext, backup, null);
+        File liveDatabase = mContext.getDatabasePath(SQLDatabaseImporter.DATABASE_NAME);
+        importer.prepareDatabase(importFolder(), liveDatabase.getParentFile());
+        importer.commitDatabase();
+
+        android.database.sqlite.SQLiteDatabase restored =
+                SQLDatabase.getShared(mContext).getReadableDatabase();
+        assertEquals(before, financialRestoreSnapshot(restored));
+    }
+
+    private static long insertRestoreTestTransaction(
+            android.database.sqlite.SQLiteDatabase database, long walletId, long categoryId,
+            long money, int direction, String uuid, long now) {
+        android.content.ContentValues transaction = new android.content.ContentValues();
+        transaction.put(Schema.Transaction.MONEY, money);
+        transaction.put(Schema.Transaction.DATE, "2026-01-02");
+        transaction.put(Schema.Transaction.CATEGORY, categoryId);
+        transaction.put(Schema.Transaction.DIRECTION, direction);
+        transaction.put(Schema.Transaction.TYPE, 0);
+        transaction.put(Schema.Transaction.WALLET, walletId);
+        transaction.put(Schema.Transaction.CONFIRMED, 1);
+        transaction.put(Schema.Transaction.COUNT_IN_TOTAL, 1);
+        transaction.put(Schema.Transaction.UUID, uuid);
+        transaction.put(Schema.Transaction.LAST_EDIT, now);
+        return database.insertOrThrow(Schema.Transaction.TABLE, null, transaction);
+    }
+
+    private static String financialRestoreSnapshot(android.database.sqlite.SQLiteDatabase database) {
+        android.database.Cursor cursor = database.rawQuery(
+                "SELECT " +
+                "(SELECT wallet_start_money FROM wallets WHERE uuid = 'restore-test-wallet') || '|' || " +
+                "(SELECT SUM(transaction_money) FROM transactions WHERE uuid LIKE 'restore-%') || '|' || " +
+                "(SELECT COUNT(*) FROM transactions WHERE uuid LIKE 'restore-%') || '|' || " +
+                "(SELECT SUM(debt_money) FROM debts WHERE uuid = 'restore-test-debt') || '|' || " +
+                "(SELECT COUNT(*) FROM transfers WHERE uuid = 'restore-test-transfer')", null);
+        try {
+            assertTrue(cursor.moveToFirst());
+            return cursor.getString(0);
+        } finally {
+            cursor.close();
+        }
+    }
+
+    @Test
     public void interruptedRestoreBeforeDatabasePromotionRestoresPreviousAttachments() throws Exception {
         File attachmentFolder = new File(mContext.getCacheDir(), "crash-restore-before-db");
         File previous = new File(attachmentFolder.getParentFile(), attachmentFolder.getName() + ".restore-previous");
