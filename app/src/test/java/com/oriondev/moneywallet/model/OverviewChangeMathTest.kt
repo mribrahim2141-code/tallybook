@@ -8,6 +8,22 @@ import java.math.BigDecimal
 class OverviewChangeMathTest {
 
     @Test
+    fun calculatesSavingsRateAndHandlesNoIncome() {
+        assertEquals(BigDecimal("25.0"), OverviewChangeMath.savingsRate(400L, 300L))
+        assertEquals(BigDecimal("-20.0"), OverviewChangeMath.savingsRate(100L, 120L))
+        assertNull(OverviewChangeMath.savingsRate(0L, 50L))
+        assertNull(OverviewChangeMath.savingsRate(-10L, 5L))
+    }
+
+    @Test
+    fun calculatesSavingsRateWithoutLongOverflow() {
+        assertEquals(BigDecimal("0.0"),
+            OverviewChangeMath.savingsRate(Long.MAX_VALUE, Long.MAX_VALUE))
+        assertEquals(BigDecimal("100.0"),
+            OverviewChangeMath.savingsRate(Long.MAX_VALUE, 0L))
+    }
+
+    @Test
     fun calculatesPositiveNegativeAndUnchangedPercentages() {
         assertEquals(BigDecimal("50.0"), OverviewChangeMath.percentageChange(100L, 150L))
         assertEquals(BigDecimal("-50.0"), OverviewChangeMath.percentageChange(100L, 50L))
