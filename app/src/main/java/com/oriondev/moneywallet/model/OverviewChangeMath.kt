@@ -11,6 +11,18 @@ import java.math.RoundingMode
  */
 object OverviewChangeMath {
 
+    /**
+     * Share of income left after expenses, calculated independently for each currency.
+     * A percentage is undefined when there is no income in that currency.
+     */
+    @JvmStatic
+    fun savingsRate(income: Long, expenses: Long): BigDecimal? {
+        if (income <= 0L) return null
+        val net = BigDecimal.valueOf(income).subtract(BigDecimal.valueOf(expenses))
+        return net.multiply(BigDecimal.valueOf(100))
+            .divide(BigDecimal.valueOf(income), 1, RoundingMode.HALF_UP)
+    }
+
     @JvmStatic
     fun percentageChange(previous: Long, current: Long): BigDecimal? {
         if (previous == 0L) {
