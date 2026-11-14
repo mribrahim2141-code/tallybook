@@ -321,7 +321,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
                     projection,
                     "DATE(" + Contract.Debt.EXPIRATION_DATE + ") >= DATE('now', 'localtime')"
                             + " AND " + Contract.Debt.ARCHIVED + " = 0"
-                            + " AND " + Contract.Debt.MONEY + " > ABS(" + Contract.Debt.PROGRESS + ")",
+                            + " AND " + Contract.Debt.MONEY + " > COALESCE(ABS(" + Contract.Debt.PROGRESS + "), 0)",
                     null,
                     Contract.Debt.EXPIRATION_DATE + " ASC");
             if (cursor != null && cursor.moveToFirst()) {
@@ -380,7 +380,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
                     projection,
                     "DATE(" + Contract.Debt.EXPIRATION_DATE + ") < DATE('now', 'localtime')"
                             + " AND " + Contract.Debt.ARCHIVED + " = 0"
-                            + " AND " + Contract.Debt.MONEY + " > ABS(" + Contract.Debt.PROGRESS + ")",
+                            + " AND " + Contract.Debt.MONEY + " > COALESCE(ABS(" + Contract.Debt.PROGRESS + "), 0)",
                     null,
                     Contract.Debt.EXPIRATION_DATE + " ASC");
             if (cursor != null && cursor.moveToFirst()) {
