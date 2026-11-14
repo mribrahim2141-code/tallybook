@@ -222,14 +222,8 @@ public class BackupImportFailureTest {
                 SQLDatabase.getShared(mContext).getWritableDatabase();
         long now = 1700000000000L;
 
-        android.content.ContentValues currency = new android.content.ContentValues();
-        currency.put(Schema.Currency.ISO, "USD");
-        currency.put(Schema.Currency.NAME, "US Dollar");
-        currency.put(Schema.Currency.SYMBOL, "$");
-        currency.put(Schema.Currency.DECIMALS, 2);
-        currency.put(Schema.Currency.UUID, "restore-test-currency");
-        currency.put(Schema.Currency.LAST_EDIT, now);
-        database.insertOrThrow(Schema.Currency.TABLE, null, currency);
+        // TestDatabases.useFreshDatabase() seeds the real default currency set, including USD.
+        // Re-inserting USD here violates the currencies table's ISO primary-key constraint.
 
         android.content.ContentValues wallet = new android.content.ContentValues();
         wallet.put(Schema.Wallet.NAME, "Restore test wallet");
