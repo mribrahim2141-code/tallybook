@@ -72,20 +72,10 @@ public abstract class AbstractBackupImporter {
      * @param databaseFolder folder where the database is located.
      * @throws ImportException if an error occur while importing the backup file.
      *
-     * Only this thread is sent to the staging file. The rest of the app keeps reading and
-     * writing the live ledger while the import runs, so a screen open during a restore shows
-     * the old data until the swap and then redraws, instead of watching rows appear.
-     *
-     * A write made from another thread while this runs therefore goes into the ledger that is
-     * about to be replaced, and is lost. That is what this app already did and it is deliberate.
-     * Sending every thread to the staging file instead would keep such a write, by putting it in
-     * a half imported database whose ids name different rows with foreign keys on, and it would
-     * make the live file name movable, which costs a lock on every read in the app. Refusing
-     * those writes was also built and reverted. The refusal reaches the caller as an exception,
-     * no caller on any of these write paths catches it, and injecting that throw into the
-     * recurrence job on an emulator ended the run with FATAL EXCEPTION on the AsyncTask that
-     * JobIntentService dispatches on, with the process gone. Every component here shares that
-     * one process, so the restore died with it.
+     * The import thread builds the staged database while the restore-wide writer barrier is
+     * held. Other threads may continue reading the live ledger, but all database writers wait
+     * until the attachment and database commit has completed. They then resolve the replacement
+     * shared helper and write to the restored ledger, so no concurrent write is silently lost.
      *
      * The service uses the prepare/commit methods below to build both resources before
      * replacing either one. It installs the attachment directory first while retaining the
@@ -189,7 +179,14 @@ public abstract class AbstractBackupImporter {
                 if (!previous.renameTo(attachmentFolder)) {
                     throw new IOException("Cannot recover the previous attachment folder");
                 }
-            } else if (!hadPrevious) {
+            } else if (hadPrevious) {
+                // The journal says an old attachment folder existed. If neither its retained
+                // copy nor the live folder exists, recovery cannot reconstruct the old state.
+                // Keep the journal and fail closed rather than silently accepting missing files.
+                if (!attachmentFolder.exists()) {
+                    throw new IOException("Cannot recover previous attachments: both folders are missing");
+                }
+            } else {
                 FileUtils.deleteQuietly(attachmentFolder);
             }
         } else {
