@@ -32,6 +32,8 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 /**
@@ -70,20 +72,10 @@ public abstract class AbstractBackupImporter {
      * @param databaseFolder folder where the database is located.
      * @throws ImportException if an error occur while importing the backup file.
      *
-     * Only this thread is sent to the staging file. The rest of the app keeps reading and
-     * writing the live ledger while the import runs, so a screen open during a restore shows
-     * the old data until the swap and then redraws, instead of watching rows appear.
-     *
-     * A write made from another thread while this runs therefore goes into the ledger that is
-     * about to be replaced, and is lost. That is what this app already did and it is deliberate.
-     * Sending every thread to the staging file instead would keep such a write, by putting it in
-     * a half imported database whose ids name different rows with foreign keys on, and it would
-     * make the live file name movable, which costs a lock on every read in the app. Refusing
-     * those writes was also built and reverted. The refusal reaches the caller as an exception,
-     * no caller on any of these write paths catches it, and injecting that throw into the
-     * recurrence job on an emulator ended the run with FATAL EXCEPTION on the AsyncTask that
-     * JobIntentService dispatches on, with the process gone. Every component here shares that
-     * one process, so the restore died with it.
+     * The import thread builds the staged database while the restore-wide writer barrier is
+     * held. Other threads may continue reading the live ledger, but all database writers wait
+     * until the attachment and database commit has completed. They then resolve the replacement
+     * shared helper and write to the restored ledger, so no concurrent write is silently lost.
      *
      * The service uses the prepare/commit methods below to build both resources before
      * replacing either one. It installs the attachment directory first while retaining the
@@ -99,6 +91,7 @@ public abstract class AbstractBackupImporter {
     private File mPreviousAttachmentFolder;
     private boolean mHadPreviousAttachments;
     private boolean mAttachmentsCommitted;
+    private File mRestoreJournal;
 
     public void importDatabase(@NonNull File temporaryFolder, @NonNull File databaseFolder) throws ImportException {
         prepareDatabase(temporaryFolder, databaseFolder);
@@ -157,6 +150,65 @@ public abstract class AbstractBackupImporter {
     protected abstract void importDatabase(@NonNull File temporaryFolder) throws ImportException;
 
     /**
+     * Recover an interrupted two-resource restore before the application starts using its data.
+     * If the staged database still exists, promotion did not happen and the old attachment
+     * directory must be restored. If it is gone, the database rename completed, so the new
+     * attachments are retained and the old directory can be discarded.
+     */
+    public static void recoverInterruptedRestore(@NonNull Context context, @NonNull File attachmentFolder)
+            throws IOException {
+        File parent = attachmentFolder.getAbsoluteFile().getParentFile();
+        if (parent == null) {
+            return;
+        }
+        File journal = new File(parent, attachmentFolder.getName() + ".restore-journal");
+        if (!journal.isFile()) {
+            return;
+        }
+        File previous = new File(parent, attachmentFolder.getName() + ".restore-previous");
+        File staging = new File(parent, attachmentFolder.getName() + ".restore-staging");
+        File stagedDatabase = new File(context.getDatabasePath(SQLDatabaseImporter.DATABASE_NAME).getParentFile(),
+                SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        String journalState = org.apache.commons.io.FileUtils.readFileToString(journal, StandardCharsets.UTF_8);
+        boolean hadPrevious = journalState.contains("hadPrevious=true");
+
+        if (stagedDatabase.exists()) {
+            // The live database was not promoted. Put the original attachments back.
+            if (previous.exists()) {
+                FileUtils.deleteQuietly(attachmentFolder);
+                if (!previous.renameTo(attachmentFolder)) {
+                    throw new IOException("Cannot recover the previous attachment folder");
+                }
+            } else if (hadPrevious) {
+                // The journal says an old attachment folder existed. If neither its retained
+                // copy nor the live folder exists, recovery cannot reconstruct the old state.
+                // Keep the journal and fail closed rather than silently accepting missing files.
+                if (!attachmentFolder.exists()) {
+                    throw new IOException("Cannot recover previous attachments: both folders are missing");
+                }
+            } else {
+                FileUtils.deleteQuietly(attachmentFolder);
+            }
+        } else {
+            // Database promotion completed. Keep the new attachments and discard the old copy.
+            FileUtils.deleteQuietly(previous);
+        }
+        FileUtils.deleteQuietly(staging);
+        FileUtils.deleteQuietly(journal);
+    }
+
+    private static void writeRestoreJournal(@NonNull File journal, boolean hadPrevious) throws IOException {
+        File parent = journal.getAbsoluteFile().getParentFile();
+        if (parent != null) {
+            FileUtils.forceMkdir(parent);
+        }
+        try (FileOutputStream output = new FileOutputStream(journal, false)) {
+            output.write(("hadPrevious=" + hadPrevious).getBytes(StandardCharsets.UTF_8));
+            output.getFD().sync();
+        }
+    }
+
+    /**
      * Restore attachments into a sibling staging directory first. The current folder is not
      * touched until every entry has been extracted successfully, so a bad archive, wrong
      * password, or full device cannot erase the user's existing attachments.
@@ -169,6 +221,11 @@ public abstract class AbstractBackupImporter {
      * Extract attachments into a sibling staging directory without touching the live folder.
      */
     public void prepareAttachments(@NonNull File attachmentFolder) throws ImportException {
+        try {
+            recoverInterruptedRestore(mContext, attachmentFolder);
+        } catch (IOException recoveryFailure) {
+            throw new ImportException(recoveryFailure.getMessage());
+        }
         File parent = attachmentFolder.getAbsoluteFile().getParentFile();
         File staging = new File(parent, attachmentFolder.getName() + ".restore-staging");
         File previous = new File(parent, attachmentFolder.getName() + ".restore-previous");
@@ -205,6 +262,9 @@ public abstract class AbstractBackupImporter {
         }
         try {
             mHadPreviousAttachments = mPreparedAttachmentFolder.exists();
+            mRestoreJournal = new File(mPreparedAttachmentFolder.getAbsoluteFile().getParentFile(),
+                    mPreparedAttachmentFolder.getName() + ".restore-journal");
+            writeRestoreJournal(mRestoreJournal, mHadPreviousAttachments);
             if (mHadPreviousAttachments && !mPreparedAttachmentFolder.renameTo(mPreviousAttachmentFolder)) {
                 throw new IOException("Cannot move the current attachment folder");
             }
@@ -223,6 +283,7 @@ public abstract class AbstractBackupImporter {
         if (mPreparedAttachmentFolder == null) {
             return;
         }
+        boolean rollbackCompleted = false;
         try {
             boolean previousExists = mPreviousAttachmentFolder != null && mPreviousAttachmentFolder.exists();
             if (previousExists) {
@@ -235,9 +296,14 @@ public abstract class AbstractBackupImporter {
             } else if (mAttachmentsCommitted && !mHadPreviousAttachments && mPreparedAttachmentFolder.exists()) {
                 FileUtils.deleteDirectory(mPreparedAttachmentFolder);
             }
+            rollbackCompleted = true;
         } catch (IOException e) {
             throw new ImportException(e.getMessage());
         } finally {
+            // Keep the durable journal if rollback itself failed so startup recovery can retry.
+            if (rollbackCompleted && mRestoreJournal != null) {
+                FileUtils.deleteQuietly(mRestoreJournal);
+            }
             clearAttachmentRestoreState();
         }
     }
@@ -246,6 +312,9 @@ public abstract class AbstractBackupImporter {
     public void finishAttachmentRestore() {
         if (mPreviousAttachmentFolder != null) {
             FileUtils.deleteQuietly(mPreviousAttachmentFolder);
+        }
+        if (mRestoreJournal != null) {
+            FileUtils.deleteQuietly(mRestoreJournal);
         }
         clearAttachmentRestoreState();
     }
@@ -273,6 +342,7 @@ public abstract class AbstractBackupImporter {
         mPreparedAttachmentFolder = null;
         mStagedAttachmentFolder = null;
         mPreviousAttachmentFolder = null;
+        mRestoreJournal = null;
         mHadPreviousAttachments = false;
         mAttachmentsCommitted = false;
     }
@@ -307,14 +377,12 @@ public abstract class AbstractBackupImporter {
     }
 
     /**
-     * Puts the staged import in place. The staging helper closes first, and the rename then runs
-     * in the slot where the live helper is closed too and no DataContentProvider write is in
-     * flight. That is the whole of what the swap lock excludes; SyncContentProvider writes and
-     * every query take no lock at all and can be running while the file moves, which resetShared
-     * says in full. Today the only writers on that provider are the importers themselves, on this
-     * thread. An open connection does not stop the rename itself, rename replaces a directory
-     * entry and does not care what has the file open; it is the connection carried ACROSS the
-     * rename that breaks, which resetShared also describes.
+     * Puts the staged import in place. The staging helper closes first, and the rename then
+     * runs while the restore-wide writer barrier is still held. Database writes from both
+     * DataContentProvider and SyncContentProvider therefore wait until the replacement is live;
+     * queries may continue reading the old ledger while staging is built and can briefly contend
+     * with the final helper replacement. The shared helper is closed before the rename so no
+     * writer carries a connection across the file move.
      *
      * The rename goes straight over the live database and nothing is deleted ahead of it, so a
      * rename that fails leaves the ledger where it was and the staged file is the only thing

@@ -1535,6 +1535,92 @@ public class SQLDatabaseTest {
                 replacement.getWritableDatabase().isOpen());
     }
 
+
+    /**
+     * A restore pauses every writer before it starts building the staged database. A sync write
+     * from another thread must wait for the restore to finish, then resolve the live helper and
+     * commit to the restored database instead of being lost in the database that is replaced.
+     */
+    @Test(timeout = 20000)
+    public void restoreBarrierDefersSyncProviderWritesUntilReleased() throws Exception {
+        final String name = "Written after restore barrier";
+        final CountDownLatch started = new CountDownLatch(1);
+        final CountDownLatch finished = new CountDownLatch(1);
+        final Throwable[] failure = new Throwable[1];
+        ContentResolver resolver = mContext.getContentResolver();
+
+        DataContentProvider.beginRestoreBarrier();
+        Thread writer = new Thread(() -> {
+            started.countDown();
+            try {
+                resolver.insert(SyncContentProvider.CONTENT_WALLETS, syncWallet(name));
+            } catch (Throwable t) {
+                failure[0] = t;
+            } finally {
+                finished.countDown();
+            }
+        });
+        writer.start();
+        try {
+            assertTrue("the writer thread did not start", started.await(5, TimeUnit.SECONDS));
+            assertFalse("a sync-provider write passed the restore barrier",
+                    finished.await(1, TimeUnit.SECONDS));
+        } finally {
+            DataContentProvider.endRestoreBarrier();
+        }
+
+        assertTrue("the sync-provider write did not resume after restore",
+                finished.await(10, TimeUnit.SECONDS));
+        writer.join(10000);
+        assertNull("the sync-provider write failed: " + failure[0], failure[0]);
+        assertEquals("the deferred write was not committed to the live database",
+                1, sharedWalletsNamed(name));
+    }
+
+    /**
+     * The restore thread owns the exclusive barrier but must still be able to acquire the
+     * reentrant read side for its own writes into the private staging database.
+     */
+    @Test(timeout = 20000)
+    public void restoreBarrierAllowsItsOwnStagedSyncProviderWrites() {
+        final String name = "Written by restore into staging";
+        ContentResolver resolver = mContext.getContentResolver();
+        DataContentProvider.beginRestoreBarrier();
+        try {
+            SQLDatabase.openStaging(mContext, SQLDatabaseImporter.STAGING_DATABASE_NAME);
+            try {
+                resolver.insert(SyncContentProvider.CONTENT_WALLETS, syncWallet(name));
+                assertEquals("the restore thread did not write into staging",
+                        1, sharedWalletsNamed(name));
+            } finally {
+                SQLDatabase.closeStaging();
+            }
+        } finally {
+            DataContentProvider.endRestoreBarrier();
+        }
+        assertEquals("a staged restore row leaked into the live database",
+                0, sharedWalletsNamed(name));
+    }
+
+    /** Run SQLite's structural and referential-integrity checks against the isolated test DB. */
+    @Test
+    public void isolatedDatabasePassesSQLiteIntegrityAndForeignKeyChecks() {
+        Cursor integrity = mDatabase.getReadableDatabase().rawQuery("PRAGMA integrity_check", null);
+        try {
+            assertTrue("integrity_check returned no result", integrity.moveToFirst());
+            assertEquals("SQLite reported database corruption", "ok", integrity.getString(0));
+        } finally {
+            integrity.close();
+        }
+
+        Cursor foreignKeys = mDatabase.getReadableDatabase().rawQuery("PRAGMA foreign_key_check", null);
+        try {
+            assertEquals("foreign_key_check found invalid references", 0, foreignKeys.getCount());
+        } finally {
+            foreignKeys.close();
+        }
+    }
+
     private ContentValues wallet(String name) {
         ContentValues values = new ContentValues();
         values.put(Contract.Wallet.NAME, name);

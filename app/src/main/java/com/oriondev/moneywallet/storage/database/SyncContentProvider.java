@@ -134,7 +134,8 @@ public class SyncContentProvider extends ContentProvider {
      * The same helper DataContentProvider uses, read on every use instead of held in a field.
      * One helper means one connection on one file, so the two providers cannot end up with a
      * transaction on one and a write on the other. A field would be a closed handle after a
-     * restore, since resetShared closes what it replaces.
+     * restore, since resetShared closes what it replaces. Every write below takes the shared
+     * transaction lock so a restore cannot replace the database while one is in flight.
      *
      * A restore resolves its own staging helper through here. Its rows travel through this
      * provider on the one thread the import runs on, and getShared answers that thread with the
@@ -227,30 +228,36 @@ public class SyncContentProvider extends ContentProvider {
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
-        String table = getTable(uri);
-        if (table != null) {
-            long id = db().getWritableDatabase().insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE);
-            return ContentUris.withAppendedId(uri, id);
-        }
-        return null;
+        return SQLDatabase.inSharedTransaction(getContext(), database -> {
+            String table = getTable(uri);
+            if (table != null) {
+                long id = database.getWritableDatabase().insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                return ContentUris.withAppendedId(uri, id);
+            }
+            return null;
+        });
     }
 
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
-        String table = getTable(uri);
-        if (table != null) {
-            return db().getWritableDatabase().delete(table, selection, selectionArgs);
-        }
-        return 0;
+        return SQLDatabase.inSharedTransaction(getContext(), database -> {
+            String table = getTable(uri);
+            if (table != null) {
+                return database.getWritableDatabase().delete(table, selection, selectionArgs);
+            }
+            return 0;
+        });
     }
 
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
-        String table = getTable(uri);
-        if (table != null) {
-            return db().getWritableDatabase().update(table, values, selection, selectionArgs);
-        }
-        return 0;
+        return SQLDatabase.inSharedTransaction(getContext(), database -> {
+            String table = getTable(uri);
+            if (table != null) {
+                return database.getWritableDatabase().update(table, values, selection, selectionArgs);
+            }
+            return 0;
+        });
     }
 
     @SuppressLint("Recycle")
