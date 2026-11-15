@@ -19,6 +19,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -324,6 +325,45 @@ public class BackupImportFailureTest {
         } finally {
             cursor.close();
         }
+    }
+
+    @Test
+    public void interruptedRestoreWithBothPreviousAndLiveAttachmentsMissingFailsClosed() throws Exception {
+        File attachmentFolder = new File(mContext.getCacheDir(), "crash-restore-missing-attachments");
+        File previous = new File(attachmentFolder.getParentFile(),
+                attachmentFolder.getName() + ".restore-previous");
+        File journal = new File(attachmentFolder.getParentFile(),
+                attachmentFolder.getName() + ".restore-journal");
+        File staging = new File(attachmentFolder.getParentFile(),
+                attachmentFolder.getName() + ".restore-staging");
+        File stagedDatabase = new File(mContext.getDatabasePath(SQLDatabaseImporter.DATABASE_NAME)
+                .getParentFile(), SQLDatabaseImporter.STAGING_DATABASE_NAME);
+
+        org.apache.commons.io.FileUtils.deleteQuietly(attachmentFolder);
+        org.apache.commons.io.FileUtils.deleteQuietly(previous);
+        org.apache.commons.io.FileUtils.deleteQuietly(journal);
+        org.apache.commons.io.FileUtils.deleteQuietly(staging);
+        org.apache.commons.io.FileUtils.deleteQuietly(stagedDatabase);
+        Files.write(journal.toPath(), "hadPrevious=true".getBytes(StandardCharsets.UTF_8));
+        assertTrue(stagedDatabase.createNewFile());
+
+        try {
+            com.oriondev.moneywallet.storage.database.backup.AbstractBackupImporter
+                    .recoverInterruptedRestore(mContext, attachmentFolder);
+            fail("recovery must fail when both the previous and live attachment folders are missing");
+        } catch (IOException expected) {
+            assertTrue(expected.getMessage().contains("both folders are missing"));
+        }
+
+        assertTrue("the recovery journal must remain available for a later recovery attempt",
+                journal.isFile());
+        assertTrue("the staged database must not be discarded after failed recovery",
+                stagedDatabase.isFile());
+        assertTrue(!attachmentFolder.exists());
+        assertTrue(!previous.exists());
+
+        org.apache.commons.io.FileUtils.deleteQuietly(journal);
+        org.apache.commons.io.FileUtils.deleteQuietly(stagedDatabase);
     }
 
     @Test
