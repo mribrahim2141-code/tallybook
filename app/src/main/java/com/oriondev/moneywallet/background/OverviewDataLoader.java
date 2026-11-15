@@ -24,6 +24,8 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 
+import com.oriondev.moneywallet.R;
+
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
@@ -177,47 +179,58 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
         // Summary figures are independent of the chart's selected cash-flow/category filter.
         loadSummaryTotals(totalIncomes, totalExpenses, totalNetIncomes, totalTransfers);
 
-        // generate chart data
+        // Generate chart data. The line chart compares income, expenses and net flow
+        // side-by-side when the complete cash-flow view is selected. Each currency remains
+        // an independent series; amounts from different currencies are never combined.
         List<IBarDataSet> barDataSets = new ArrayList<>();
         List<ILineDataSet> lineDataSets = new ArrayList<>();
         List<IRadarDataSet> radarDataSets = new ArrayList<>();
+        boolean showIncomeExpenseTrend = mOverviewSetting.getType() == OverviewSetting.Type.CASH_FLOW
+                && mOverviewSetting.getCashFlow() == OverviewSetting.CashFlow.NET_INCOMES;
         for (String currency : chartNetIncomes.getCurrencies()) {
-            // for each currency we have to iterate the list of period money and generate
-            // a valid chart data set for each chart types.
             List<BarEntry> barEntryList = new ArrayList<>();
-            List<Entry> lineEntryList = new ArrayList<>();
+            List<Entry> netLineEntries = new ArrayList<>();
+            List<Entry> incomeLineEntries = new ArrayList<>();
+            List<Entry> expenseLineEntries = new ArrayList<>();
             List<RadarEntry> radarEntryList = new ArrayList<>();
-            // iterate period money items
             CurrencyUnit currencyUnit = CurrencyManager.getCurrency(currency);
             for (int i = 0; i < periodMoneyList.size(); i++) {
                 PeriodMoney periodMoney = periodMoneyList.get(i);
-                long money = periodMoney.getNetIncomes().getMoney(currency);
-                // getDecimals and not getDecimals() on the unit. A row can name a currency this
-                // installation does not have, which a restore from another one leaves behind, and
-                // getCurrency answers null for it
-                float value = MoneyScale.toHumanAmount(money, CurrencyManager.getDecimals(currencyUnit)).floatValue();
-                barEntryList.add(new BarEntry(i, value));
-                lineEntryList.add(new Entry(i, value));
-                radarEntryList.add(new RadarEntry(value));
+                long netMoney = periodMoney.getNetIncomes().getMoney(currency);
+                int decimals = CurrencyManager.getDecimals(currencyUnit);
+                float netValue = MoneyScale.toHumanAmount(netMoney, decimals).floatValue();
+                barEntryList.add(new BarEntry(i, netValue));
+                netLineEntries.add(new Entry(i, netValue));
+                radarEntryList.add(new RadarEntry(netValue));
+                if (showIncomeExpenseTrend) {
+                    float incomeValue = MoneyScale.toHumanAmount(
+                            periodMoney.getIncomes().getMoney(currency), decimals).floatValue();
+                    float expenseValue = MoneyScale.toHumanAmount(
+                            periodMoney.getExpenses().getMoney(currency), decimals).floatValue();
+                    incomeLineEntries.add(new Entry(i, incomeValue));
+                    expenseLineEntries.add(new Entry(i, expenseValue));
+                }
             }
-            // Keep one stable color for this currency across all three chart types.
             int color = COLOR_PALETTE[barDataSets.size() % COLOR_PALETTE.length];
             BarDataSet barDataSet = new BarDataSet(barEntryList, currency);
             barDataSet.setColor(color);
             barDataSets.add(barDataSet);
-            LineDataSet lineDataSet = new LineDataSet(lineEntryList, currency);
-            lineDataSet.setColor(color);
-            lineDataSet.setCircleColor(color);
-            lineDataSet.setCircleRadius(0.3f);
-            lineDataSet.setLineWidth(1f);
-            lineDataSets.add(lineDataSet);
+
+            if (showIncomeExpenseTrend) {
+                addTrendLineSet(lineDataSets, incomeLineEntries,
+                        currency + " · " + getContext().getString(R.string.hint_incomes));
+                addTrendLineSet(lineDataSets, expenseLineEntries,
+                        currency + " · " + getContext().getString(R.string.hint_expenses));
+            }
+            addTrendLineSet(lineDataSets, netLineEntries,
+                    currency + " · " + getContext().getString(R.string.hint_net_incomes));
+
             RadarDataSet radarDataSet = new RadarDataSet(radarEntryList, currency);
             radarDataSet.setColor(color);
             radarDataSet.setFillColor(color);
             radarDataSet.setDrawFilled(true);
             radarDataSets.add(radarDataSet);
         }
-        // buildMaterialDialog the bar data and personalize it
         BarData barData = null;
         if (!barDataSets.isEmpty()) {
             barData = new BarData(barDataSets);
@@ -250,6 +263,16 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
      * filter. Selecting an income/expense chart or drilling into a category must not change
      * the summary card's meaning.
      */
+    private void addTrendLineSet(List<ILineDataSet> lineDataSets, List<Entry> entries, String label) {
+        int color = COLOR_PALETTE[lineDataSets.size() % COLOR_PALETTE.length];
+        LineDataSet dataSet = new LineDataSet(entries, label);
+        dataSet.setColor(color);
+        dataSet.setCircleColor(color);
+        dataSet.setCircleRadius(2f);
+        dataSet.setLineWidth(1.8f);
+        lineDataSets.add(dataSet);
+    }
+
     private void loadSummaryTotals(Money totalIncomes, Money totalExpenses,
                                    Money totalNetIncomes, Money totalTransfers) {
         String[] projection = new String[] {

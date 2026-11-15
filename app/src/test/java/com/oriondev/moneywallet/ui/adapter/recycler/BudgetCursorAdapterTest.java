@@ -33,6 +33,16 @@ public class BudgetCursorAdapterTest {
     }
 
     @Test
+    public void forecastStatusWarnsAtEightyPercentAndWhenOverBudget() {
+        assertEquals(0, BudgetCursorAdapter.calculateForecastStatus(10000L, 7900L));
+        assertEquals(1, BudgetCursorAdapter.calculateForecastStatus(10000L, 8000L));
+        assertEquals(1, BudgetCursorAdapter.calculateForecastStatus(10000L, 9500L));
+        assertEquals(2, BudgetCursorAdapter.calculateForecastStatus(10000L, 10001L));
+        assertEquals(0, BudgetCursorAdapter.calculateForecastStatus(0L, 10001L));
+        assertEquals(0, BudgetCursorAdapter.calculateForecastStatus(10000L, -1L));
+    }
+
+    @Test
     public void usagePercentAllowsOverBudgetAndHandlesInvalidTarget() {
         assertEquals(125, BudgetCursorAdapter.calculateUsagePercent(10000L, 12500L));
         assertEquals(0, BudgetCursorAdapter.calculateUsagePercent(0L, 100L));
