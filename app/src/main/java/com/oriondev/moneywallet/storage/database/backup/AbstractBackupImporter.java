@@ -377,14 +377,12 @@ public abstract class AbstractBackupImporter {
     }
 
     /**
-     * Puts the staged import in place. The staging helper closes first, and the rename then runs
-     * in the slot where the live helper is closed too and no DataContentProvider write is in
-     * flight. That is the whole of what the swap lock excludes; SyncContentProvider writes and
-     * every query take no lock at all and can be running while the file moves, which resetShared
-     * says in full. Today the only writers on that provider are the importers themselves, on this
-     * thread. An open connection does not stop the rename itself, rename replaces a directory
-     * entry and does not care what has the file open; it is the connection carried ACROSS the
-     * rename that breaks, which resetShared also describes.
+     * Puts the staged import in place. The staging helper closes first, and the rename then
+     * runs while the restore-wide writer barrier is still held. Database writes from both
+     * DataContentProvider and SyncContentProvider therefore wait until the replacement is live;
+     * queries may continue reading the old ledger while staging is built and can briefly contend
+     * with the final helper replacement. The shared helper is closed before the rename so no
+     * writer carries a connection across the file move.
      *
      * The rename goes straight over the live database and nothing is deleted ahead of it, so a
      * rename that fails leaves the ledger where it was and the staged file is the only thing
