@@ -95,23 +95,23 @@ jobs:
                               if error.tag in ("failure", "error"):
                                   failed_count += 1
 
-                                  print("\\n" + "=" * 70)
+                                  print("\n" + "=" * 70)
                                   print("FAILED TEST")
                                   print("=" * 70)
                                   print("Class:", test.get("classname", "Unknown"))
                                   print("Test:", test.get("name", "Unknown"))
                                   print("Type:", error.tag)
                                   print("Message:", error.get("message", "No message"))
-                                  print("\\nDetails:")
+                                  print("\nDetails:")
                                   print(error.text or "No additional details")
 
-                      print("\\nReport file:", file)
+                      print("\nReport file:", file)
 
                   except Exception as exc:
                       print("Could not read report:", file)
                       print("Error:", str(exc))
 
-              print("\\n" + "=" * 70)
+              print("\n" + "=" * 70)
               print("TOTAL FAILED TESTS:", failed_count)
               print("=" * 70)
 
