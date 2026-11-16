@@ -40,6 +40,17 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField('String', 'API_KEY_OPEN_EXCHANGE_RATES', ApiKey_OpenExchangeRates)
     }
+
+    // Stable signing identity is supplied securely by GitHub Actions.
+    // Local builds keep Android's normal debug signing unless the key path is provided.
+    signingConfigs {
+        stable {
+            storeFile file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "signing-local/tallybook-signing.jks")
+            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
+            keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "tallybook"
+            keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: ""
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -50,10 +61,16 @@ android {
             vcsInfo {
                 include false
             }
+            if (System.getenv("ANDROID_KEYSTORE_PATH")) {
+                signingConfig signingConfigs.stable
+            }
         }
         debug {
             applicationIdSuffix ".fresh"
             debuggable true
+            if (System.getenv("ANDROID_KEYSTORE_PATH")) {
+                signingConfig signingConfigs.stable
+            }
         }
     }
     dependenciesInfo {
