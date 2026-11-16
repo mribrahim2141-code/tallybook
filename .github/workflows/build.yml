@@ -1,4 +1,3 @@
-
 name: build
 
 on:
@@ -41,6 +40,35 @@ jobs:
         run: |
           ./gradlew --no-daemon clean testFlossOsmDebugUnitTest assembleFlossOsmDebug assembleFlossOsmDebugAndroidTest lintFlossOsmDebug
 
+      # Verify Android APK signing and print the certificate fingerprint.
+      - name: Verify APK signature and print certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="$(find app/build/outputs/apk/flossOsm/debug -maxdepth 1 -type f -name '*.apk' -print -quit)"
+          if [[ -z "$APK" ]]; then
+            echo "::error::Expected FlossOsmDebug APK was not produced."
+            exit 1
+          fi
+
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [[ -z "$SDK_ROOT" || ! -d "$SDK_ROOT/build-tools" ]]; then
+            echo "::error::Android SDK build-tools directory was not found."
+            exit 1
+          fi
+
+          APKSIGNER="$(find "$SDK_ROOT/build-tools" -type f -name apksigner -print | sort -V | tail -n 1)"
+          if [[ -z "$APKSIGNER" ]]; then
+            echo "::error::apksigner was not found in Android SDK build-tools."
+            exit 1
+          fi
+
+          echo "APK: $APK"
+          echo "APK SHA-256:"
+          sha256sum "$APK"
+          echo "Signature verification and signer certificate:"
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
+
       # Automatically diagnose failed unit tests
       - name: Diagnose Failed Unit Tests
         if: always()
@@ -67,23 +95,23 @@ jobs:
                               if error.tag in ("failure", "error"):
                                   failed_count += 1
 
-                                  print("\n" + "=" * 70)
+                                  print("\\n" + "=" * 70)
                                   print("FAILED TEST")
                                   print("=" * 70)
                                   print("Class:", test.get("classname", "Unknown"))
                                   print("Test:", test.get("name", "Unknown"))
                                   print("Type:", error.tag)
                                   print("Message:", error.get("message", "No message"))
-                                  print("\nDetails:")
+                                  print("\\nDetails:")
                                   print(error.text or "No additional details")
 
-                      print("\nReport file:", file)
+                      print("\\nReport file:", file)
 
                   except Exception as exc:
                       print("Could not read report:", file)
                       print("Error:", str(exc))
 
-              print("\n" + "=" * 70)
+              print("\\n" + "=" * 70)
               print("TOTAL FAILED TESTS:", failed_count)
               print("=" * 70)
 
