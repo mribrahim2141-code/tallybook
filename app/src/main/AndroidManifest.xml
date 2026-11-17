@@ -185,6 +185,7 @@
         <service android:name=".service.ImportExportIntentService" />
 
         <receiver android:name=".broadcast.DailyBroadcastReceiver" />
+        <receiver android:name=".broadcast.DebtDueBroadcastReceiver" />
         <receiver android:name=".broadcast.RecurrenceBroadcastReceiver" />
         <receiver android:name=".broadcast.NotificationBroadcastReceiver" />
         <receiver android:name=".broadcast.BootBroadcastReceiver"
