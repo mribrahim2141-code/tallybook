@@ -20,6 +20,7 @@ import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.broadcast.DebtDueBroadcastReceiver;
 import com.oriondev.moneywallet.broadcast.RecurrenceBroadcastReceiver;
 import com.oriondev.moneywallet.model.Category;
 import com.oriondev.moneywallet.model.RecurrenceSetting;
@@ -107,6 +108,10 @@ public class NewEditBudgetActivityTest {
         // the app schedules the roll alarm from its own onCreate, off whichever database the
         // shared helper was still holding, so a case that reads the alarm starts from nothing
         cancelRollAlarm();
+        // Application.onCreate also schedules the independent daily debt reminder. These
+        // budget tests assert on AlarmManager contents, so remove only that unrelated scheduler
+        // before each case and leave production scheduling unchanged.
+        DebtDueBroadcastReceiver.cancelDailyReminder(mContext);
         // one throwaway wallet takes id 1, so the first wallet row is never the current wallet
         mUnusedWallet = insertWallet("Unused", "EUR");
         mWalletA = insertWallet("Cash", "EUR");
