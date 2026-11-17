@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.graphics.Color;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -75,7 +76,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         back.setOnClickListener(v -> finish());
         top.addView(back);
         TextView title = text(s("تخصيص الزجاج السائل","Liquid Glass Studio"), 23, Color.WHITE);
-        title.setTypeface(null, 1);
+        title.setTypeface(null, Typeface.BOLD);
         top.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
         root.addView(top);
         TextView subtitle = text(s("تحكم بالمظهر والحركة مع معاينة فورية","Tune appearance and motion with a live preview"), 13, 0xFFD9D7F4);
@@ -95,7 +96,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         ((LinearLayout)preview).setOrientation(LinearLayout.VERTICAL);
         preview.setPadding(dp(18), dp(18), dp(18), dp(18));
         previewCaption = text(s("بطاقة زجاجية تفاعلية","Interactive glass surface"), 16, Color.WHITE);
-        previewCaption.setTypeface(null, 1);
+        previewCaption.setTypeface(null, Typeface.BOLD);
         ((LinearLayout)preview).addView(previewCaption);
         TextView sample = text(s("تظهر تغييراتك هنا فوراً","Your adjustments appear here instantly"), 13, 0xFFECEBFF);
         sample.setPadding(0, dp(8), 0, 0);
@@ -158,7 +159,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
     }
 
     private void addSection(LinearLayout root,String label){
-        TextView t=text(label,15,0xFFF4F1FF); t.setTypeface(null,1);
+        TextView t=text(label,15,0xFFF4F1FF); t.setTypeface(null, Typeface.BOLD);
         t.setPadding(dp(4),dp(22),dp(4),dp(9)); root.addView(t);
     }
     private TextView text(String value,int size,int color){
