@@ -475,6 +475,7 @@ public class NewEditDebtActivity extends NewEditItemActivity implements IconPick
                 case EDIT_ITEM:
                     Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_DEBTS, getItemId());
                     contentResolver.update(uri, contentValues, null, null);
+                    com.oriondev.moneywallet.broadcast.DebtDueBroadcastReceiver.cancelReminder(this, getItemId());
                     break;
             }
         } catch (SQLiteDataException e) {
