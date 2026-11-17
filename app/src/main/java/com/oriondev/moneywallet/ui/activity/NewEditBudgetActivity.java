@@ -606,6 +606,7 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
         FragmentManager fragmentManager = getSupportFragmentManager();
         mMoneyPicker = MoneyPicker.createPicker(fragmentManager, TAG_MONEY_PICKER, null, money);
         mBudgetTypePicker = BudgetTypePicker.createPicker(fragmentManager, TAG_BUDGET_TYPE_PICKER, type);
+        mRecommendationTextView.setVisibility(type == Contract.BudgetType.EXPENSES ? View.VISIBLE : View.GONE);
         mCategoryPicker = CategoryPicker.createPicker(fragmentManager, TAG_CATEGORY_PICKER, categories);
         mStartDatePicker = DateTimePicker.createPicker(fragmentManager, TAG_START_DATE_PICKER, startDate);
         mEndDatePicker = DateTimePicker.createPicker(fragmentManager, TAG_END_DATE_PICKER, endDate);
@@ -929,7 +930,6 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
         String selection = Contract.Transaction.DIRECTION + " = " + Contract.Direction.EXPENSE
                 + " AND " + Contract.Transaction.TYPE + " = " + Contract.TransactionType.STANDARD
                 + " AND " + Contract.Transaction.CONFIRMED + " = 1"
-                + " AND " + Contract.Transaction.COUNT_IN_TOTAL + " = 1"
                 + " AND " + Contract.Transaction.NOT_TRANSFER
                 + " AND " + Contract.Transaction.WALLET_ID + " IN (" + walletPlaceholders + ")"
                 + " AND DATE(" + Contract.Transaction.DATE + ") >= DATE(?)"
