@@ -25,6 +25,7 @@ import android.os.LocaleList
 
 import com.oriondev.moneywallet.broadcast.AutoBackupBroadcastReceiver
 import com.oriondev.moneywallet.broadcast.DailyBroadcastReceiver
+import com.oriondev.moneywallet.broadcast.DebtDueBroadcastReceiver
 import com.oriondev.moneywallet.broadcast.RecurrenceBroadcastReceiver
 import com.oriondev.moneywallet.storage.database.SystemCategoryLocalizer
 import com.oriondev.moneywallet.storage.preference.BackendManager
@@ -78,6 +79,7 @@ class App : Application() {
         // every kind of reasons. When the application is killed all the scheduled operations are
         // canceled by the OS. This is the best place where all those things can be scheduled again.
         DailyBroadcastReceiver.scheduleDailyNotification(this)
+        DebtDueBroadcastReceiver.scheduleDailyReminder(this)
         RecurrenceBroadcastReceiver.scheduleRecurrenceTask(this)
         AutoBackupBroadcastReceiver.ensureAutoBackupTaskScheduled(this)
     }
