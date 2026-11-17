@@ -24,6 +24,12 @@
     <com.oriondev.moneywallet.ui.preference.ThemedPreferenceCategory
         android:title="@string/setting_category_ui_appearance" >
 
+        <com.oriondev.moneywallet.ui.preference.ThemedPreference
+            android:key="liquid_glass_customization"
+            android:title="@string/setting_title_liquid_glass"
+            android:summary="@string/setting_summary_liquid_glass"
+            android:persistent="false" />
+
         <com.oriondev.moneywallet.ui.preference.ThemedSwitchPreference
             android:key="system_colors"
             android:title="@string/setting_title_ui_system_colors"
