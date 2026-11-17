@@ -975,4 +975,6 @@
     <string name="overview_upcoming_debt_item">%1$s — %2$s — remaining: %3$s</string>
     <string name="overview_overdue_debts_title">Overdue debts</string>
     <string name="overview_overdue_debt_item">%1$s — due: %2$s — remaining: %3$s</string>
+    <string name="setting_title_liquid_glass">Liquid Glass customization</string>
+    <string name="setting_summary_liquid_glass">Customize glass surfaces, live preview and motion</string>
 </resources>
