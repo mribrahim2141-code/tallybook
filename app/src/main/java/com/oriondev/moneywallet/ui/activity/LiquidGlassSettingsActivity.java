@@ -42,6 +42,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
     private final int purple = Color.rgb(151, 112, 255);
     private final java.util.Map<String, Integer> previewValues = new java.util.HashMap<>();
     private int motionPreset = 0;
+    private int appearancePreset = 0;
 
     private boolean ar() { return "ar".equals(Locale.getDefault().getLanguage()); }
     private String s(String arabic, String english) { return ar() ? arabic : english; }
@@ -111,6 +112,11 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         for (int i=0;i<names.length;i++) {
             final int index=i;
             Button b=button(names[i]);
+            GradientDrawable presetBg=new GradientDrawable();
+            presetBg.setCornerRadius(dp(18));
+            presetBg.setColor(i==appearancePreset?0x88BDA8FF:0x553FFFFF);
+            presetBg.setStroke(dp(1),i==appearancePreset?0xDDFFFFFF:0x55FFFFFF);
+            b.setBackground(presetBg);
             b.setTextSize(11);
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(44),1);
             lp.setMargins(dp(2),0,dp(2),0);
@@ -126,13 +132,13 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
 
         addSection(root,s("الحركة والفيزياء","Motion & physics"));
         RadioGroup group=new RadioGroup(this);
-        group.setOrientation(RadioGroup.HORIZONTAL);
+        group.setOrientation(RadioGroup.VERTICAL);
         String[] motionNames={s("عادي","Normal"),s("الأداء","Performance"),s("مرن","Elastic"),s("مرن جداً","Very elastic")};
         for(int i=0;i<motionNames.length;i++){
             RadioButton rb=new RadioButton(this); rb.setText(motionNames[i]); rb.setTextColor(Color.WHITE); rb.setId(100+i);
             group.addView(rb,new RadioGroup.LayoutParams(0,-2,1));
         }
-        group.check(100);
+        group.check(100 + motionPreset);
         group.setOnCheckedChangeListener((g,id)->applyMotionPreset(id-100));
         root.addView(group);
         Button tryButton=button(s("جربها","Try it"));
@@ -193,6 +199,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         root.addView(sw);
     }
     private void applyPreset(int index){
+        appearancePreset=index;
         int[][] presets={
             {42,34,45,28,72,100,48,28},
             {8,15,15,12,85,100,22,20},
