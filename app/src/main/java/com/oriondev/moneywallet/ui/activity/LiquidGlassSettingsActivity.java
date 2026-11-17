@@ -38,6 +38,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
     private View preview, ambient;
     private TextView previewCaption;
     private final int purple = Color.rgb(151, 112, 255);
+    private final java.util.Map<String, Integer> previewValues = new java.util.HashMap<>();
     private int motionPreset = 0;
 
     private boolean ar() { return "ar".equals(Locale.getDefault().getLanguage()); }
