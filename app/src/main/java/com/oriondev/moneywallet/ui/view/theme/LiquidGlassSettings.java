@@ -15,8 +15,8 @@ public final class LiquidGlassSettings {
     private static final String[] KEYS = {"blur", "refraction_height", "refraction_amount", "tint",
             "vibrancy", "brightness", "gloss", "corner_radius", "bounce", "speed",
             "compression", "pull_stretch", "long_press", "haptics_strength"};
-    private static final String[] TOGGLES = {"depth", "chromatic"};
-    private static final boolean[] TOGGLE_DEFAULTS = {true, false};
+    private static final String[] TOGGLES = {"depth", "chromatic", "release_haptics"};
+    private static final boolean[] TOGGLE_DEFAULTS = {true, false, true};
 
     private LiquidGlassSettings() {}
 
@@ -52,8 +52,10 @@ public final class LiquidGlassSettings {
             boolean motion = i >= 8;
             if (motion == motionOnly) editor.putInt(PREFIX + KEYS[i], DEFAULTS[i]);
         }
-        if (!motionOnly) {
-            for (int i = 0; i < TOGGLES.length; i++) editor.putBoolean(PREFIX + TOGGLES[i], TOGGLE_DEFAULTS[i]);
+        for (int i = 0; i < TOGGLES.length; i++) {
+            if (!motionOnly || "release_haptics".equals(TOGGLES[i])) {
+                editor.putBoolean(PREFIX + TOGGLES[i], TOGGLE_DEFAULTS[i]);
+            }
         }
         editor.apply();
     }
