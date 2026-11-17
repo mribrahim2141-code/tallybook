@@ -75,7 +75,7 @@ public final class LiquidGlassSettings {
         int brightness = get(context, "brightness");
         int overlay = Color.argb(Math.round(12 + tint * 0.48f), 133, 104, 255);
         int surface = ColorUtils.blendARGB(baseColor, overlay, tint / 100f * 0.34f);
-        surface = ColorUtils.blendARGB(surface, Color.WHITE, Math.max(0, brightness - 100) / 100f * 0.12f);
+        surface = ColorUtils.blendARGB(surface, Color.WHITE, brightness / 100f * 0.12f);
         surface = ColorUtils.blendARGB(surface, baseColor, (100 - vibrancy) / 100f * 0.08f);
         card.setCardBackgroundColor(surface);
         float density = context.getResources().getDisplayMetrics().density;
