@@ -29,6 +29,7 @@
     android:layout_marginTop="3dp"
     android:layout_marginBottom="3dp"
     android:background="@drawable/bg_glass_surface"
+    android:clipToOutline="true"
     android:foreground="?attr/selectableItemBackground" >
 
     <com.oriondev.moneywallet.ui.view.theme.ThemedImageView
