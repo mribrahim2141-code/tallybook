@@ -87,7 +87,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         ambient.setBackground(glow);
         LinearLayout previewWrap = new LinearLayout(this);
         previewWrap.setPadding(dp(14), dp(14), dp(14), dp(14));
-        previewWrap.addView(ambient, new LinearLayout.LayoutParams(-1, dp(10)));
+        previewWrap.addView(ambient, new LinearLayout.LayoutParams(-1, dp(44)));
         preview = new LinearLayout(this);
         ((LinearLayout)preview).setOrientation(LinearLayout.VERTICAL);
         preview.setPadding(dp(18), dp(18), dp(18), dp(18));
@@ -135,6 +135,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         root.addView(group);
         Button tryButton=button(s("جربها","Try it"));
         tryButton.setOnClickListener(v->playMotion());
+        tryButton.setOnLongClickListener(v->{float inflation=1f+LiquidGlassSettings.get(this,"long_press")/350f;preview.animate().scaleX(inflation).scaleY(inflation).setDuration(260).withEndAction(()->preview.animate().scaleX(1f).scaleY(1f).setDuration(220).start()).start();return true;});
         root.addView(tryButton,new LinearLayout.LayoutParams(-1,dp(48)));
         for(int i=0;i<MOTION_KEYS.length;i++) addSlider(root,MOTION_KEYS[i],AR[i+8],EN[i+8],true);
         addToggle(root,s("الاهتزاز عند الإفلات","Release haptics"),"release_haptics");
@@ -213,9 +214,10 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
     private void applyPreview(){
         if(preview==null)return;
         int tint=current("tint"), gloss=current("gloss");
-        int radius=current("corner_radius"), brightness=current("brightness");
+        int radius=current("corner_radius"), brightness=current("brightness"), vibrancy=current("vibrancy");
         int base=ColorUtils.blendARGB(0xAAFFFFFF,0xFF9876FF,tint/100f*0.34f);
         base=ColorUtils.blendARGB(base,Color.WHITE,Math.max(0,brightness-100)/100f*0.16f);
+        base=ColorUtils.blendARGB(base,0xFF9876FF,(100-vibrancy)/100f*0.12f);
         GradientDrawable glass=new GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 new int[]{ColorUtils.setAlphaComponent(base,0xD8),ColorUtils.setAlphaComponent(ColorUtils.blendARGB(base,0xFF60BFEF,0.22f),0xB8)});
         glass.setCornerRadius(dp(12+radius*.20f));
@@ -229,19 +231,24 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         float glossAlpha=0.12f+gloss/100f*0.35f;
         preview.setAlpha(0.90f+glossAlpha*0.1f);
         preview.setTranslationY(-current("refraction_height")/25f);
+        float refraction=current("refraction_amount")/100f;
+        preview.setScaleX(1f+refraction*0.025f);
+        preview.setScaleY(1f-refraction*0.012f);
         if(LiquidGlassSettings.isEnabled(this,"chromatic")){
             preview.setRotationY(0.4f);
         }else preview.setRotationY(0f);
     }
     private void playMotion(){
         float bounce=0.85f+LiquidGlassSettings.get(this,"bounce")/100f*0.55f;
+        float compression=LiquidGlassSettings.get(this,"compression")/100f*0.16f;
+        float stretch=LiquidGlassSettings.get(this,"pull_stretch")/100f*0.12f;
         long duration=Math.max(180,650-LiquidGlassSettings.get(this,"speed")*4L);
-        ObjectAnimator x=ObjectAnimator.ofFloat(preview,"scaleX",1f,0.94f,1.04f,1f);
-        ObjectAnimator y=ObjectAnimator.ofFloat(preview,"scaleY",1f,0.90f,1.04f,1f);
+        ObjectAnimator x=ObjectAnimator.ofFloat(preview,"scaleX",1f,1f-compression,1f+stretch,1f);
+        ObjectAnimator y=ObjectAnimator.ofFloat(preview,"scaleY",1f,1f-compression*1.5f,1f+stretch*0.45f,1f);
         x.setDuration(duration); y.setDuration(duration);
         x.setInterpolator(new OvershootInterpolator(bounce)); y.setInterpolator(new OvershootInterpolator(bounce));
         x.start(); y.start();
-        if(LiquidGlassSettings.isEnabled(this,"release_haptics")) preview.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK);
+        if(LiquidGlassSettings.isEnabled(this,"release_haptics") && LiquidGlassSettings.get(this,"haptics_strength") > 0) preview.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK);
     }
     private void updateMotionPreview(int value){ if(preview!=null) preview.setTranslationY(-value/35f); }
     private void confirmReset(boolean motion){
