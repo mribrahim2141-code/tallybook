@@ -63,6 +63,22 @@ class DebtDueBroadcastReceiver : BroadcastReceiver() {
             )
         }
 
+        /**
+         * Cancels only the repeating scheduler. Kept separate from cancelReminder(), which
+         * removes one posted notification when a debt is edited, archived, or deleted.
+         */
+        @JvmStatic
+        fun cancelDailyReminder(context: Context) {
+            val intent = Intent(context, DebtDueBroadcastReceiver::class.java)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context, REQUEST_CODE, intent,
+                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+            ) ?: return
+            val alarmManager = context.getSystemService(Service.ALARM_SERVICE) as AlarmManager?
+            alarmManager?.cancel(pendingIntent)
+            pendingIntent.cancel()
+        }
+
         @JvmStatic
         fun cancelReminder(context: Context, debtId: Long) {
             NotificationManagerCompat.from(context).cancel(NOTIFICATION_TAG, debtId.toInt())
