@@ -128,6 +128,12 @@
     <string name="hint_budget_repeat">"Repeat this budget"</string>
     <string name="hint_category_budgets">"Category budgets"</string>
     <string name="hint_budget_follow_category_budgets">"Use the category budgets inside it as the limit"</string>
+    <string name="action_suggest_budget_from_history">"Suggest amount from the last 3 complete months"</string>
+    <string name="title_budget_recommendation">"Smart budget suggestion"</string>
+    <string name="message_budget_recommendation_select_wallets">"Select at least one wallet first."</string>
+    <string name="message_budget_recommendation_select_dates">"Choose a valid budget start and end date first."</string>
+    <string name="message_budget_recommendation_no_history">"There is not enough confirmed expense history in the selected wallets for the last three complete months."</string>
+    <string name="message_budget_recommendation_applied">"A suggested amount based on average daily spending over the last three complete months has been filled in for this budget period. Review it before saving."</string>
     <string name="message_budget_period_superseded">"This budget has moved on to a later period since you opened it, so this one is now part of its history and cannot be set to repeat. Open the latest period instead."</string>
     <string name="error_input_invalid_budget_recurrence">"This recurrence never repeats, so it cannot set the length of a period"</string>
     <string name="hint_event">"Event"</string>
