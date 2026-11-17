@@ -26,14 +26,20 @@ public final class LiquidGlassSettings {
 
     public static int get(Context context, String key) {
         for (int i = 0; i < KEYS.length; i++) {
-            if (KEYS[i].equals(key)) return clamp(prefs(context).getInt(PREFIX + key, DEFAULTS[i]), 0, 100);
+            if (KEYS[i].equals(key)) {
+                try { return clamp(prefs(context).getInt(PREFIX + key, DEFAULTS[i]), 0, 100); }
+                catch (RuntimeException ignored) { return DEFAULTS[i]; }
+            }
         }
         return 0;
     }
 
     public static boolean isEnabled(Context context, String key) {
         for (int i = 0; i < TOGGLES.length; i++) {
-            if (TOGGLES[i].equals(key)) return prefs(context).getBoolean(PREFIX + key, TOGGLE_DEFAULTS[i]);
+            if (TOGGLES[i].equals(key)) {
+                try { return prefs(context).getBoolean(PREFIX + key, TOGGLE_DEFAULTS[i]); }
+                catch (RuntimeException ignored) { return TOGGLE_DEFAULTS[i]; }
+            }
         }
         return false;
     }
@@ -53,7 +59,8 @@ public final class LiquidGlassSettings {
             if (motion == motionOnly) editor.putInt(PREFIX + KEYS[i], DEFAULTS[i]);
         }
         for (int i = 0; i < TOGGLES.length; i++) {
-            if (!motionOnly || "release_haptics".equals(TOGGLES[i])) {
+            boolean motionToggle = "release_haptics".equals(TOGGLES[i]);
+            if (motionToggle == motionOnly) {
                 editor.putBoolean(PREFIX + TOGGLES[i], TOGGLE_DEFAULTS[i]);
             }
         }
