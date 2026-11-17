@@ -36,6 +36,7 @@ class BootBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (ACTION_BOOT_COMPLETED.equals(intent.action)) {
             DailyBroadcastReceiver.scheduleDailyNotification(context)
+            DebtDueBroadcastReceiver.scheduleDailyReminder(context)
             RecurrenceBroadcastReceiver.scheduleRecurrenceTask(context)
             AutoBackupBroadcastReceiver.ensureAutoBackupTaskScheduled(context)
         }
