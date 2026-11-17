@@ -1,6 +1,7 @@
 package com.oriondev.moneywallet.ui.activity;
 
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.graphics.Color;
 import android.graphics.RenderEffect;
@@ -8,6 +9,7 @@ import android.graphics.Shader;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -135,7 +137,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         root.addView(group);
         Button tryButton=button(s("جربها","Try it"));
         tryButton.setOnClickListener(v->playMotion());
-        tryButton.setOnLongClickListener(v->{float inflation=1f+LiquidGlassSettings.get(this,"long_press")/350f;preview.animate().scaleX(inflation).scaleY(inflation).setDuration(260).withEndAction(()->preview.animate().scaleX(1f).scaleY(1f).setDuration(220).start()).start();return true;});
+        tryButton.setOnLongClickListener(v->{if (!motionAllowed()) return true; float inflation=1f+LiquidGlassSettings.get(this,"long_press")/350f;preview.animate().scaleX(inflation).scaleY(inflation).setDuration(260).withEndAction(()->preview.animate().scaleX(1f).scaleY(1f).setDuration(220).start()).start();return true;});
         root.addView(tryButton,new LinearLayout.LayoutParams(-1,dp(48)));
         for(int i=0;i<MOTION_KEYS.length;i++) addSlider(root,MOTION_KEYS[i],AR[i+8],EN[i+8],true);
         addToggle(root,s("الاهتزاز عند الإفلات","Release haptics"),"release_haptics");
@@ -238,7 +240,13 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
             preview.setRotationY(0.4f);
         }else preview.setRotationY(0f);
     }
+    private boolean motionAllowed(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) return ValueAnimator.areAnimatorsEnabled();
+        try { return Settings.Global.getFloat(getContentResolver(), Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f; }
+        catch (RuntimeException ignored) { return true; }
+    }
     private void playMotion(){
+        if (!motionAllowed()) { preview.setScaleX(1f); preview.setScaleY(1f); return; }
         float bounce=0.85f+LiquidGlassSettings.get(this,"bounce")/100f*0.55f;
         float compression=LiquidGlassSettings.get(this,"compression")/100f*0.16f;
         float stretch=LiquidGlassSettings.get(this,"pull_stretch")/100f*0.12f;
