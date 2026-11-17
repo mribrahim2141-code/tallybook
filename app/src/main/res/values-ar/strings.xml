@@ -949,5 +949,10 @@
     <string name="budget_forecast_usage">المتوقع بنهاية الفترة: %1$s</string>
     <string name="budget_forecast_near_limit">توقع باقتراب الإنفاق من الحد (%1$d%%): %2$s</string>
     <string name="budget_forecast_over">قد يتجاوز الإنفاق الحد المحدد: %1$s</string>
+    <string name="notification_debt_due_title">تذكير باستحقاق مالي</string>
+    <string name="notification_debt_due_today">موعد «%1$s» مستحق اليوم.</string>
+    <string name="notification_debt_due_tomorrow">موعد «%1$s» مستحق غدًا.</string>
+    <string name="notification_debt_due_debt_type">مبلغ مستحق عليك</string>
+    <string name="notification_debt_due_credit_type">مبلغ مستحق لك</string>
 </resources>
 
