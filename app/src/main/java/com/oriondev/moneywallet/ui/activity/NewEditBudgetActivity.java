@@ -63,6 +63,7 @@ import com.oriondev.moneywallet.utils.DefaultWallet;
 import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -102,6 +103,7 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
     private MaterialEditText mStartDateEditText;
     private MaterialEditText mEndDateEditText;
     private MaterialEditText mWalletsEditText;
+    private TextView mRecommendationTextView;
 
     private MoneyPicker mMoneyPicker;
     private BudgetTypePicker mBudgetTypePicker;
@@ -146,6 +148,7 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
         mStartDateEditText = view.findViewById(R.id.start_date_edit_text);
         mEndDateEditText = view.findViewById(R.id.end_date_edit_text);
         mWalletsEditText = view.findViewById(R.id.wallets_edit_text);
+        mRecommendationTextView = view.findViewById(R.id.budget_recommendation_text_view);
         // disable unused edit text
         mTypeEditText.setTextViewMode(true);
         mCategoryEditText.setTextViewMode(true);
@@ -447,6 +450,14 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
             }
 
         });
+        mRecommendationTextView.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                suggestExpenseBudget();
+            }
+
+        });
     }
 
     @Override
@@ -595,6 +606,7 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
         FragmentManager fragmentManager = getSupportFragmentManager();
         mMoneyPicker = MoneyPicker.createPicker(fragmentManager, TAG_MONEY_PICKER, null, money);
         mBudgetTypePicker = BudgetTypePicker.createPicker(fragmentManager, TAG_BUDGET_TYPE_PICKER, type);
+        mRecommendationTextView.setVisibility(type == Contract.BudgetType.EXPENSES ? View.VISIBLE : View.GONE);
         mCategoryPicker = CategoryPicker.createPicker(fragmentManager, TAG_CATEGORY_PICKER, categories);
         mStartDatePicker = DateTimePicker.createPicker(fragmentManager, TAG_START_DATE_PICKER, startDate);
         mEndDatePicker = DateTimePicker.createPicker(fragmentManager, TAG_END_DATE_PICKER, endDate);
@@ -856,6 +868,111 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
         return getRepeatingPeriod();
     }
 
+    /**
+     * Suggests an expense budget from the last three complete calendar months. The amount is
+     * scaled to the period currently selected by the user and is only placed in the editor;
+     * nothing is saved until the user presses the normal Save action.
+     */
+    private void suggestExpenseBudget() {
+        Wallet[] wallets = mWalletsPicker.getCurrentWallets();
+        if (wallets == null || wallets.length == 0) {
+            ThemedDialog.buildMaterialDialog(this)
+                    .setTitle(R.string.title_budget_recommendation)
+                    .setMessage(R.string.message_budget_recommendation_select_wallets)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            return;
+        }
+
+        Date[] budgetPeriod = mRepeatCheckBox.isChecked() ? periodToSave(getMode())
+                : new Date[] {mStartDatePicker.getCurrentDateTime(), mEndDatePicker.getCurrentDateTime()};
+        if (budgetPeriod == null || budgetPeriod.length < 2 || budgetPeriod[0] == null
+                || budgetPeriod[1] == null || budgetPeriod[0].after(budgetPeriod[1])) {
+            ThemedDialog.buildMaterialDialog(this)
+                    .setTitle(R.string.title_budget_recommendation)
+                    .setMessage(R.string.message_budget_recommendation_select_dates)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            return;
+        }
+
+        Calendar historyEnd = Calendar.getInstance();
+        historyEnd.set(Calendar.DAY_OF_MONTH, 1);
+        historyEnd.add(Calendar.DAY_OF_MONTH, -1);
+        historyEnd.set(Calendar.HOUR_OF_DAY, 0);
+        historyEnd.set(Calendar.MINUTE, 0);
+        historyEnd.set(Calendar.SECOND, 0);
+        historyEnd.set(Calendar.MILLISECOND, 0);
+        Calendar historyStart = (Calendar) historyEnd.clone();
+        historyStart.set(Calendar.DAY_OF_MONTH, 1);
+        historyStart.add(Calendar.MONTH, -2);
+
+        long historyDays = (historyEnd.getTimeInMillis() - historyStart.getTimeInMillis())
+                / 86400000L + 1L;
+        long budgetDays = (budgetPeriod[1].getTime() - budgetPeriod[0].getTime())
+                / 86400000L + 1L;
+        if (historyDays <= 0L || budgetDays <= 0L) {
+            return;
+        }
+
+        StringBuilder walletPlaceholders = new StringBuilder();
+        ArrayList<String> selectionArgs = new ArrayList<>();
+        for (Wallet wallet : wallets) {
+            if (walletPlaceholders.length() > 0) {
+                walletPlaceholders.append(",");
+            }
+            walletPlaceholders.append("?");
+            selectionArgs.add(String.valueOf(wallet.getId()));
+        }
+        selectionArgs.add(DateUtils.getSQLDateString(historyStart.getTime()));
+        selectionArgs.add(DateUtils.getSQLDateString(historyEnd.getTime()));
+
+        String selection = Contract.Transaction.DIRECTION + " = " + Contract.Direction.EXPENSE
+                + " AND " + Contract.Transaction.TYPE + " = " + Contract.TransactionType.STANDARD
+                + " AND " + Contract.Transaction.CONFIRMED + " = 1"
+                + " AND " + Contract.Transaction.NOT_TRANSFER
+                + " AND " + Contract.Transaction.WALLET_ID + " IN (" + walletPlaceholders + ")"
+                + " AND DATE(" + Contract.Transaction.DATE + ") >= DATE(?)"
+                + " AND DATE(" + Contract.Transaction.DATE + ") <= DATE(?)";
+
+        long totalExpenses = 0L;
+        Cursor cursor = getContentResolver().query(DataContentProvider.CONTENT_TRANSACTIONS,
+                new String[] {Contract.Transaction.MONEY}, selection,
+                selectionArgs.toArray(new String[0]), null);
+        if (cursor != null) {
+            try {
+                while (cursor.moveToNext()) {
+                    long amount = cursor.getLong(0);
+                    if (amount > 0L && Long.MAX_VALUE - totalExpenses >= amount) {
+                        totalExpenses += amount;
+                    }
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+
+        if (totalExpenses <= 0L) {
+            ThemedDialog.buildMaterialDialog(this)
+                    .setTitle(R.string.title_budget_recommendation)
+                    .setMessage(R.string.message_budget_recommendation_no_history)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            return;
+        }
+
+        long recommendedAmount = Math.round((double) totalExpenses * budgetDays / historyDays);
+        if (recommendedAmount <= 0L) {
+            return;
+        }
+        mMoneyPicker.setMoney(recommendedAmount);
+        ThemedDialog.buildMaterialDialog(this)
+                .setTitle(R.string.title_budget_recommendation)
+                .setMessage(R.string.message_budget_recommendation_applied)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
     private void showCategorySum() {
         if (mRepeatCheckBox.isChecked() && mRecurrencePicker.getCurrentSettings() == null) {
             return;
@@ -1008,17 +1125,20 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
                 mCategoryEditText.setVisibility(View.GONE);
                 mFollowCheckBox.setChecked(false);
                 mFollowCheckBox.setVisibility(View.GONE);
+                mRecommendationTextView.setVisibility(View.GONE);
                 break;
             case EXPENSES:
                 mTypeEditText.setText(R.string.hint_expenses);
                 mCategoryEditText.setVisibility(View.GONE);
                 mFollowCheckBox.setVisibility(View.VISIBLE);
+                mRecommendationTextView.setVisibility(View.VISIBLE);
                 break;
             case CATEGORY:
                 mTypeEditText.setText(R.string.hint_category);
                 mCategoryEditText.setVisibility(View.VISIBLE);
                 mFollowCheckBox.setChecked(false);
                 mFollowCheckBox.setVisibility(View.GONE);
+                mRecommendationTextView.setVisibility(View.GONE);
                 break;
         }
     }

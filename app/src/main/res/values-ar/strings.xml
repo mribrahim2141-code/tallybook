@@ -6,6 +6,12 @@
     <string name="menu_overview">نظرة عامة</string>
     <string name="menu_debt">الديون</string>
     <string name="menu_budget">الميزانيات</string>
+    <string name="action_suggest_budget_from_history">"اقترح مبلغًا بناءً على آخر 3 أشهر مكتملة"</string>
+    <string name="title_budget_recommendation">"اقتراح ميزانية ذكي"</string>
+    <string name="message_budget_recommendation_select_wallets">"يرجى اختيار محفظة واحدة على الأقل أولاً."</string>
+    <string name="message_budget_recommendation_select_dates">"يرجى تحديد تاريخ بداية ونهاية صالحين للميزانية أولاً."</string>
+    <string name="message_budget_recommendation_no_history">"لا توجد مصروفات مؤكدة كافية في المحافظ المحددة خلال آخر ثلاثة أشهر مكتملة."</string>
+    <string name="message_budget_recommendation_applied">"تم تعبئة مبلغ مقترح اعتمادًا على متوسط الإنفاق اليومي خلال آخر ثلاثة أشهر مكتملة، وبما يتناسب مع مدة هذه الميزانية. راجع المبلغ قبل الحفظ."</string>
     <string name="menu_saving">الادخار</string>
     <string name="menu_event">الأحداث</string>
     <string name="menu_recurrences">المعاملات المتكررة</string>
