@@ -48,6 +48,6 @@ public class ThemedCardView extends CardView implements ThemeEngine.ThemeConsume
         // rounded corners with it and leaving CardView's own reference to that drawable dangling,
         // so setRadius and friends would silently stop working. The shadow survives, squared off:
         // elevation is a property of the View, not of the background
-        setCardBackgroundColor(theme.getColorCardBackground());
+        LiquidGlassSettings.applyTo(this, theme.getColorCardBackground());
     }
 }
