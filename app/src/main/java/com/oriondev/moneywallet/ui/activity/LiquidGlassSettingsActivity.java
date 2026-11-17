@@ -218,7 +218,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         int tint=current("tint"), gloss=current("gloss");
         int radius=current("corner_radius"), brightness=current("brightness"), vibrancy=current("vibrancy");
         int base=ColorUtils.blendARGB(0xAAFFFFFF,0xFF9876FF,tint/100f*0.34f);
-        base=ColorUtils.blendARGB(base,Color.WHITE,Math.max(0,brightness-100)/100f*0.16f);
+        base=ColorUtils.blendARGB(base,Color.WHITE,brightness/100f*0.16f);
         base=ColorUtils.blendARGB(base,0xFF9876FF,(100-vibrancy)/100f*0.12f);
         GradientDrawable glass=new GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 new int[]{ColorUtils.setAlphaComponent(base,0xD8),ColorUtils.setAlphaComponent(ColorUtils.blendARGB(base,0xFF60BFEF,0.22f),0xB8)});
