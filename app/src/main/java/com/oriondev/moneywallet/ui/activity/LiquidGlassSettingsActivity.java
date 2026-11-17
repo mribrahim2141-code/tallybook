@@ -137,7 +137,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         tryButton.setOnClickListener(v->playMotion());
         root.addView(tryButton,new LinearLayout.LayoutParams(-1,dp(48)));
         for(int i=0;i<MOTION_KEYS.length;i++) addSlider(root,MOTION_KEYS[i],AR[i+8],EN[i+8],true);
-        addToggle(root,s("الاهتزاز عند الإفلات","Release haptics"),"haptics");
+        addToggle(root,s("الاهتزاز عند الإفلات","Release haptics"),"release_haptics");
 
         addSection(root,s("إعادة الضبط","Reset"));
         Button resetGlass=button(s("↺  إعادة إلى الافتراضي","↺  Reset appearance"));
