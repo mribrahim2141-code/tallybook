@@ -154,6 +154,7 @@ public class DebtItemFragment extends SecondaryPanelFragment implements LoaderMa
                             contentValues.put(Contract.Debt.ARCHIVED, true);
                             int rows = activity.getContentResolver().update(uri, contentValues, null, null);
                             if (rows > 0) {
+                                com.oriondev.moneywallet.broadcast.DebtDueBroadcastReceiver.cancelReminder(activity, getItemId());
                                 setMenuItemVisibility(R.id.action_archive_item, false);
                                 setMenuItemVisibility(R.id.action_unarchive_item, true);
                             }
@@ -204,6 +205,7 @@ public class DebtItemFragment extends SecondaryPanelFragment implements LoaderMa
                             Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_DEBTS, getItemId());
                             ContentResolver contentResolver = activity.getContentResolver();
                             contentResolver.delete(uri, null, null);
+                            com.oriondev.moneywallet.broadcast.DebtDueBroadcastReceiver.cancelReminder(activity, getItemId());
                             navigateBackSafely();
                             showItemId(0L);
                         }

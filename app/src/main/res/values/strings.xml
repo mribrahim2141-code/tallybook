@@ -975,4 +975,9 @@
     <string name="overview_upcoming_debt_item">%1$s — %2$s — remaining: %3$s</string>
     <string name="overview_overdue_debts_title">Overdue debts</string>
     <string name="overview_overdue_debt_item">%1$s — due: %2$s — remaining: %3$s</string>
+    <string name="notification_debt_due_title">Debt due reminder</string>
+    <string name="notification_debt_due_today">“%1$s” is due today.</string>
+    <string name="notification_debt_due_tomorrow">“%1$s” is due tomorrow.</string>
+    <string name="notification_debt_due_debt_type">Payment you owe</string>
+    <string name="notification_debt_due_credit_type">Payment owed to you</string>
 </resources>
