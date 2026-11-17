@@ -14,7 +14,7 @@ public final class LiquidGlassSettings {
     private static final int[] DEFAULTS = {42, 34, 45, 28, 72, 100, 48, 28, 42, 100, 18, 55, 45, 30};
     private static final String[] KEYS = {"blur", "refraction_height", "refraction_amount", "tint",
             "vibrancy", "brightness", "gloss", "corner_radius", "bounce", "speed",
-            "compression", "pull_stretch", "long_press", "haptics"};
+            "compression", "pull_stretch", "long_press", "haptics_strength"};
     private static final String[] TOGGLES = {"depth", "chromatic"};
     private static final boolean[] TOGGLE_DEFAULTS = {true, false};
 
