@@ -156,7 +156,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
     }
     private Button button(String label){
         Button b=new Button(this); b.setText(label); b.setAllCaps(false); b.setTextColor(Color.WHITE);
-        GradientDrawable bg=new GradientDrawable(); bg.setColor(0x553FFFFFF); bg.setCornerRadius(dp(18));
+        GradientDrawable bg=new GradientDrawable(); bg.setColor(0x553FFFFF); bg.setCornerRadius(dp(18));
         bg.setStroke(dp(1),0x77FFFFFF); b.setBackground(bg); return b;
     }
     private void addSlider(LinearLayout root,String key,String arabic,String english,boolean motion){
