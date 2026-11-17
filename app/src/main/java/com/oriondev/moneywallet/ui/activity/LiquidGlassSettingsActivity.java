@@ -175,18 +175,18 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         panel.addView(bar);
         bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
             public void onProgressChanged(SeekBar seek,int progress,boolean user){
-                value.setText(String.valueOf(progress)); applyPreview();
+                previewValues.put(key, progress); value.setText(String.valueOf(progress)); applyPreview();
                 if(motion) updateMotionPreview(progress);
             }
             public void onStartTrackingTouch(SeekBar seek){}
-            public void onStopTrackingTouch(SeekBar seek){LiquidGlassSettings.put(LiquidGlassSettingsActivity.this,key,seek.getProgress());}
+            public void onStopTrackingTouch(SeekBar seek){LiquidGlassSettings.put(LiquidGlassSettingsActivity.this,key,seek.getProgress()); com.oriondev.moneywallet.ui.view.theme.ThemeEngine.refresh();}
         });
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2); lp.bottomMargin=dp(7); root.addView(panel,lp);
     }
     private void addToggle(LinearLayout root,String label,String key){
         Switch sw=new Switch(this); sw.setText(label); sw.setTextColor(Color.WHITE); sw.setPadding(dp(12),dp(8),dp(12),dp(8));
         sw.setChecked(LiquidGlassSettings.isEnabled(this,key));
-        sw.setOnCheckedChangeListener((CompoundButton b,boolean checked)->{LiquidGlassSettings.put(this,key,checked);applyPreview();});
+        sw.setOnCheckedChangeListener((CompoundButton b,boolean checked)->{LiquidGlassSettings.put(this,key,checked);applyPreview();com.oriondev.moneywallet.ui.view.theme.ThemeEngine.refresh();});
         root.addView(sw);
     }
     private void applyPreset(int index){
@@ -197,8 +197,10 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
             {0,0,0,8,65,100,10,18}
         };
         for(int i=0;i<GLASS_KEYS.length;i++) LiquidGlassSettings.put(this,GLASS_KEYS[i],presets[index][i]);
+        previewValues.clear();
         if(index==3) LiquidGlassSettings.put(this,"depth",false);
         else LiquidGlassSettings.put(this,"depth",true);
+        com.oriondev.moneywallet.ui.view.theme.ThemeEngine.refresh();
         buildScreen();
     }
     private void applyMotionPreset(int index){
@@ -207,10 +209,11 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         for(int i=0;i<MOTION_KEYS.length;i++) LiquidGlassSettings.put(this,MOTION_KEYS[i],values[index][i]);
         buildScreen();
     }
+    private int current(String key){ return previewValues.containsKey(key) ? previewValues.get(key) : LiquidGlassSettings.get(this,key); }
     private void applyPreview(){
         if(preview==null)return;
-        int tint=LiquidGlassSettings.get(this,"tint"), gloss=LiquidGlassSettings.get(this,"gloss");
-        int radius=LiquidGlassSettings.get(this,"corner_radius"), brightness=LiquidGlassSettings.get(this,"brightness");
+        int tint=current("tint"), gloss=current("gloss");
+        int radius=current("corner_radius"), brightness=current("brightness");
         int base=ColorUtils.blendARGB(0xAAFFFFFF,0xFF9876FF,tint/100f*0.34f);
         base=ColorUtils.blendARGB(base,Color.WHITE,Math.max(0,brightness-100)/100f*0.16f);
         GradientDrawable glass=new GradientDrawable(GradientDrawable.Orientation.TL_BR,
@@ -220,12 +223,12 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         preview.setBackground(glass);
         preview.setElevation(dp(LiquidGlassSettings.isEnabled(this,"depth")?8:1));
         if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.S){
-            float blur=LiquidGlassSettings.get(this,"blur")/18f;
+            float blur=current("blur")/18f;
             ambient.setRenderEffect(blur>0?RenderEffect.createBlurEffect(blur,blur,Shader.TileMode.CLAMP):null);
         }
         float glossAlpha=0.12f+gloss/100f*0.35f;
         preview.setAlpha(0.90f+glossAlpha*0.1f);
-        preview.setTranslationY(-LiquidGlassSettings.get(this,"refraction_height")/25f);
+        preview.setTranslationY(-current("refraction_height")/25f);
         if(LiquidGlassSettings.isEnabled(this,"chromatic")){
             preview.setRotationY(0.4f);
         }else preview.setRotationY(0f);
@@ -238,12 +241,12 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         x.setDuration(duration); y.setDuration(duration);
         x.setInterpolator(new OvershootInterpolator(bounce)); y.setInterpolator(new OvershootInterpolator(bounce));
         x.start(); y.start();
-        if(LiquidGlassSettings.isEnabled(this,"haptics")) preview.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK);
+        if(LiquidGlassSettings.isEnabled(this,"release_haptics")) preview.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK);
     }
     private void updateMotionPreview(int value){ if(preview!=null) preview.setTranslationY(-value/35f); }
     private void confirmReset(boolean motion){
         new AlertDialog.Builder(this).setMessage(s("هل تريد إعادة ضبط هذه الإعدادات؟","Reset these settings?"))
             .setNegativeButton(android.R.string.cancel,null)
-            .setPositiveButton(s("إعادة الضبط","Reset"),(d,w)->{LiquidGlassSettings.reset(this,motion);buildScreen();}).show();
+            .setPositiveButton(s("إعادة الضبط","Reset"),(d,w)->{LiquidGlassSettings.reset(this,motion);previewValues.clear();com.oriondev.moneywallet.ui.view.theme.ThemeEngine.refresh();buildScreen();}).show();
     }
 }
