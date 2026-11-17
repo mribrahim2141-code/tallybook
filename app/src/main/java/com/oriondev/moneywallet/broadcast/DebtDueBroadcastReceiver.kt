@@ -12,14 +12,12 @@
 package com.oriondev.moneywallet.broadcast
 
 import android.app.AlarmManager
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.database.Cursor
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.oriondev.moneywallet.R
@@ -29,7 +27,6 @@ import com.oriondev.moneywallet.ui.activity.MainActivity
 import com.oriondev.moneywallet.ui.notification.NotificationContract
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 /**
@@ -43,6 +40,7 @@ class DebtDueBroadcastReceiver : BroadcastReceiver() {
     companion object {
         private const val REQUEST_CODE = 23462
         private const val REMINDER_HOUR = 9
+        private const val NOTIFICATION_TAG = "debt_due"
 
         @JvmStatic
         fun scheduleDailyReminder(context: Context) {
@@ -63,6 +61,11 @@ class DebtDueBroadcastReceiver : BroadcastReceiver() {
             alarmManager.setInexactRepeating(
                 AlarmManager.RTC_WAKEUP, firstRun, AlarmManager.INTERVAL_DAY, pendingIntent
             )
+        }
+
+        @JvmStatic
+        fun cancelReminder(context: Context, debtId: Long) {
+            NotificationManagerCompat.from(context).cancel(NOTIFICATION_TAG, debtId.toInt())
         }
 
         private fun dateString(calendar: Calendar): String =
@@ -125,7 +128,7 @@ class DebtDueBroadcastReceiver : BroadcastReceiver() {
                         .setContentIntent(openApp)
                         .build()
                     try {
-                        NotificationManagerCompat.from(context).notify(id.toInt(), notification)
+                        NotificationManagerCompat.from(context).notify(NOTIFICATION_TAG, id.toInt(), notification)
                     } catch (_: SecurityException) {
                         // Notifications may be disabled by the user or denied on Android 13+.
                     }
