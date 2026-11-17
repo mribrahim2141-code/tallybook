@@ -31,7 +31,7 @@ import java.util.Locale;
 /** Native Android Liquid Glass controls; no WebView, CSS or additional dependency. */
 public class LiquidGlassSettingsActivity extends AppCompatActivity {
     private static final String[] GLASS_KEYS = {"blur","refraction_height","refraction_amount","tint","vibrancy","brightness","gloss","corner_radius"};
-    private static final String[] MOTION_KEYS = {"bounce","speed","compression","pull_stretch","long_press","haptics"};
+    private static final String[] MOTION_KEYS = {"bounce","speed","compression","pull_stretch","long_press","haptics_strength"};
     private static final int[] DEFAULTS = {42,34,45,28,72,100,48,28};
     private static final String[] AR = {"التمويه","ارتفاع الانكسار","مقدار الانكسار","الصباغة","الحيوية","السطوع","اللمعة","نصف قطر الزوايا","الارتداد","السرعة","عمق الضغط","التمدد عند السحب","التضخم عند الضغط المطول","الاهتزاز عند الإفلات"};
     private static final String[] EN = {"Blur","Refraction height","Refraction amount","Tint","Vibrancy","Brightness","Gloss","Corner radius","Bounce","Speed","Compression depth","Pull stretch","Long-press inflation","Release haptics"};
