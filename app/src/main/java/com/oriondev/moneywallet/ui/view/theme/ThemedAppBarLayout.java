@@ -101,7 +101,7 @@ public class ThemedAppBarLayout extends AppBarLayout implements ThemeEngine.Them
     public void onApplyTheme(ITheme theme) {
         if (mBackgroundColor != null) {
             int background = getBackgroundColor(theme);
-            LiquidGlassSettings.applySurface(this, background);
+            LiquidGlassSettings.applySurface(this, background, false);
         }
     }
 
