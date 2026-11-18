@@ -104,7 +104,6 @@ public final class LiquidGlassSettings {
         card.setCardBackgroundColor(ColorUtils.setAlphaComponent(surface, surfaceAlpha));
         card.setRadius((16 + get(context, "corner_radius") * 0.20f) * density);
         card.setCardElevation((isEnabled(context, "depth") ? 3 + gloss * 0.045f : 1.5f) * density);
-        card.setUseCompatPadding(true);
 
         if (card instanceof com.google.android.material.card.MaterialCardView) {
             com.google.android.material.card.MaterialCardView materialCard =
