@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark-mode overrides for the TallyBook Hybrid Premium design tokens. -->
+<resources>
+    <color name="tally_brand_navy">#0D1424</color>
+    <color name="tally_brand_royal">#82A2FF</color>
+    <color name="tally_brand_royal_soft">#23365F</color>
+    <color name="tally_brand_ice">#C8D8FF</color>
+
+    <color name="tally_surface_canvas">#0D1424</color>
+    <color name="tally_surface_primary">#151F33</color>
+    <color name="tally_surface_secondary">#1B2940</color>
+    <color name="tally_surface_tertiary">#24334D</color>
+
+    <color name="tally_text_primary">#EFF3FA</color>
+    <color name="tally_text_secondary">#B2BED1</color>
+    <color name="tally_text_muted">#8798B2</color>
+    <color name="tally_outline">#33415B</color>
+    <color name="tally_outline_strong">#50617D</color>
+
+    <color name="tally_finance_positive">#57C69A</color>
+    <color name="tally_finance_negative">#FF7C86</color>
+    <color name="tally_finance_warning">#F0BD69</color>
+    <color name="tally_finance_neutral">#AAB8CC</color>
+
+    <color name="tally_glass_surface">#C21D2B43</color>
+    <color name="tally_glass_surface_strong">#E6263652</color>
+    <color name="tally_glass_stroke">#4DFFFFFF</color>
+    <color name="tally_glass_shadow">#66000000</color>
+    <color name="tally_overlay_scrim">#99050A14</color>
+</resources>
