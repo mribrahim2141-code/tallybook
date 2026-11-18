@@ -214,6 +214,12 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+        // Apply the initial theme to the complete hierarchy, including standard MaterialCardViews
+        // that are not custom Themed* widgets. Theme changes already walk this same tree.
+        View decor = getWindow().peekDecorView();
+        if (decor != null) {
+            ThemeEngine.applyTheme(decor, true);
+        }
         onThemeSetup(ThemeEngine.getTheme());
     }
 
