@@ -41,8 +41,8 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
     private static final String[] GLASS_KEYS = {"blur","refraction_height","refraction_amount","tint","vibrancy","brightness","gloss","corner_radius"};
     private static final String[] MOTION_KEYS = {"bounce","speed","compression","pull_stretch","long_press","haptics_strength"};
     private static final int[] DEFAULTS = {42,34,45,28,72,100,48,28};
-    private static final String[] AR = {"التمويه","ارتفاع الانكسار","مقدار الانكسار","الصباغة","الحيوية","السطوع","اللمعة","نصف قطر الزوايا","الارتداد","السرعة","عمق الضغط","التمدد عند السحب","التضخم عند الضغط المطول","الاهتزاز عند الإفلات"};
-    private static final String[] EN = {"Blur","Refraction height","Refraction amount","Tint","Vibrancy","Brightness","Gloss","Corner radius","Bounce","Speed","Compression depth","Pull stretch","Long-press inflation","Release haptics"};
+    private static final String[] AR = {"التمويه (للمعاينة فقط)","ارتفاع الانكسار (للمعاينة فقط)","مقدار الانكسار (للمعاينة فقط)","الصباغة","الحيوية","السطوع","اللمعة","نصف قطر الزوايا","الارتداد","السرعة","عمق الضغط","التمدد عند السحب","التضخم عند الضغط المطول","الاهتزاز عند الإفلات"};
+    private static final String[] EN = {"Blur (preview only)","Refraction height (preview only)","Refraction amount (preview only)","Tint","Vibrancy","Brightness","Gloss","Corner radius","Bounce","Speed","Compression depth","Pull stretch","Long-press inflation","Release haptics"};
     private View preview, ambient;
     private TextView previewCaption;
     private final int purple = Color.rgb(151, 112, 255);
@@ -134,6 +134,9 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         root.addView(presets);
 
         addSection(root, s("خصائص الزجاج","Glass properties"));
+        TextView previewOnlyNote = text(s("ملاحظة: التمويه والانكسار يؤثران على منطقة المعاينة فقط، ولا يغيّران بطاقات التطبيق.","Note: Blur and refraction affect the preview area only; they do not change app cards."), 12, 0xFFD9D7F4);
+        previewOnlyNote.setPadding(dp(4), 0, dp(4), dp(8));
+        root.addView(previewOnlyNote);
         for(int i=0;i<GLASS_KEYS.length;i++) addSlider(root, GLASS_KEYS[i], AR[i], EN[i], false);
         addToggle(root,s("تأثير العمق","Depth effect"),"depth");
         addToggle(root,s("الزيغ اللوني","Chromatic aberration"),"chromatic");
