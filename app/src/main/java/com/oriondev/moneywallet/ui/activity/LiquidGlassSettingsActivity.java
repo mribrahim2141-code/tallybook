@@ -226,7 +226,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         buildScreen();
     }
     private void applyMotionPreset(int index){
-        int[][] values={{42,100,18,55,45,30},{8,125,8,20,12,0},{68,82,36,75,65,45},{90,70,52,95,88,75}};
+        int[][] values={{42,100,18,55,45,30},{8,100,8,20,12,0},{68,82,36,75,65,45},{90,70,52,95,88,75}};
         motionPreset=index;
         LiquidGlassSettings.putSelection(this, "motion_preset", index);
         for(int i=0;i<MOTION_KEYS.length;i++) LiquidGlassSettings.put(this,MOTION_KEYS[i],values[index][i]);
