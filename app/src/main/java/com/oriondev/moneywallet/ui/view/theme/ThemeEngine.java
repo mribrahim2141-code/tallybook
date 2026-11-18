@@ -27,6 +27,7 @@ import androidx.annotation.UiThread;
 import androidx.core.graphics.ColorUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import androidx.cardview.widget.CardView;
 
 import com.google.android.material.color.DynamicColors;
 
@@ -326,6 +327,10 @@ public class ThemeEngine implements ITheme {
     public static void applyTheme(View view, boolean propagate) {
         if (view instanceof ThemeConsumer) {
             ((ThemeConsumer) view).onApplyTheme(sInstance);
+        } else if (view instanceof CardView && sInstance != null) {
+            // Plain CardViews and MaterialCardViews must receive the same app-wide glass treatment
+            // as the custom themed card classes.
+            LiquidGlassSettings.applyTo((CardView) view, sInstance.getColorCardBackground());
         }
         if (propagate && view instanceof ViewGroup) {
             for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
