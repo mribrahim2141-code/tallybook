@@ -71,6 +71,5 @@ public class ThemedScrollView extends ScrollView implements ThemeEngine.ThemeCon
     @Override
     public void onApplyTheme(ITheme theme) {
         EdgeGlowUtil.setEdgeGlowColor(this, theme.getColorPrimary());
-        LiquidGlassSettings.applySurface(this, theme.getColorWindowForeground(), false);
     }
 }
