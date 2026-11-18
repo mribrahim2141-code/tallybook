@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TallyBook Hybrid Premium design tokens.
+  Phase 1 foundation only: these resources define the visual language without changing
+  existing screens, runtime theme selection, stored preferences, or financial behavior.
+-->
+<resources>
+    <!-- Brand -->
+    <color name="tally_brand_navy">#14213D</color>
+    <color name="tally_brand_royal">#315FEA</color>
+    <color name="tally_brand_royal_soft">#E8EEFF</color>
+    <color name="tally_brand_ice">#DCE8FF</color>
+
+    <!-- Warm light surfaces -->
+    <color name="tally_surface_canvas">#F7F5F0</color>
+    <color name="tally_surface_primary">#FFFEFC</color>
+    <color name="tally_surface_secondary">#F0F2F7</color>
+    <color name="tally_surface_tertiary">#E8ECF3</color>
+
+    <!-- Text and structure -->
+    <color name="tally_text_primary">#172033</color>
+    <color name="tally_text_secondary">#667085</color>
+    <color name="tally_text_muted">#8792A5</color>
+    <color name="tally_outline">#E1E6EF</color>
+    <color name="tally_outline_strong">#C8D0DE</color>
+
+    <!-- Financial meaning -->
+    <color name="tally_finance_positive">#168A63</color>
+    <color name="tally_finance_negative">#D84B57</color>
+    <color name="tally_finance_warning">#B7791F</color>
+    <color name="tally_finance_neutral">#64748B</color>
+
+    <!-- Glass: restrained translucency, not a substitute for readable surfaces -->
+    <color name="tally_glass_surface">#DFFFFFFF</color>
+    <color name="tally_glass_surface_strong">#F2FFFFFF</color>
+    <color name="tally_glass_stroke">#B3FFFFFF</color>
+    <color name="tally_glass_shadow">#160F1B33</color>
+    <color name="tally_overlay_scrim">#520B1428</color>
+</resources>
