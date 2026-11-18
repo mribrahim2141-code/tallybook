@@ -3,6 +3,8 @@ package com.oriondev.moneywallet.ui.view.theme;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.view.View;
 import androidx.cardview.widget.CardView;
 import androidx.core.graphics.ColorUtils;
 
@@ -124,6 +126,47 @@ public final class LiquidGlassSettings {
             material.setStrokeColor(android.content.res.ColorStateList.valueOf(stroke));
             material.setStrokeWidth(Math.max(1, Math.round((1f + gloss / 100f) * density)));
         }
+    }
+
+    /**
+     * Applies the same glass language to themed page surfaces, toolbars and scrolling panels.
+     * This is intentionally limited to containers whose theme code already owns their background;
+     * it never replaces arbitrary content backgrounds or text-bearing child views.
+     */
+    public static void applySurface(View view, int baseColor) {
+        Context context = view.getContext();
+        if (!isEnabled(context, "glass_enabled")) {
+            view.setBackgroundColor(baseColor);
+            view.setElevation(0f);
+            return;
+        }
+
+        float density = context.getResources().getDisplayMetrics().density;
+        int tint = get(context, "tint");
+        int gloss = get(context, "gloss");
+        int brightness = get(context, "brightness");
+        int vibrancy = get(context, "vibrancy");
+
+        int blue = Color.rgb(61, 117, 242);
+        int top = ColorUtils.blendARGB(baseColor, blue, 0.16f + tint / 100f * 0.26f);
+        int bottom = ColorUtils.blendARGB(baseColor, blue, 0.24f + (100 - vibrancy) / 100f * 0.12f);
+        top = ColorUtils.blendARGB(top, Color.WHITE, brightness / 100f * 0.12f);
+        bottom = ColorUtils.blendARGB(bottom, Color.WHITE, brightness / 100f * 0.06f);
+
+        int topAlpha = ColorUtils.calculateLuminance(baseColor) > 0.5 ? 238 : 232;
+        int bottomAlpha = ColorUtils.calculateLuminance(baseColor) > 0.5 ? 222 : 218;
+        GradientDrawable glass = new GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                new int[] {
+                        ColorUtils.setAlphaComponent(top, topAlpha),
+                        ColorUtils.setAlphaComponent(bottom, bottomAlpha)
+                });
+        glass.setCornerRadius(18f * density);
+        int strokeAlpha = Math.min(220, 105 + gloss);
+        glass.setStroke(Math.max(1, Math.round(density)),
+                ColorUtils.setAlphaComponent(Color.WHITE, strokeAlpha));
+        view.setBackground(glass);
+        view.setElevation((isEnabled(context, "depth") ? 3f + gloss * 0.035f : 0f) * density);
     }
 
     private static int clamp(int value, int min, int max) {
