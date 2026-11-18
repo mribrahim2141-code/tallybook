@@ -140,6 +140,14 @@ public final class LiquidGlassSettings {
     /** Full-bleed variant for page roots and app bars that must meet the screen edges. */
     public static void applySurface(View view, int baseColor, boolean rounded) {
         Context context = view.getContext();
+        // Deep Dark surfaces are intentionally pure black; keep their native ColorDrawable
+        // so system-theme contrast and existing theme consumers remain compatible.
+        if (baseColor == Color.BLACK) {
+            view.setBackgroundColor(Color.BLACK);
+            view.setElevation(0f);
+            return;
+        }
+
         if (!isEnabled(context, "glass_enabled")) {
             view.setBackgroundColor(baseColor);
             view.setElevation(0f);
