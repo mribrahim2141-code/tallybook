@@ -949,5 +949,7 @@
     <string name="budget_forecast_usage">المتوقع بنهاية الفترة: %1$s</string>
     <string name="budget_forecast_near_limit">توقع باقتراب الإنفاق من الحد (%1$d%%): %2$s</string>
     <string name="budget_forecast_over">قد يتجاوز الإنفاق الحد المحدد: %1$s</string>
+    <string name="setting_title_liquid_glass">تخصيص الزجاج السائل</string>
+    <string name="setting_summary_liquid_glass">تخصيص المظهر الزجاجي والمعاينة والحركة</string>
 </resources>
 

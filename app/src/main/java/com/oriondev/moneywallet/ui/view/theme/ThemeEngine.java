@@ -280,6 +280,12 @@ public class ThemeEngine implements ITheme {
         }
     }
 
+    /** Re-applies the current theme after non-color surface preferences change. */
+    @UiThread
+    public static void refresh() {
+        notifyObservers();
+    }
+
     @UiThread
     private static void notifyObservers() {
         if (sInstance != null) {

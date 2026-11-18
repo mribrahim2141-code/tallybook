@@ -45,6 +45,7 @@ import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.MainActivity;
+import com.oriondev.moneywallet.ui.activity.LiquidGlassSettingsActivity;
 import com.oriondev.moneywallet.utils.SystemBars;
 import com.oriondev.moneywallet.ui.fragment.dialog.CustomDigitSetupDialog;
 import com.oriondev.moneywallet.ui.preference.ColorPreference;
@@ -130,6 +131,13 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        Preference liquidGlass = findPreference("liquid_glass_customization");
+        if (liquidGlass != null) {
+            liquidGlass.setOnPreferenceClickListener(preference -> {
+                startActivity(new Intent(requireContext(), LiquidGlassSettingsActivity.class));
+                return true;
+            });
+        }
         // setup appearance preference logic
         mColorIncomePreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
