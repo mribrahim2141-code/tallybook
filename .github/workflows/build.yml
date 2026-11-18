@@ -27,6 +27,19 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      # Decode the private signing key only on trusted non-PR runs.
+      # Pull requests use the standard temporary debug signing identity.
+      - name: Prepare stable Android signing key
+        if: github.event_name != 'pull_request'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/tallybook-signing.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/tallybook-signing.jks" >> "$GITHUB_ENV"
+
       # Use the repository-pinned Gradle Wrapper instead of provisioning a
       # separate Gradle distribution through setup-gradle.
       - uses: gradle/actions/setup-gradle@v6
@@ -38,6 +51,10 @@ jobs:
 
       # Build and run tests
       - name: Build and Run Tests
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           ./gradlew --no-daemon clean testFlossOsmDebugUnitTest assembleFlossOsmDebug assembleFlossOsmDebugAndroidTest lintFlossOsmDebug
 
