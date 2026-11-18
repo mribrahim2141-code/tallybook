@@ -63,7 +63,7 @@ public class ThemedCoordinatorLayout extends CoordinatorLayout implements ThemeE
     public void onApplyTheme(ITheme theme) {
         if (mBackgroundColor != null) {
             int background = mBackgroundColor.getColor(theme);
-            setBackgroundColor(background);
+            LiquidGlassSettings.applySurface(this, background);
         }
     }
 }
