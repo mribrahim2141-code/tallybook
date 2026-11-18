@@ -31,38 +31,65 @@
         android:orientation="vertical"
         android:descendantFocusability="blocksDescendants">
 
+        <!-- Primary financial summary: a calm, high-contrast premium hero. -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="12dp"
-            android:layout_marginBottom="8dp"
-            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="3dp"
-            app:strokeColor="?attr/colorOutlineVariant"
+            android:layout_marginStart="@dimen/tally_screen_gutter"
+            android:layout_marginTop="@dimen/tally_space_16"
+            android:layout_marginEnd="@dimen/tally_screen_gutter"
+            android:layout_marginBottom="@dimen/tally_space_12"
+            app:cardBackgroundColor="@color/tally_brand_navy"
+            app:cardCornerRadius="@dimen/tally_radius_large"
+            app:cardElevation="1dp"
+            app:strokeColor="@color/tally_brand_royal"
             app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp"
-                android:background="@drawable/bg_glass_surface">
+                android:padding="@dimen/tally_space_20"
+                android:background="@drawable/bg_tally_overview_hero">
 
-                <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/overview_summary_title"
+                    android:textColor="#DCE8FF"
                     android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="@string/overview_summary_balance"
+                    android:textColor="#C5D2E8"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/summary_balance_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:textColor="#FFFFFF"
+                    android:textSize="@dimen/tally_text_balance"
                     android:textStyle="bold"
-                    app:theme_textColor="textColorPrimary" />
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    tools:text="SAR 12,850.00" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="#40FFFFFF" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
                     android:orientation="horizontal">
 
                     <LinearLayout
@@ -71,50 +98,56 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
 
-                        <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                        <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/hint_incomes"
-                            android:textSize="12sp"
-                            app:theme_textColor="textColorSecondary" />
+                            android:textColor="#BFD0EA"
+                            android:textSize="12sp" />
 
                         <TextView
                             android:id="@+id/summary_income_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
+                            android:layout_marginTop="5dp"
+                            android:textColor="#FFFFFF"
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:maxLines="2"
                             android:ellipsize="end"
-                            android:textColor="?attr/colorOnSurface"
                             tools:text="SAR 5,000" />
                     </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="@dimen/tally_screen_gutter"
+                        android:layout_marginEnd="@dimen/tally_screen_gutter"
+                        android:background="#40FFFFFF" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="12dp">
+                        android:orientation="vertical">
 
-                        <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                        <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/hint_expenses"
-                            android:textSize="12sp"
-                            app:theme_textColor="textColorSecondary" />
+                            android:textColor="#BFD0EA"
+                            android:textSize="12sp" />
 
                         <TextView
                             android:id="@+id/summary_expense_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
+                            android:layout_marginTop="5dp"
+                            android:textColor="#FFFFFF"
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:maxLines="2"
                             android:ellipsize="end"
-                            android:textColor="?attr/colorOnSurface"
                             tools:text="SAR 1,200" />
                     </LinearLayout>
                 </LinearLayout>
@@ -122,90 +155,56 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="16dp"
+                    android:orientation="vertical">
 
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:text="@string/hint_net_incomes"
+                        android:textColor="#BFD0EA"
+                        android:textSize="12sp" />
 
-                        <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/hint_net_incomes"
-                            android:textSize="12sp"
-                            app:theme_textColor="textColorSecondary" />
-
-                        <TextView
-                            android:id="@+id/summary_net_value"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:maxLines="2"
-                            android:ellipsize="end"
-                            android:textColor="?attr/colorOnSurface"
-                            tools:text="SAR 3,800" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/summary_net_value"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="12dp">
-
-                        <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/overview_summary_balance"
-                            android:textSize="12sp"
-                            app:theme_textColor="textColorSecondary" />
-
-                        <TextView
-                            android:id="@+id/summary_balance_value"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:maxLines="2"
-                            android:ellipsize="end"
-                            android:textColor="?attr/colorOnSurface"
-                            tools:text="SAR 8,800" />
-                    </LinearLayout>
+                        android:layout_marginTop="4dp"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        tools:text="SAR 3,800" />
                 </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginTop="14dp"
-                    android:background="?attr/colorOutlineVariant" />
+                    android:layout_marginTop="16dp"
+                    android:background="#40FFFFFF" />
 
                 <LinearLayout
                     android:id="@+id/summary_comparison_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="14dp"
                     android:orientation="vertical"
                     android:visibility="gone"
                     tools:visibility="visible">
 
-                    <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/overview_comparison_title"
+                        android:textColor="#DCE8FF"
                         android:textSize="12sp"
-                        android:textStyle="bold"
-                        app:theme_textColor="textColorSecondary" />
+                        android:textStyle="bold" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="9dp"
                         android:orientation="horizontal">
 
                         <LinearLayout
@@ -214,23 +213,23 @@
                             android:layout_weight="1"
                             android:orientation="vertical">
 
-                            <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                            <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/overview_comparison_income"
-                                android:textSize="11sp"
-                                app:theme_textColor="textColorSecondary" />
+                                android:textColor="#BFD0EA"
+                                android:textSize="11sp" />
 
                             <TextView
                                 android:id="@+id/summary_income_change_value"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
+                                android:textColor="#FFFFFF"
                                 android:textSize="14sp"
                                 android:textStyle="bold"
                                 android:maxLines="2"
                                 android:ellipsize="end"
-                                android:textColor="?attr/colorOnSurface"
                                 tools:text="SAR 500" />
 
                             <TextView
@@ -238,37 +237,37 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
+                                android:textColor="#BFD0EA"
                                 android:textSize="11sp"
                                 android:maxLines="3"
                                 android:ellipsize="end"
-                                android:textColor="?attr/colorOnSurfaceVariant"
                                 tools:text="SAR: +10.0%" />
                         </LinearLayout>
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/tally_screen_gutter"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
                             android:orientation="vertical">
 
-                            <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                            <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/overview_comparison_expense"
-                                android:textSize="11sp"
-                                app:theme_textColor="textColorSecondary" />
+                                android:textColor="#BFD0EA"
+                                android:textSize="11sp" />
 
                             <TextView
                                 android:id="@+id/summary_expense_change_value"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
+                                android:textColor="#FFFFFF"
                                 android:textSize="14sp"
                                 android:textStyle="bold"
                                 android:maxLines="2"
                                 android:ellipsize="end"
-                                android:textColor="?attr/colorOnSurface"
                                 tools:text="SAR 120" />
 
                             <TextView
@@ -276,10 +275,10 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
+                                android:textColor="#BFD0EA"
                                 android:textSize="11sp"
                                 android:maxLines="3"
                                 android:ellipsize="end"
-                                android:textColor="?attr/colorOnSurfaceVariant"
                                 tools:text="SAR: +8.0%" />
                         </LinearLayout>
                     </LinearLayout>
@@ -287,26 +286,26 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginTop="12dp"
                         android:orientation="vertical">
 
-                        <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                        <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/overview_comparison_net"
-                            android:textSize="11sp"
-                            app:theme_textColor="textColorSecondary" />
+                            android:textColor="#BFD0EA"
+                            android:textSize="11sp" />
 
                         <TextView
                             android:id="@+id/summary_net_change_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="3dp"
+                            android:textColor="#FFFFFF"
                             android:textSize="14sp"
                             android:textStyle="bold"
                             android:maxLines="2"
                             android:ellipsize="end"
-                            android:textColor="?attr/colorOnSurface"
                             tools:text="SAR 380" />
 
                         <TextView
@@ -314,10 +313,10 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
+                            android:textColor="#BFD0EA"
                             android:textSize="11sp"
                             android:maxLines="3"
                             android:ellipsize="end"
-                            android:textColor="?attr/colorOnSurfaceVariant"
                             tools:text="SAR: +12.0%" />
                     </LinearLayout>
                 </LinearLayout>
@@ -326,29 +325,29 @@
                     android:id="@+id/summary_savings_rate_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="14dp"
                     android:orientation="vertical"
                     android:visibility="gone"
                     tools:visibility="visible">
 
-                    <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/overview_savings_rate_title"
+                        android:textColor="#DCE8FF"
                         android:textSize="12sp"
-                        android:textStyle="bold"
-                        app:theme_textColor="textColorSecondary" />
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/summary_savings_rate_value"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="5dp"
+                        android:textColor="#FFFFFF"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:maxLines="5"
                         android:ellipsize="end"
-                        android:textColor="?attr/colorOnSurface"
                         tools:text="SAR: +25.0%" />
                 </LinearLayout>
             </LinearLayout>
@@ -358,14 +357,14 @@
             android:id="@+id/summary_top_expenses_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/tally_screen_gutter"
             android:layout_marginTop="4dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="@dimen/tally_screen_gutter"
             android:layout_marginBottom="8dp"
             android:visibility="gone"
             app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="2dp"
+            app:cardCornerRadius="@dimen/tally_radius_medium"
+            app:cardElevation="1dp"
             app:strokeColor="?attr/colorOutlineVariant"
             app:strokeWidth="1dp">
 
@@ -400,14 +399,14 @@
             android:id="@+id/summary_upcoming_events_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/tally_screen_gutter"
             android:layout_marginTop="4dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="@dimen/tally_screen_gutter"
             android:layout_marginBottom="8dp"
             android:visibility="gone"
             app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="2dp"
+            app:cardCornerRadius="@dimen/tally_radius_medium"
+            app:cardElevation="1dp"
             app:strokeColor="?attr/colorOutlineVariant"
             app:strokeWidth="1dp">
 
@@ -442,14 +441,14 @@
             android:id="@+id/summary_upcoming_debts_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/tally_screen_gutter"
             android:layout_marginTop="4dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="@dimen/tally_screen_gutter"
             android:layout_marginBottom="8dp"
             android:visibility="gone"
             app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="2dp"
+            app:cardCornerRadius="@dimen/tally_radius_medium"
+            app:cardElevation="1dp"
             app:strokeColor="?attr/colorOutlineVariant"
             app:strokeWidth="1dp">
 
@@ -484,14 +483,14 @@
             android:id="@+id/summary_overdue_debts_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/tally_screen_gutter"
             android:layout_marginTop="4dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="@dimen/tally_screen_gutter"
             android:layout_marginBottom="8dp"
             android:visibility="gone"
             app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="2dp"
+            app:cardCornerRadius="@dimen/tally_radius_medium"
+            app:cardElevation="1dp"
             app:strokeColor="?attr/colorOutlineVariant"
             app:strokeWidth="1dp">
 
@@ -525,13 +524,13 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="@dimen/view_pie_chart_height"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/tally_screen_gutter"
             android:layout_marginTop="@dimen/view_pie_chart_margin_top"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="@dimen/tally_screen_gutter"
             android:layout_marginBottom="@dimen/view_pie_chart_margin_bottom"
             app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="4dp"
+            app:cardCornerRadius="@dimen/tally_radius_large"
+            app:cardElevation="1dp"
             app:strokeColor="?attr/colorOutlineVariant"
             app:strokeWidth="1dp">
 
