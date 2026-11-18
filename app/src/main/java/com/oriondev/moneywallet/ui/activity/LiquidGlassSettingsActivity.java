@@ -289,11 +289,18 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
                 vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
             }
             if (vibrator == null || !vibrator.hasVibrator()) return;
+            // Some vibrator drivers cannot vary amplitude. In that case, vary duration
+            // instead so the strength slider still has a useful effect.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                int amplitude = Math.max(1, Math.min(255, Math.round(strength * 2.55f)));
-                vibrator.vibrate(VibrationEffect.createOneShot(35, amplitude));
+                if (vibrator.hasAmplitudeControl()) {
+                    int amplitude = Math.max(1, Math.min(255, Math.round(strength * 2.55f)));
+                    vibrator.vibrate(VibrationEffect.createOneShot(35, amplitude));
+                } else {
+                    long duration = 20L + Math.round(strength * 0.8f);
+                    vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE));
+                }
             } else {
-                vibrator.vibrate(20 + Math.round(strength * 0.25f));
+                vibrator.vibrate(20 + Math.round(strength * 0.8f));
             }
         } catch (RuntimeException ignored) {
             preview.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK);
