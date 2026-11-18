@@ -63,7 +63,7 @@ public class ThemedConstraintLayout extends ConstraintLayout implements ThemeEng
     public void onApplyTheme(ITheme theme) {
         if (mBackgroundColor != null) {
             int background = getBackgroundColor(theme);
-            setBackgroundColor(background);
+            LiquidGlassSettings.applySurface(this, background);
         }
     }
 

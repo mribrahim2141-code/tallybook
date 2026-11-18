@@ -214,6 +214,13 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+        // Custom Themed* views receive their initial theme during inflation. Only plain
+        // CardViews need a post-inflation pass; re-applying every ThemeConsumer here can repeat
+        // surface mutations after widgets have initialized accessibility focus and layout.
+        View decor = getWindow().peekDecorView();
+        if (decor != null) {
+            ThemeEngine.applyCardSurfaces(decor, true);
+        }
         onThemeSetup(ThemeEngine.getTheme());
     }
 

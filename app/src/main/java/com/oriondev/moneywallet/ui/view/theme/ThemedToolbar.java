@@ -69,7 +69,7 @@ public class ThemedToolbar extends Toolbar implements ThemeEngine.ThemeConsumer 
     public void onApplyTheme(ITheme theme) {
         if (mBackgroundColor != null) {
             int background = getBackgroundColor(theme);
-            setBackgroundColor(background);
+            LiquidGlassSettings.applySurface(this, background, false);
             setTitleTextColor(theme);
             setOverflowButtonColor(theme);
             setNavigationIconColor(theme);
