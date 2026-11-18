@@ -52,6 +52,17 @@ public final class LiquidGlassSettings {
         prefs(context).edit().putBoolean(PREFIX + key, value).apply();
     }
 
+    /** Persists the selected preset independently from the individual slider values. */
+    public static int getSelection(Context context, String key, int fallback) {
+        if (!"appearance_preset".equals(key) && !"motion_preset".equals(key)) return fallback;
+        return Math.max(0, Math.min(3, prefs(context).getInt(PREFIX + key, fallback)));
+    }
+
+    public static void putSelection(Context context, String key, int value) {
+        if (!"appearance_preset".equals(key) && !"motion_preset".equals(key)) return;
+        prefs(context).edit().putInt(PREFIX + key, Math.max(0, Math.min(3, value))).apply();
+    }
+
     public static void reset(Context context, boolean motionOnly) {
         SharedPreferences.Editor editor = prefs(context).edit();
         for (int i = 0; i < KEYS.length; i++) {
