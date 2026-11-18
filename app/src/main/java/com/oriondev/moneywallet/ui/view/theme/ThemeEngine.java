@@ -339,6 +339,18 @@ public class ThemeEngine implements ITheme {
         }
     }
 
+    /** Applies glass only to standard cards after inflation; themed containers already ran once. */
+    public static void applyCardSurfaces(View view, boolean propagate) {
+        if (view instanceof CardView && sInstance != null) {
+            LiquidGlassSettings.applyTo((CardView) view, sInstance.getColorCardBackground());
+        }
+        if (propagate && view instanceof ViewGroup) {
+            for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
+                applyCardSurfaces(((ViewGroup) view).getChildAt(i), true);
+            }
+        }
+    }
+
     private final Context mContext;
     private final SharedPreferences mPreferences;
 
