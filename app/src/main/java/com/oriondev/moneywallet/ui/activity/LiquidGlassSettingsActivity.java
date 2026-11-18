@@ -45,7 +45,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
     private static final String[] EN = {"Blur (preview only)","Refraction height (preview only)","Refraction amount (preview only)","Tint","Vibrancy","Brightness","Gloss","Corner radius","Bounce","Speed","Compression depth","Pull stretch","Long-press inflation","Release haptics"};
     private View preview, ambient;
     private TextView previewCaption;
-    private final int purple = Color.rgb(61, 117, 242);
+    private final int royalBlue = Color.rgb(61, 117, 242);
     private final java.util.Map<String, Integer> previewValues = new java.util.HashMap<>();
     private int motionPreset = 0;
     private int appearancePreset = 0;
@@ -137,7 +137,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         root.addView(presets);
 
         addSection(root, s("خصائص الزجاج","Glass properties"));
-        TextView previewOnlyNote = text(s("ملاحظة: التمويه والانكسار يؤثران على منطقة المعاينة فقط، ولا يغيّران بطاقات التطبيق.","Note: Blur and refraction affect the preview area only; they do not change app cards."), 12, 0xFFD9D7F4);
+        TextView previewOnlyNote = text(s("ملاحظة: التمويه والانكسار يؤثران على منطقة المعاينة فقط، ولا يغيّران بطاقات التطبيق.","Note: Blur and refraction affect the preview area only; they do not change app cards."), 12, 0xFFDCE6FF);
         previewOnlyNote.setPadding(dp(4), 0, dp(4), dp(8));
         root.addView(previewOnlyNote);
         for(int i=0;i<GLASS_KEYS.length;i++) addSlider(root, GLASS_KEYS[i], AR[i], EN[i], false);
@@ -242,7 +242,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         int radius=current("corner_radius"), brightness=current("brightness"), vibrancy=current("vibrancy");
         int base=ColorUtils.blendARGB(0xAAFFFFFF,0xFF3D75F2,tint/100f*0.34f);
         base=ColorUtils.blendARGB(base,Color.WHITE,brightness/100f*0.16f);
-        base=ColorUtils.blendARGB(base,0xFF9876FF,(100-vibrancy)/100f*0.12f);
+        base=ColorUtils.blendARGB(base,0xFF3D75F2,(100-vibrancy)/100f*0.12f);
         GradientDrawable glass=new GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 new int[]{ColorUtils.setAlphaComponent(base,0xD8),ColorUtils.setAlphaComponent(ColorUtils.blendARGB(base,0xFF60BFEF,0.22f),0xB8)});
         glass.setCornerRadius(dp(12+radius*.20f));
