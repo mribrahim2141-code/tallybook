@@ -45,7 +45,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
     private static final String[] EN = {"Blur (preview only)","Refraction height (preview only)","Refraction amount (preview only)","Tint","Vibrancy","Brightness","Gloss","Corner radius","Bounce","Speed","Compression depth","Pull stretch","Long-press inflation","Release haptics"};
     private View preview, ambient;
     private TextView previewCaption;
-    private final int purple = Color.rgb(151, 112, 255);
+    private final int purple = Color.rgb(61, 117, 242);
     private final java.util.Map<String, Integer> previewValues = new java.util.HashMap<>();
     private int motionPreset = 0;
     private int appearancePreset = 0;
@@ -70,7 +70,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(18), dp(16), dp(18), dp(28));
         GradientDrawable page = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                new int[]{Color.rgb(27, 31, 75), Color.rgb(71, 42, 104), Color.rgb(26, 77, 113)});
+                new int[]{Color.rgb(11, 18, 32), Color.rgb(23, 59, 155), Color.rgb(18, 49, 87)});
         root.setBackground(page);
         scroll.addView(root);
         setContentView(scroll);
@@ -86,14 +86,17 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         title.setTypeface(null, Typeface.BOLD);
         top.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
         root.addView(top);
-        TextView subtitle = text(s("تحكم بالمظهر والحركة مع معاينة فورية","Tune appearance and motion with a live preview"), 13, 0xFFD9D7F4);
+        TextView subtitle = text(s("تحكم بالمظهر والحركة مع معاينة فورية","Tune appearance and motion with a live preview"), 13, 0xFFDCE6FF);
         subtitle.setPadding(dp(4), dp(4), dp(4), dp(14));
         root.addView(subtitle);
+
+        addSection(root, s("التحكم العام","Global control"));
+        addToggle(root, s("تفعيل Liquid Glass في جميع شاشات التطبيق","Enable Liquid Glass across every app screen"), "glass_enabled");
 
         addSection(root, s("معاينة مباشرة","Live preview"));
         ambient = new View(this);
         GradientDrawable glow = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                new int[]{0xFF9D72FF,0xFF4DA9E8,0xFFD86CB8});
+                new int[]{0xFF2457D6,0xFF3D75F2,0xFF9BC1FF});
         glow.setCornerRadius(dp(28));
         ambient.setBackground(glow);
         LinearLayout previewWrap = new LinearLayout(this);
@@ -122,7 +125,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
             Button b=button(names[i]);
             GradientDrawable presetBg=new GradientDrawable();
             presetBg.setCornerRadius(dp(18));
-            presetBg.setColor(i==appearancePreset?0x88BDA8FF:0x553FFFFF);
+            presetBg.setColor(i==appearancePreset?0x885B8CFF:0x553FFFFF);
             presetBg.setStroke(dp(1),i==appearancePreset?0xDDFFFFFF:0x55FFFFFF);
             b.setBackground(presetBg);
             b.setTextSize(11);
@@ -187,7 +190,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         panel.setBackground(bg);
         LinearLayout line=new LinearLayout(this); line.setGravity(Gravity.CENTER_VERTICAL);
         TextView label=text(s(arabic,english),13,Color.WHITE);
-        TextView value=text(String.valueOf(LiquidGlassSettings.get(this,key)),13,0xFFE7DCFF);
+        TextView value=text(String.valueOf(LiquidGlassSettings.get(this,key)),13,0xFFDCE6FF);
         value.setGravity(Gravity.END);
         line.addView(label,new LinearLayout.LayoutParams(0,-2,1)); line.addView(value);
         panel.addView(line);
@@ -237,7 +240,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         if(preview==null)return;
         int tint=current("tint"), gloss=current("gloss");
         int radius=current("corner_radius"), brightness=current("brightness"), vibrancy=current("vibrancy");
-        int base=ColorUtils.blendARGB(0xAAFFFFFF,0xFF9876FF,tint/100f*0.34f);
+        int base=ColorUtils.blendARGB(0xAAFFFFFF,0xFF3D75F2,tint/100f*0.34f);
         base=ColorUtils.blendARGB(base,Color.WHITE,brightness/100f*0.16f);
         base=ColorUtils.blendARGB(base,0xFF9876FF,(100-vibrancy)/100f*0.12f);
         GradientDrawable glass=new GradientDrawable(GradientDrawable.Orientation.TL_BR,
