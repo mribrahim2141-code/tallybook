@@ -3,11 +3,10 @@ package com.oriondev.moneywallet.ui.view.theme;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import androidx.cardview.widget.CardView;
 import androidx.core.graphics.ColorUtils;
 
-/** Small, isolated preference store for optional Liquid Glass presentation settings. */
+/** Persistent, Android-version-safe presentation settings for the app's glass surfaces. */
 public final class LiquidGlassSettings {
     private static final String FILE = "liquid_glass_settings";
     private static final String PREFIX = "glass_";
@@ -17,6 +16,7 @@ public final class LiquidGlassSettings {
             "compression", "pull_stretch", "long_press", "haptics_strength"};
     private static final String[] TOGGLES = {"glass_enabled", "depth", "chromatic", "release_haptics"};
     private static final boolean[] TOGGLE_DEFAULTS = {true, true, false, true};
+    private static final int ROYAL_BLUE = Color.rgb(61, 117, 242);
 
     private LiquidGlassSettings() {}
 
@@ -71,23 +71,28 @@ public final class LiquidGlassSettings {
         }
         for (int i = 0; i < TOGGLES.length; i++) {
             boolean motionToggle = "release_haptics".equals(TOGGLES[i]);
-            if (motionToggle == motionOnly) {
-                editor.putBoolean(PREFIX + TOGGLES[i], TOGGLE_DEFAULTS[i]);
-            }
+            if (motionToggle == motionOnly) editor.putBoolean(PREFIX + TOGGLES[i], TOGGLE_DEFAULTS[i]);
         }
         editor.apply();
     }
 
-    /** Applies the app-wide Liquid Glass surface treatment to every CardView in the view tree. */
+    /**
+     * Applies a visible translucent blue-glass treatment to themed CardViews.
+     * Blur/refraction are intentionally not faked by blurring card contents; Android 12+
+     * backdrop blur is not consistently available to ordinary app surfaces on all devices.
+     */
     public static void applyTo(CardView card, int baseColor) {
         Context context = card.getContext();
         float density = context.getResources().getDisplayMetrics().density;
-        if (!isEnabled(context, "glass_enabled")) {
+        boolean enabled = isEnabled(context, "glass_enabled");
+        if (!enabled) {
             card.setCardBackgroundColor(baseColor);
             card.setRadius(16f * density);
             card.setCardElevation(2f * density);
             if (card instanceof com.google.android.material.card.MaterialCardView) {
-                ((com.google.android.material.card.MaterialCardView) card).setStrokeWidth(0);
+                com.google.android.material.card.MaterialCardView material =
+                        (com.google.android.material.card.MaterialCardView) card;
+                material.setStrokeWidth(0);
             }
             return;
         }
@@ -96,22 +101,28 @@ public final class LiquidGlassSettings {
         int vibrancy = get(context, "vibrancy");
         int brightness = get(context, "brightness");
         int gloss = get(context, "gloss");
-        int overlay = Color.argb(Math.round(20 + tint * 0.55f), 61, 117, 242);
-        int surface = ColorUtils.blendARGB(baseColor, overlay, tint / 100f * 0.42f);
-        surface = ColorUtils.blendARGB(surface, Color.WHITE, brightness / 100f * 0.10f);
-        surface = ColorUtils.blendARGB(surface, baseColor, (100 - vibrancy) / 100f * 0.06f);
-        int surfaceAlpha = ColorUtils.calculateLuminance(baseColor) > 0.5 ? 238 : 226;
+
+        // A stronger blue tint and lower surface alpha make the glass treatment visible
+        // against both light and dark app backgrounds instead of looking like a solid card.
+        float tintStrength = 0.18f + (tint / 100f) * 0.34f;
+        int surface = ColorUtils.blendARGB(baseColor, ROYAL_BLUE, tintStrength);
+        surface = ColorUtils.blendARGB(surface, Color.WHITE, brightness / 100f * 0.12f);
+        surface = ColorUtils.blendARGB(surface, ROYAL_BLUE, (100 - vibrancy) / 100f * 0.10f);
+        int surfaceAlpha = ColorUtils.calculateLuminance(baseColor) > 0.5 ? 214 : 198;
         card.setCardBackgroundColor(ColorUtils.setAlphaComponent(surface, surfaceAlpha));
-        card.setRadius((16 + get(context, "corner_radius") * 0.20f) * density);
-        card.setCardElevation((isEnabled(context, "depth") ? 3 + gloss * 0.045f : 1.5f) * density);
+
+        float radius = (20f + get(context, "corner_radius") * 0.22f) * density;
+        card.setRadius(radius);
+        card.setCardElevation((isEnabled(context, "depth")
+                ? 5f + gloss * 0.065f : 2f) * density);
 
         if (card instanceof com.google.android.material.card.MaterialCardView) {
-            com.google.android.material.card.MaterialCardView materialCard =
+            com.google.android.material.card.MaterialCardView material =
                     (com.google.android.material.card.MaterialCardView) card;
-            int strokeAlpha = Math.round(70 + gloss * 0.75f);
-            int stroke = ColorUtils.setAlphaComponent(Color.parseColor("#78A8FF"), strokeAlpha);
-            materialCard.setStrokeColor(android.content.res.ColorStateList.valueOf(stroke));
-            materialCard.setStrokeWidth(Math.max(1, Math.round((0.6f + gloss / 100f * 0.8f) * density)));
+            int strokeAlpha = Math.round(115 + gloss * 1.05f);
+            int stroke = ColorUtils.setAlphaComponent(Color.WHITE, Math.min(225, strokeAlpha));
+            material.setStrokeColor(android.content.res.ColorStateList.valueOf(stroke));
+            material.setStrokeWidth(Math.max(1, Math.round((1f + gloss / 100f) * density)));
         }
     }
 
