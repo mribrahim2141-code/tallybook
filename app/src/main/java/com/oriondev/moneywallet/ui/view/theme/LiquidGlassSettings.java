@@ -134,6 +134,11 @@ public final class LiquidGlassSettings {
      * it never replaces arbitrary content backgrounds or text-bearing child views.
      */
     public static void applySurface(View view, int baseColor) {
+        applySurface(view, baseColor, true);
+    }
+
+    /** Full-bleed variant for page roots and app bars that must meet the screen edges. */
+    public static void applySurface(View view, int baseColor, boolean rounded) {
         Context context = view.getContext();
         if (!isEnabled(context, "glass_enabled")) {
             view.setBackgroundColor(baseColor);
@@ -161,7 +166,7 @@ public final class LiquidGlassSettings {
                         ColorUtils.setAlphaComponent(top, topAlpha),
                         ColorUtils.setAlphaComponent(bottom, bottomAlpha)
                 });
-        glass.setCornerRadius(18f * density);
+        glass.setCornerRadius((rounded ? 18f : 0f) * density);
         int strokeAlpha = Math.min(220, 105 + gloss);
         glass.setStroke(Math.max(1, Math.round(density)),
                 ColorUtils.setAlphaComponent(Color.WHITE, strokeAlpha));
