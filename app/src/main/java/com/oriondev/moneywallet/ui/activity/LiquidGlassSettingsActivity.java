@@ -90,6 +90,9 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         subtitle.setPadding(dp(4), dp(4), dp(4), dp(14));
         root.addView(subtitle);
 
+        addSection(root, s("التحكم العام","Global control"));
+        addToggle(root, s("تفعيل Liquid Glass في جميع شاشات التطبيق","Enable Liquid Glass across every app screen"), "glass_enabled");
+
         addSection(root, s("معاينة مباشرة","Live preview"));
         ambient = new View(this);
         GradientDrawable glow = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
