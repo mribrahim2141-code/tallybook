@@ -15,8 +15,8 @@ public final class LiquidGlassSettings {
     private static final String[] KEYS = {"blur", "refraction_height", "refraction_amount", "tint",
             "vibrancy", "brightness", "gloss", "corner_radius", "bounce", "speed",
             "compression", "pull_stretch", "long_press", "haptics_strength"};
-    private static final String[] TOGGLES = {"depth", "chromatic", "release_haptics"};
-    private static final boolean[] TOGGLE_DEFAULTS = {true, false, true};
+    private static final String[] TOGGLES = {"glass_enabled", "depth", "chromatic", "release_haptics"};
+    private static final boolean[] TOGGLE_DEFAULTS = {true, true, false, true};
 
     private LiquidGlassSettings() {}
 
@@ -78,20 +78,41 @@ public final class LiquidGlassSettings {
         editor.apply();
     }
 
-    /** Applies the supported glass surface properties to every themed CardView in the app. */
+    /** Applies the app-wide Liquid Glass surface treatment to every CardView in the view tree. */
     public static void applyTo(CardView card, int baseColor) {
         Context context = card.getContext();
+        float density = context.getResources().getDisplayMetrics().density;
+        if (!isEnabled(context, "glass_enabled")) {
+            card.setCardBackgroundColor(baseColor);
+            card.setRadius(16f * density);
+            card.setCardElevation(2f * density);
+            if (card instanceof com.google.android.material.card.MaterialCardView) {
+                ((com.google.android.material.card.MaterialCardView) card).setStrokeWidth(0);
+            }
+            return;
+        }
+
         int tint = get(context, "tint");
         int vibrancy = get(context, "vibrancy");
         int brightness = get(context, "brightness");
-        int overlay = Color.argb(Math.round(12 + tint * 0.48f), 133, 104, 255);
-        int surface = ColorUtils.blendARGB(baseColor, overlay, tint / 100f * 0.34f);
-        surface = ColorUtils.blendARGB(surface, Color.WHITE, brightness / 100f * 0.12f);
-        surface = ColorUtils.blendARGB(surface, baseColor, (100 - vibrancy) / 100f * 0.08f);
-        card.setCardBackgroundColor(surface);
-        float density = context.getResources().getDisplayMetrics().density;
-        card.setRadius((12 + get(context, "corner_radius") * 0.20f) * density);
-        card.setCardElevation((isEnabled(context, "depth") ? 2 + get(context, "gloss") * 0.035f : 1) * density);
+        int gloss = get(context, "gloss");
+        int overlay = Color.argb(Math.round(20 + tint * 0.55f), 61, 117, 242);
+        int surface = ColorUtils.blendARGB(baseColor, overlay, tint / 100f * 0.42f);
+        surface = ColorUtils.blendARGB(surface, Color.WHITE, brightness / 100f * 0.10f);
+        surface = ColorUtils.blendARGB(surface, baseColor, (100 - vibrancy) / 100f * 0.06f);
+        int surfaceAlpha = ColorUtils.calculateLuminance(baseColor) > 0.5 ? 238 : 226;
+        card.setCardBackgroundColor(ColorUtils.setAlphaComponent(surface, surfaceAlpha));
+        card.setRadius((16 + get(context, "corner_radius") * 0.20f) * density);
+        card.setCardElevation((isEnabled(context, "depth") ? 3 + gloss * 0.045f : 1.5f) * density);
+
+        if (card instanceof com.google.android.material.card.MaterialCardView) {
+            com.google.android.material.card.MaterialCardView materialCard =
+                    (com.google.android.material.card.MaterialCardView) card;
+            int strokeAlpha = Math.round(70 + gloss * 0.75f);
+            int stroke = ColorUtils.setAlphaComponent(Color.parseColor("#78A8FF"), strokeAlpha);
+            materialCard.setStrokeColor(android.content.res.ColorStateList.valueOf(stroke));
+            materialCard.setStrokeWidth(Math.max(1, Math.round((0.6f + gloss / 100f * 0.8f) * density)));
+        }
     }
 
     private static int clamp(int value, int min, int max) {
