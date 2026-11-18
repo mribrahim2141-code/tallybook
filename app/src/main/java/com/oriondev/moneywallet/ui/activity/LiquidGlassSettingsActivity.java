@@ -10,6 +10,11 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.os.VibratorManager;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
@@ -53,6 +58,8 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         super.onCreate(state);
         getWindow().setStatusBarColor(Color.rgb(20, 24, 54));
         getWindow().setNavigationBarColor(Color.rgb(20, 24, 54));
+        appearancePreset = LiquidGlassSettings.getSelection(this, "appearance_preset", 0);
+        motionPreset = LiquidGlassSettings.getSelection(this, "motion_preset", 0);
         buildScreen();
     }
 
@@ -201,6 +208,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
     }
     private void applyPreset(int index){
         appearancePreset=index;
+        LiquidGlassSettings.putSelection(this, "appearance_preset", index);
         int[][] presets={
             {42,34,45,28,72,100,48,28},
             {8,15,15,12,85,100,22,20},
@@ -217,6 +225,7 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
     private void applyMotionPreset(int index){
         int[][] values={{42,100,18,55,45,30},{8,125,8,20,12,0},{68,82,36,75,65,45},{90,70,52,95,88,75}};
         motionPreset=index;
+        LiquidGlassSettings.putSelection(this, "motion_preset", index);
         for(int i=0;i<MOTION_KEYS.length;i++) LiquidGlassSettings.put(this,MOTION_KEYS[i],values[index][i]);
         buildScreen();
     }
@@ -263,13 +272,37 @@ public class LiquidGlassSettingsActivity extends AppCompatActivity {
         ObjectAnimator y=ObjectAnimator.ofFloat(preview,"scaleY",1f,1f-compression*1.5f,1f+stretch*0.45f,1f);
         x.setDuration(duration); y.setDuration(duration);
         x.setInterpolator(new OvershootInterpolator(bounce)); y.setInterpolator(new OvershootInterpolator(bounce));
+        x.addListener(new AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(Animator animation) { triggerReleaseHaptic(); }
+        });
         x.start(); y.start();
-        if(LiquidGlassSettings.isEnabled(this,"release_haptics") && LiquidGlassSettings.get(this,"haptics_strength") > 0) preview.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK);
+    }
+    private void triggerReleaseHaptic() {
+        int strength = LiquidGlassSettings.get(this, "haptics_strength");
+        if (!LiquidGlassSettings.isEnabled(this, "release_haptics") || strength <= 0) return;
+        try {
+            Vibrator vibrator;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                VibratorManager manager = (VibratorManager) getSystemService(VIBRATOR_MANAGER_SERVICE);
+                vibrator = manager != null ? manager.getDefaultVibrator() : null;
+            } else {
+                vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+            }
+            if (vibrator == null || !vibrator.hasVibrator()) return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                int amplitude = Math.max(1, Math.min(255, Math.round(strength * 2.55f)));
+                vibrator.vibrate(VibrationEffect.createOneShot(35, amplitude));
+            } else {
+                vibrator.vibrate(20 + Math.round(strength * 0.25f));
+            }
+        } catch (RuntimeException ignored) {
+            preview.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK);
+        }
     }
     private void updateMotionPreview(int value){ if(preview!=null) preview.setTranslationY(-value/35f); }
     private void confirmReset(boolean motion){
         new AlertDialog.Builder(this).setMessage(s("هل تريد إعادة ضبط هذه الإعدادات؟","Reset these settings?"))
             .setNegativeButton(android.R.string.cancel,null)
-            .setPositiveButton(s("إعادة الضبط","Reset"),(d,w)->{LiquidGlassSettings.reset(this,motion);previewValues.clear();com.oriondev.moneywallet.ui.view.theme.ThemeEngine.refresh();buildScreen();}).show();
+            .setPositiveButton(s("إعادة الضبط","Reset"),(d,w)->{LiquidGlassSettings.reset(this,motion);if(motion){motionPreset=0;LiquidGlassSettings.putSelection(this,"motion_preset",0);}else{appearancePreset=0;LiquidGlassSettings.putSelection(this,"appearance_preset",0);}previewValues.clear();com.oriondev.moneywallet.ui.view.theme.ThemeEngine.refresh();buildScreen();}).show();
     }
 }
